@@ -8,7 +8,11 @@ import type { Config } from "jest";
 const config: Config = {
   // The regexp pattern or array of patterns that Jest uses to detect test files
   testRegex: [
-    "test/demo.test.ts",
+    "test/10-BGP_EVPN_VXLAN/0010-BGP_EVPN_VXLAN.test.ts",
+    // "test/10-BGP_EVPN_VXLAN/0020-BGP_EVPN_VXLAN.test.ts",
+    // "test/10-BGP_EVPN_VXLAN/0030-BGP_EVPN_VXLAN.test.ts",
+    // "test/10-BGP_EVPN_VXLAN/0040-BGP_EVPN_VXLAN.test.ts",
+    // "test/10-BGP_EVPN_VXLAN/0050-BGP_EVPN_VXLAN.test.ts",
   ],
 
   // All imported modules in your tests should be mocked automatically
@@ -25,6 +29,8 @@ const config: Config = {
 
   // Indicates whether the coverage information should be collected while executing the test
   collectCoverage: false,
+
+  testSequencer: '<rootDir>/script/jest.sequencer.js',
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   // collectCoverageFrom: undefined,
@@ -116,7 +122,7 @@ const config: Config = {
 
   // Use this configuration option to add custom reporters to Jest
   // reporters: undefined,
-  
+
   // Automatically reset mock state before every test
   // resetMocks: false,
 
@@ -130,7 +136,7 @@ const config: Config = {
   // restoreMocks: false,
 
   // The root directory that Jest should scan for tests and modules within
-  rootDir: "./",
+  rootDir: "../",
 
   // A list of paths to directories that Jest should use to search for files in
   roots: ["<rootDir>"],

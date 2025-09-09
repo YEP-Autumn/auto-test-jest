@@ -33,7 +33,7 @@ export class Dut {
 
   public async safeExec(command: string) {
     let result = await this.connection.exec(command);
-    console.log(`[s][${this.conn_param.host}] ` + this.lastCmdMode + command);
+    console.log(`[${this.conn_param.host}][s] ` + this.lastCmdMode + command);
     console.log(result);
     let split = new RegExp("Switch.*?# ", "g").exec(result);
     this.lastCmdMode = split ? split[0] : this.lastCmdMode;

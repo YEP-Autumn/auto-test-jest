@@ -3,5 +3,5 @@
 ``` shell
 npm test
 or
-npm run test -- -i --config=config/test.config.ts --verbose
+npm run test -- -i --config=config/jest.config.ts --verbose
 ```

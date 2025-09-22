@@ -1,0 +1,22 @@
+***************************
+DUTA(1)  <————>  (1)DUTB
+DUTB(2)  <————>  (2)DUTC
+DUTC(25) <————> (25)DUTA
+RenixA   <————>  DUTA(39)
+RenixB   <————>  DUTB(9)
+***************************
+
+
+                 +--------+
+RenixA <-> PortA-|  DUTA  |--PortB---+
+                 +--------+          |
+                     |             PortA
+                   PortC             |
+                     |           +--------+
+                     |           |  DUTC  |
+                     |           +--------+
+                     |               |
+                   PortC           PortB
+                     |               |
+RenixB <-> PortA-|  DUTC  |--PortB---+
+                 +--------+

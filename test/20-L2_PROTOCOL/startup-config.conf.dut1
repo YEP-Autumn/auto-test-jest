@@ -1,0 +1,148 @@
+!
+!
+no service password-encryption
+!
+!
+!
+!
+username root privilege 4 password !@#
+!
+!
+!
+management ip address 172.16.9.106/24
+!
+!
+!
+!
+!
+l2protocol enable
+l2protocol tunnel-dmac 0100.0ccd.cdd2
+l2protocol mac 3 0180.c200.0010
+!
+vlan database
+ vlan 2-400
+!
+
+!
+ethernet evc 1
+ dot1q mapped-vlan 300
+!
+ethernet evc 2
+ dot1q mapped-vlan 100
+!
+vlan mapping table test
+ raw-vlan 123 evc 2
+!
+interface eth-0-1
+ switchport mode trunk
+ switchport trunk allowed vlan all
+ l2protocol uplink enable
+!
+interface eth-0-2
+!
+interface eth-0-3
+!
+interface eth-0-4
+!
+interface eth-0-5
+!
+interface eth-0-6
+!
+interface eth-0-7
+!
+interface eth-0-8
+!
+interface eth-0-9
+!
+interface eth-0-10
+!
+interface eth-0-11
+!
+interface eth-0-12
+!
+interface eth-0-13
+!
+interface eth-0-14
+!
+interface eth-0-15
+!
+interface eth-0-16
+!
+interface eth-0-17
+!
+interface eth-0-18
+!
+interface eth-0-19
+ shutdown
+!
+interface eth-0-20
+ shutdown
+!
+interface eth-0-21
+!
+interface eth-0-22
+!
+interface eth-0-23
+!
+interface eth-0-24
+!
+interface eth-0-25
+!
+interface eth-0-26
+!
+interface eth-0-27
+!
+interface eth-0-28
+!
+interface eth-0-29
+!
+interface eth-0-30
+!
+interface eth-0-31
+!
+interface eth-0-32
+!
+interface eth-0-33
+!
+interface eth-0-34
+!
+interface eth-0-35
+!
+interface eth-0-36
+!
+interface eth-0-37
+!
+interface eth-0-38
+!
+interface eth-0-39
+ switchport mode dot1q-tunnel
+ switchport dot1q-tunnel type selective
+ switchport dot1q-tunnel vlan mapping table test
+ switchport dot1q-tunnel allowed vlan all
+ l2protocol mac 3 tunnel evc 1
+ l2protocol stp tunnel evc 1
+ spanning-tree port disable
+!
+interface eth-0-40
+!
+interface eth-0-41
+!
+interface eth-0-42
+!
+interface eth-0-43
+!
+interface null0
+!
+!
+!
+line con 0
+ no line-password
+ no login
+line vty 0 7
+ exec-timeout 35791 0
+ privilege level 4
+ no line-password
+ no login
+!
+end
+

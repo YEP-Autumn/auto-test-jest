@@ -4,9 +4,9 @@ import {
   ExecConfig,
   ExecRetMatch,
   Sleep,
-} from "./Components";
-import { Config } from "./Config";
-import { Dut } from "./Dut";
+} from "./comm/Components";
+import { Config } from "./comm/Config";
+import { Dut } from "./comm/Dut";
 
 export class TestHelper {
   private dut_list: Dut[] = [];

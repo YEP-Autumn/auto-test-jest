@@ -1,8 +1,10 @@
 export class Config {
   public static dutA = {
-    host: "172.16.9.106",
+    // host: "172.16.9.106",
+    host: "172.16.131.106",
     port: 23,
-    shellPrompt: "Switch.*#",
+    // shellPrompt: "Switch.*#",
+    shellPrompt: "S7548N-106.*#",
     timeout: 1000 * 60 * 5,
     debug: true,
     stripShellPrompt: false,
@@ -12,7 +14,7 @@ export class Config {
   };
 
   public static dutB = {
-    host: "172.16.9.108",
+    host: "172.16.9.110",
     port: 23,
     shellPrompt: "Switch.*#",
     timeout: 1000 * 60 * 5,
@@ -24,9 +26,10 @@ export class Config {
   };
 
   public static dutC = {
-    host: "172.16.9.107",
+    host: "172.16.131.107",
     port: 23,
-    shellPrompt: "Switch.*#",
+    // shellPrompt: "Switch.*#",
+    shellPrompt: "S7548-107.*#",
     timeout: 1000 * 60 * 5,
     debug: true,
     stripShellPrompt: false,

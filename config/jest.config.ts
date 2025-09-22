@@ -8,11 +8,15 @@ import type { Config } from "jest";
 const config: Config = {
   // The regexp pattern or array of patterns that Jest uses to detect test files
   testRegex: [
-    "test/10-BGP_EVPN_VXLAN/0010-BGP_EVPN_VXLAN.test.ts",
+    // "test/10-BGP_EVPN_VXLAN/0010-BGP_EVPN_VXLAN.test.ts",
     // "test/10-BGP_EVPN_VXLAN/0020-BGP_EVPN_VXLAN.test.ts",
     // "test/10-BGP_EVPN_VXLAN/0030-BGP_EVPN_VXLAN.test.ts",
     // "test/10-BGP_EVPN_VXLAN/0040-BGP_EVPN_VXLAN.test.ts",
     // "test/10-BGP_EVPN_VXLAN/0050-BGP_EVPN_VXLAN.test.ts",
+    // "test/30-MPLS/0010-MPLS.test.ts",
+    // "test/30-MPLS/0020-MPLS.test.ts",
+    // "test/30-MPLS/0030-MPLS.test.ts",
+    "test/30-MPLS/0040-MPLS.test.ts",
   ],
 
   // All imported modules in your tests should be mocked automatically
@@ -30,7 +34,7 @@ const config: Config = {
   // Indicates whether the coverage information should be collected while executing the test
   collectCoverage: false,
 
-  testSequencer: '<rootDir>/script/jest.sequencer.js',
+  testSequencer: "<rootDir>/script/jest.sequencer.js",
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   // collectCoverageFrom: undefined,

@@ -1,3 +1,5 @@
+import { Port } from "..";
+import { Config } from "./Config";
 import { Dut } from "./Dut";
 
 export interface Actuator {

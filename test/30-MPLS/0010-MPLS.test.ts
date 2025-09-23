@@ -1,3 +1,4 @@
+import { Port } from "../../utils";
 import { TestHelper } from "../../utils/TestHelper";
 
 let testHelper: TestHelper;
@@ -10,10 +11,19 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
+/**
+ *
+ * +--------+                   +--------+                   +--------+
+ * |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB <=> PortB--|  DUTC  |
+ * +--------+                   +--------+                   +--------+
+ *
+ */
+
 test("配置LDP功能", async () => {
+
   testHelper.ExecConfigDutA([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "label-switching",
     "ip address 11.11.17.1/24",
@@ -32,13 +42,13 @@ test("配置LDP功能", async () => {
 
   testHelper.ExecConfigDutB([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "label-switching",
     "ip address 11.11.17.2/24",
     "enable-ldp",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "no switchport",
     "label-switching",
     "ip address 11.11.9.1/24",
@@ -57,7 +67,7 @@ test("配置LDP功能", async () => {
 
   testHelper.ExecConfigDutC([
     "configure terminal",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "no switchport",
     "label-switching",
     "ip address 11.11.9.2/24",
@@ -81,7 +91,7 @@ test("配置LDP功能", async () => {
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "disable-ldp",
     "exit",
@@ -93,11 +103,11 @@ test("配置LDP功能", async () => {
 
   testHelper.CleanConfigDutB([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "disable-ldp",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "switchport",
     "disable-ldp",
     "exit",
@@ -109,7 +119,7 @@ test("配置LDP功能", async () => {
 
   testHelper.CleanConfigDutC([
     "configure terminal",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "switchport",
     "disable-ldp",
     "exit",

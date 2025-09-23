@@ -1,3 +1,4 @@
+import { Port } from "../../utils";
 import { TestHelper } from "../../utils/TestHelper";
 
 let testHelper: TestHelper;
@@ -10,15 +11,23 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
+/**
+ *
+ *                    +--------+                   +--------+ 
+ *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortD <=> RenixB
+ *                    +--------+                   +--------+
+ *
+ */
+
 test("配置静态VPWS", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "label-switching",
     "ip address 8.8.8.1/24",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "mpls-l2-circuit t2 ethernet",
     "exit",
     "interface loopback0",
@@ -33,12 +42,12 @@ test("配置静态VPWS", async () => {
 
   testHelper.ExecConfigDutB([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "label-switching",
     "ip address 8.8.8.2/24",
     "exit",
-    "interface eth-0-9",
+    `interface ${Port.D}`,
     "mpls-l2-circuit t2 ethernet",
     "exit",
     "interface loopback0",
@@ -57,10 +66,10 @@ test("配置静态VPWS", async () => {
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "no mpls-l2-circuit t2",
     "exit",
     "no interface loopback0",
@@ -72,10 +81,10 @@ test("配置静态VPWS", async () => {
 
   testHelper.CleanConfigDutB([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "exit",
-    "interface eth-0-9",
+    `interface ${Port.D}`,
     "no mpls-l2-circuit t2",
     "exit",
     "no interface loopback0",

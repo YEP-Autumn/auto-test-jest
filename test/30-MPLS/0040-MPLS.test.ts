@@ -1,3 +1,4 @@
+import { Port } from "../../utils";
 import { TestHelper } from "../../utils/TestHelper";
 
 let testHelper: TestHelper;
@@ -10,15 +11,26 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
+
+/**
+ *
+ *                    +--------+                   +--------+   
+ *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB 
+ *                    +--------+                   +--------+    |
+ *                                                               |
+ *                                                 +--------+    |
+ *                               RenixB <=> PortD--|  DUTC  |--PortB
+ *                                                 +--------+
+ */
 test("配置MPLS LSP", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "label-switching",
     "ip address 11.11.9.1/24",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "no switchport",
     "label-switching",
     "ip address 10.10.10.1/24",
@@ -29,12 +41,12 @@ test("配置MPLS LSP", async () => {
 
   testHelper.ExecConfigDutB([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "label-switching",
     "ip address 11.11.9.2/24",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "no switchport",
     "label-switching",
     "ip address 11.11.17.2/24",
@@ -45,12 +57,12 @@ test("配置MPLS LSP", async () => {
 
   testHelper.ExecConfigDutC([
     "configure terminal",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "no switchport",
     "label-switching",
     "ip address 11.11.17.3/24",
     "exit",
-    "interface eth-0-25",
+    `interface ${Port.D}`,
     "no switchport",
     "label-switching",
     "ip address 20.20.20.1/24",
@@ -84,10 +96,10 @@ test("配置MPLS LSP", async () => {
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport",
     "exit",
     "no mpls ftn-entry 172.22.4.0/24 11.11.9.2",
@@ -96,10 +108,10 @@ test("配置MPLS LSP", async () => {
 
   testHelper.CleanConfigDutB([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "switchport",
     "exit",
     "no mpls ilm-entry 100",
@@ -108,10 +120,10 @@ test("配置MPLS LSP", async () => {
 
   testHelper.CleanConfigDutC([
     "configure terminal",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "switchport",
     "exit",
-    "interface eth-0-25",
+    `interface ${Port.D}`,
     "switchport",
     "exit",
     "no mpls ilm-entry 200",

@@ -149,7 +149,7 @@ test("配置MPLS L3VPN", async () => {
     "end",
   ]);
 
-  testHelper.sleep(5000);
+  testHelper.sleep(25000);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

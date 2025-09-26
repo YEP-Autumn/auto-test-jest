@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "telnet-client": "^2.2.5",
+    "thrift": "^0.22.0",
     "ts-node": "^10.9.2"
   }
 }

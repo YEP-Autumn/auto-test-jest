@@ -15,10 +15,10 @@ const config: Config = {
     // "test/10-BGP_EVPN_VXLAN/0050-BGP_EVPN_VXLAN.test.ts",
     // "test/30-MPLS/0010-MPLS.test.ts",
     // "test/30-MPLS/0020-MPLS.test.ts",
-    // "test/30-MPLS/0030-MPLS.test.ts",
+    "test/30-MPLS/0030-MPLS.test.ts",
     // "test/30-MPLS/0040-MPLS.test.ts",
     // "test/30-MPLS/0050-MPLS.test.ts",
-    "test/30-MPLS/0060-MPLS.test.ts",
+    // "test/30-MPLS/0060-MPLS.test.ts",
   ],
 
   // All imported modules in your tests should be mocked automatically

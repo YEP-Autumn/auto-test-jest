@@ -140,37 +140,36 @@ export class TestHelper {
 
 function replaceIntfA(configs: String[]) {
   for (let i = 0; i < configs.length; i++) {
-    configs[i] = configs[i].replace(Port.A, Config.dutA.portList[0]);
-    configs[i] = configs[i].replace(Port.B, Config.dutA.portList[1]);
-    configs[i] = configs[i].replace(Port.C, Config.dutA.portList[2]);
-    configs[i] = configs[i].replace(Port.D, Config.dutA.portList[3]);
-    // console.log(configs[i], Port.A, Config.dutA.portList[0]);
+    configs[i] = configs[i].replace(Port.A, Config.dut_list[0].portList[0]);
+    configs[i] = configs[i].replace(Port.B, Config.dut_list[0].portList[1]);
+    configs[i] = configs[i].replace(Port.C, Config.dut_list[0].portList[2]);
+    configs[i] = configs[i].replace(Port.D, Config.dut_list[0].portList[3]);
   }
 }
 
 function replaceIntfB(configs: String[]) {
   for (let i = 0; i < configs.length; i++) {
-    configs[i] = configs[i].replace(Port.A, Config.dutB.portList[0]);
-    configs[i] = configs[i].replace(Port.B, Config.dutB.portList[1]);
-    configs[i] = configs[i].replace(Port.C, Config.dutB.portList[2]);
-    configs[i] = configs[i].replace(Port.D, Config.dutB.portList[3]);
+    configs[i] = configs[i].replace(Port.A, Config.dut_list[1].portList[0]);
+    configs[i] = configs[i].replace(Port.B, Config.dut_list[1].portList[1]);
+    configs[i] = configs[i].replace(Port.C, Config.dut_list[1].portList[2]);
+    configs[i] = configs[i].replace(Port.D, Config.dut_list[1].portList[3]);
   }
 }
 
 function replaceIntfC(configs: String[]) {
   for (let i = 0; i < configs.length; i++) {
-    configs[i] = configs[i].replace(Port.A, Config.dutC.portList[0]);
-    configs[i] = configs[i].replace(Port.B, Config.dutC.portList[1]);
-    configs[i] = configs[i].replace(Port.C, Config.dutC.portList[2]);
-    configs[i] = configs[i].replace(Port.D, Config.dutC.portList[3]);
+    configs[i] = configs[i].replace(Port.A, Config.dut_list[2].portList[0]);
+    configs[i] = configs[i].replace(Port.B, Config.dut_list[2].portList[1]);
+    configs[i] = configs[i].replace(Port.C, Config.dut_list[2].portList[2]);
+    configs[i] = configs[i].replace(Port.D, Config.dut_list[2].portList[3]);
   }
 }
 
 function replaceIntfD(configs: String[]) {
   for (let i = 0; i < configs.length; i++) {
-    configs[i] = configs[i].replace(Port.A, Config.dutD.portList[0]);
-    configs[i] = configs[i].replace(Port.B, Config.dutD.portList[1]);
-    configs[i] = configs[i].replace(Port.C, Config.dutD.portList[2]);
-    configs[i] = configs[i].replace(Port.D, Config.dutD.portList[3]);
+    configs[i] = configs[i].replace(Port.A, Config.dut_list[3].portList[0]);
+    configs[i] = configs[i].replace(Port.B, Config.dut_list[3].portList[1]);
+    configs[i] = configs[i].replace(Port.C, Config.dut_list[3].portList[2]);
+    configs[i] = configs[i].replace(Port.D, Config.dut_list[3].portList[3]);
   }
 }

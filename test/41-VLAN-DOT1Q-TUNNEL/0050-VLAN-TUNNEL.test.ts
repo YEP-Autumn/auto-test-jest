@@ -18,17 +18,17 @@ afterAll(async () => {
  *                    +--------+
  */
 
-test("支持为不同单层VLAN ID的报文添加不同的外层VLAN Tag", async () => {
+test("支持为没有VLAN Tag的报文添加双层Tag", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "vlan database",
     "vlan 2-200",
     "exit",
     "ethernet evc 1",
-    "dot1q mapped-vlan 200",
+    "dot1q mapped-double-vlan 180 200",
     "exit",
     "vlan mapping table vm",
-    "raw-vlan 10 evc 1",
+    "raw-vlan untagged evc 1",
     "exit",
     `interface ${Port.A}`,
     `switchport mode dot1q-tunnel`,
@@ -45,8 +45,8 @@ test("支持为不同单层VLAN ID的报文添加不同的外层VLAN Tag", async
   testHelper.sleep(5000);
 
   /**
-   * RenixA发送vlan 10的报文，RenixB能够收到vlan [10/200]的报文
-   * RenixB发送vlan [10/200]的报文，RenixB能够收到vlan 10的报文
+   * RenixA发送不带vlan的报文，RenixB能够收到vlan 180/200的报文
+   * RenixB发送vlan 180/200的报文，RenixB能够收到不带vlan的报文
    */
 
   testHelper.CleanConfigDutA([

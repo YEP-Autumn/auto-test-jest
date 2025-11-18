@@ -18,7 +18,7 @@ afterAll(async () => {
  *                    +--------+
  */
 
-test("支持为不同单层VLAN ID的报文添加不同的外层VLAN Tag", async () => {
+test("支持配置miss-forward命令", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "vlan database",
@@ -45,8 +45,18 @@ test("支持为不同单层VLAN ID的报文添加不同的外层VLAN Tag", async
   testHelper.sleep(5000);
 
   /**
-   * RenixA发送vlan 10的报文，RenixB能够收到vlan [10/200]的报文
-   * RenixB发送vlan [10/200]的报文，RenixB能够收到vlan 10的报文
+   * RenixA发送vlan 101的报文，RenixB不能收到
+   */
+
+  testHelper.ExecConfigDutA([
+    "configure terminal",
+    `interface ${Port.A}`,
+    "switchport dot1q-tunnel vlan mapping miss-forward",
+    "end",
+  ]);
+
+  /**
+   * RenixA发送vlan 101的报文，RenixB能够收到
    */
 
   testHelper.CleanConfigDutA([

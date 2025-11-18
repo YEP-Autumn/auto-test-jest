@@ -228,4 +228,4 @@ test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普�
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 300000);
+});

@@ -132,4 +132,4 @@ test("配置LDP功能", async () => {
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 300000);
+});

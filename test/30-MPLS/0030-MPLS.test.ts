@@ -112,4 +112,4 @@ test("使用LDP配置VPWS", async () => {
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 300000);
+});

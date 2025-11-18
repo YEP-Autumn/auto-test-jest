@@ -178,4 +178,4 @@ test("测试 bgp evpn vxlan loopback ping功能, 两台交换机使用loopback�
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 300000);
+});

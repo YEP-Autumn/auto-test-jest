@@ -27,4 +27,4 @@ test("测试 VRF MAX", async () => {
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 300000);
+});

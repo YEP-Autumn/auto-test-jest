@@ -22,7 +22,7 @@ export class Config {
     stripControls: true,
     execTimeout: 1000 * 15,
     disableLogon: true,
-    portList: ["eth-0-40", "eth-0-1", "eth-0-3", "eth-0-39"],
+    portList: ["eth-0-39", "eth-0-1", "eth-0-3", "eth-0-39"],
   };
 
   public static dutC = {
@@ -51,5 +51,6 @@ export class Config {
     portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-39"],
   };
 
-  public static dut_list = [this.dutA, this.dutC, this.dutC, this.dutD];
+  // public static dut_list = [this.dutA, this.dutC, this.dutC, this.dutD];
+  public static dut_list = [this.dutB];
 }

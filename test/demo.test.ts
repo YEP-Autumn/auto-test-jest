@@ -22,4 +22,4 @@ test("测试demo功能", async () => {
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 300000);
+});

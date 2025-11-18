@@ -15,10 +15,12 @@ const config: Config = {
     // "test/10-BGP_EVPN_VXLAN/0050-BGP_EVPN_VXLAN.test.ts",
     // "test/30-MPLS/0010-MPLS.test.ts",
     // "test/30-MPLS/0020-MPLS.test.ts",
-    "test/30-MPLS/0030-MPLS.test.ts",
+    // "test/30-MPLS/0030-MPLS.test.ts",
     // "test/30-MPLS/0040-MPLS.test.ts",
     // "test/30-MPLS/0050-MPLS.test.ts",
     // "test/30-MPLS/0060-MPLS.test.ts",
+    // "test/41-VLAN-DOT1Q-TUNNEL/0010-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/0020-VLAN-TUNNEL.test.ts",
   ],
 
   // All imported modules in your tests should be mocked automatically
@@ -203,6 +205,7 @@ const config: Config = {
 
   // Whether to use watchman for file crawling
   // watchman: true,
+  testTimeout: 1000 * 60 * 5,
 };
 
 export default config;

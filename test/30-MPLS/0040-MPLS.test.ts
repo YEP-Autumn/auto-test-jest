@@ -134,4 +134,4 @@ test("配置MPLS LSP", async () => {
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 300000);
+});

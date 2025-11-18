@@ -97,4 +97,4 @@ test("配置静态VPWS", async () => {
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 300000);
+});

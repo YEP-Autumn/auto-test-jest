@@ -268,4 +268,4 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 300000);
+});

@@ -262,4 +262,4 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项", async () =>
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 300000);
+});

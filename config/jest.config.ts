@@ -2,15 +2,28 @@ import type { Config } from "jest";
 
 const config: Config = {
   clearMocks: true,
-  collectCoverage: false,
   testSequencer: "<rootDir>/script/jest.sequencer.js",
-  coverageDirectory: "coverage",
   maxWorkers: "1",
   rootDir: "../",
   roots: ["<rootDir>"],
   testPathIgnorePatterns: ["/node_modules/"],
   transformIgnorePatterns: ["/node_modules/", "\\.pnp\\.[^\\/]+$"],
   testTimeout: 1000 * 60 * 5,
+  verbose: true,
+  reporters: [
+    "default",
+    [
+      "jest-html-reporter",
+      {
+        pageTitle: "Test Report",
+        outputPath: `test-report/test-report-${Date.now()}.html`,
+        includeFailureMsg: true,
+      },
+    ],
+  ],
+  collectCoverage: false,
+  coverageDirectory: "coverage",
+  coverageReporters: ["json", "lcov", "text", "html"],
 
   testRegex: [
     // "test/10-BGP_EVPN_VXLAN/0010-BGP_EVPN_VXLAN.test.ts",
@@ -29,11 +42,11 @@ const config: Config = {
     // "test/41-VLAN-DOT1Q-TUNNEL/0030-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0040-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0050-VLAN-TUNNEL.test.ts",
-    // "test/41-VLAN-DOT1Q-TUNNEL/0060-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/0060-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0070-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0080-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0090-VLAN-TUNNEL.test.ts",
-    "test/41-VLAN-DOT1Q-TUNNEL/0100-VLAN-TUNNEL.test.ts",
+    // "test/41-VLAN-DOT1Q-TUNNEL/0100-VLAN-TUNNEL.test.ts",
   ],
 };
 

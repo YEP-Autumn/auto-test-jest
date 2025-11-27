@@ -90,8 +90,8 @@ export class ControllerApi {
       });
   }
 
-  topolopyRemove(name: String) {
-    this.api
+  async topolopyRemove(name: String) {
+    await this.api
       .post("/topology/del", { name: name })
       .then((response) => {
         console.log("Success:", response.data);
@@ -101,8 +101,8 @@ export class ControllerApi {
       });
   }
 
-  topolopyLinkAdd(name: String, link: TopolopyLink[]) {
-    this.api
+  async topolopyLinkAdd(name: String, link: TopolopyLink[]) {
+    await this.api
       .post("/topology/link/add", {
         name: name,
         link: link,
@@ -115,8 +115,8 @@ export class ControllerApi {
       });
   }
 
-  topolopyLinkDel(name: String, link: TopolopyLink[]) {
-    this.api
+  async topolopyLinkDel(name: String, link: TopolopyLink[]) {
+    await this.api
       .post("/topology/link/del", {
         name: name,
         link: link,
@@ -128,4 +128,24 @@ export class ControllerApi {
         console.error("Error:", error);
       });
   }
+
+  async streamPacketSend(binary: Buffer) {
+    await this.api
+      .post("/stream_backend/packet/send", binary, {
+        headers: {
+          "Content-Type": "application/octet-stream",
+          // 可以根据需要添加其他头，例如 Content-Length
+          "Content-Length": binary.length,
+        },
+      })
+      .then((response) => {
+        console.log("Success:", response.data);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
 }
+
+
+

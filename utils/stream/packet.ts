@@ -3,7 +3,6 @@ const thrift = require("thrift");
 const ttypes = require("../rpc/gen-nodejs/packet_types");
 // 生成的 Thrift JS 代码使用 `Thrift` 全局变量(首字母大写),
 // 因此把 thrift 模块挂到全局供生成代码使用
-(globalThis as any).Thrift = thrift.Thrift || thrift;
 
 const TCompactProtocol = thrift.TCompactProtocol;
 const TBufferedTransport = thrift.TBufferedTransport; // 用于示例

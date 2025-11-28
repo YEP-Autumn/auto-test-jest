@@ -47,7 +47,9 @@ const { Packet, EthernetII, VLAN, IPv4, FieldMeta, Field, FieldType } = ttypes;
 
 function make_packet_buffer() {
   const TCompactProtocol = thrift.TCompactProtocol;
-  const TBufferedTransport = thrift.TBufferedTransport; // 用于示例
+  const TBufferedTransport = thrift.TBufferedTransport;
+  const TFramedTransport = thrift.TFramedTransport;
+  const TBinaryProtocol = thrift.TBinaryProtocol;
   let packet = new Packet();
 
   let ethernet = new EthernetII();
@@ -95,7 +97,11 @@ function make_packet_buffer() {
   const transport: any = new TBufferedTransport(null, (msg: Buffer) => {
     capturedFlushBuffer = msg;
   });
-  const protocol: any = new TCompactProtocol(transport);
+  // const transport: any = new TFramedTransport(null, (msg: Buffer) => {
+  //   capturedFlushBuffer = msg;
+  // });
+  // const protocol: any = new TCompactProtocol(transport);
+  const protocol: any = new TBinaryProtocol(transport);
 
   // 3. 执行写入操作
   packet.write(protocol);

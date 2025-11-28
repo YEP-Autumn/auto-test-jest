@@ -19,7 +19,7 @@ test(
 
     await controller.streamPacketSend(
       make_packet_buffer(),
-      { aaa: 134 },
+      { aaa: 134, bbb: "456" },
       "test_packet"
     );
   },

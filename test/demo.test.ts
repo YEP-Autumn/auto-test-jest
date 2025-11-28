@@ -17,7 +17,11 @@ test(
   async () => {
     // await controller.topolopyCreate("this field topology_name");
 
-    await controller.streamPacketSend(make_packet_buffer());
+    await controller.streamPacketSend(
+      make_packet_buffer(),
+      { aaa: 134 },
+      "test_packet"
+    );
   },
   1000 * 60 * 10
 );

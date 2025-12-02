@@ -20,13 +20,13 @@ export class Dut {
     let result = await this.connection.exec(command);
     console.log(`[${this.conn_param.host}] ` + this.lastCmdMode + command);
     console.log(result);
-    let error = new RegExp(`(\r|\n)% `, "g").exec(result);
+    let error = new RegExp(`(\r|\n)% `).exec(result);
     if (error || result.startsWith("% ")) {
       throw new Error(
         `Command Exec Failed!\n${this.lastCmdMode + command}\n${result}`
       );
     }
-    let split = new RegExp("Switch.*?# ", "g").exec(result);
+    let split = new RegExp("Switch.*?# ").exec(result);
     this.lastCmdMode = split ? split[0] : this.lastCmdMode;
     return result;
   }
@@ -35,7 +35,7 @@ export class Dut {
     let result = await this.connection.exec(command);
     console.log(`[${this.conn_param.host}][s] ` + this.lastCmdMode + command);
     console.log(result);
-    let split = new RegExp("Switch.*?# ", "g").exec(result);
+    let split = new RegExp("Switch.*?# ").exec(result);
     this.lastCmdMode = split ? split[0] : this.lastCmdMode;
     return result;
   }

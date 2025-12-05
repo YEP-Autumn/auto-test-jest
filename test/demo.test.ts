@@ -19,7 +19,7 @@ test(
   "test",
   async () => {
     let pkt_buff = new EthernetPacketBuilder()
-      .setEthernet("00aa.bbcc.ddee", "1122.3344.5566", 0x0800)
+      .setEthernet("00:aa:bb:cc:dd:ee", "11:22:33:44:55:66", 0x0800)
       .setVLAN(100, 0x0800)
       .setIPv4(0xc0a80001, 0xc0a80002)
       .build();

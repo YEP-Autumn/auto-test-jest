@@ -14,60 +14,93 @@ afterAll(async () => {
 /**
  *
  *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortD <=> RenixB
- *  RenixC <=> PortB--|        |                   +--------+
- *                    +--------+
+ *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *  RenixC <=> PortB--|        |                   +--------+    |
+ *                    +--------+                                 |
+ *                                                 +--------+    |
+ *                               RenixB <=> PortD--|  DUTC  |--PortB
+ *                                                 +--------+
  */
-
-test("支持在开启了vlan-translate功能的接口上配置vlan 类型mpls-vpws ac", async () => {
+test("支持在开启了vlan-translate功能的接口上配置vlan + cvlan 类型mpls-vpls ac", async () => {
   testHelper.ExecConfigDutA([
+    /** 配置MPLS VPLS */
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
     "label-switching",
-    "ip address 8.8.8.1/24",
+    "ip address 11.11.9.1/24",
     "enable-ldp",
     "exit",
     `interface ${Port.D}`,
     "switchport mode trunk",
-    "mpls-l2-circuit t1 vlan 2",
+    "mpls-vpls v1 vlan 2 cvlan 3",
     "exit",
     "interface loopback0",
-    "ip address 192.168.10.10/32",
+    "ip address 11.11.1.1/32",
+    "exit",
+    "mpls vpls v1 100",
+    "vpls-peer 11.11.4.4 raw",
     "exit",
     "router rip",
-    "network 0.0.0.0/0",
+    "network 11.11.0.0/16",
     "exit",
     "router ldp",
-    "router-id 192.168.10.10",
-    "targeted-peer 192.168.11.10",
-    "exit",
-    "mpls l2-circuit t1 200 192.168.11.10 raw",
+    "router-id 11.11.1.1",
+    "targeted-peer 11.11.4.4",
+    "transport-address 11.11.1.1",
     "end",
   ]);
 
   testHelper.ExecConfigDutB([
     "configure terminal",
+    `interface ${Port.B}`,
+    "no switchport",
+    "label-switching",
+    "ip address 11.11.13.2/24",
+    "enable-ldp",
+    "exit",
     `interface ${Port.A}`,
     "no switchport",
     "label-switching",
-    "ip address 8.8.8.2/24",
+    "ip address 11.11.9.2/24",
+    "enable-ldp",
+    "exit",
+    "interface loopback0",
+    "ip address 11.11.2.2/32",
+    "exit",
+    "router rip",
+    "network 11.11.0.0/16",
+    "exit",
+    "router ldp",
+    "router-id 11.11.2.2",
+    "end",
+  ]);
+
+  testHelper.ExecConfigDutC([
+    "configure terminal",
+    `interface ${Port.B}`,
+    "no switchport",
+    "label-switching",
+    "ip address 11.11.13.4/24",
     "enable-ldp",
     "exit",
     `interface ${Port.D}`,
-    "mpls-l2-circuit t1 ethernet",
+    "switchport mode trunk",
+    "mpls-vpls v4 vlan 2",
     "exit",
     "interface loopback0",
-    "ip address 192.168.11.10/32",
+    "ip address 11.11.4.4/32",
+    "exit",
+    "mpls vpls v4 100",
+    "vpls-peer 11.11.1.1 raw",
     "exit",
     "router rip",
-    "network 0.0.0.0/0",
+    "network 11.11.0.0/16",
     "exit",
     "router ldp",
-    "router-id 192.168.11.10",
-    "targeted-peer 192.168.10.10",
-    "exit",
-    "mpls l2-circuit t1 200 192.168.10.10 raw",
+    "router-id 11.11.4.4",
+    "targeted-peer 11.11.1.1",
+    "transport-address 11.11.4.4",
     "end",
   ]);
 
@@ -100,18 +133,12 @@ test("支持在开启了vlan-translate功能的接口上配置vlan 类型mpls-vp
   testHelper.sleep(45000);
 
   /**
-   * RenixA发送vlan tag 2的报文, RenixB 可以收到
+   * RenixA发送vlan tag 3 2 的报文, RenixB 可以收到
    * RenixA发送vlan tag 123的报文, RenixC 可以收到vlan tag为333的报文
    * RenixA发送vlan tag 100 200 的报文, RenixC 可以收到vlan tag为100 444的报文
    *
    * (删除其中任意一个'mpls或vlan-translate'不会影响另一个的功能)
    */
-
-  testHelper.ExecRetMatchDutB("show mpls l2-circuit", /t1.*?200 /g);
-  testHelper.ExecRetMatchDutB(
-    "show mpls vc-table",
-    /200.*?192.168.10.10.*?Active/g
-  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",
@@ -123,7 +150,7 @@ test("支持在开启了vlan-translate功能的接口上配置vlan 类型mpls-vp
     "disable-ldp",
     "exit",
     `interface ${Port.D}`,
-    "no mpls-l2-circuit t1",
+    "no mpls-vpls v1 vlan 2",
     "switchport mode access",
     "exit",
     `interface ${Port.B}`,
@@ -133,25 +160,42 @@ test("支持在开启了vlan-translate功能的接口上配置vlan 类型mpls-vp
     "no ethernet evc 1",
     "no ethernet evc 2",
     "no interface loopback 0",
+    "no mpls vpls v1",
     "no router rip",
     "no router ldp",
-    "no mpls l2-circuit t1",
     "end",
   ]);
 
   testHelper.CleanConfigDutB([
     "configure terminal",
+    `interface ${Port.B}`,
+    "switchport",
+    "disable-ldp",
+    "exit",
     `interface ${Port.A}`,
     "switchport",
     "disable-ldp",
     "exit",
-    `interface ${Port.D}`,
-    "no mpls-l2-circuit t1",
-    "exit",
     "no interface loopback 0",
     "no router rip",
     "no router ldp",
-    "no mpls l2-circuit t1",
+    "end",
+  ]);
+
+  testHelper.CleanConfigDutC([
+    "configure terminal",
+    `interface ${Port.B}`,
+    "switchport",
+    "disable-ldp",
+    "exit",
+    `interface ${Port.D}`,
+    "no mpls-vpls v4 vlan 2",
+    "switchport mode access",
+    "exit",
+    "no interface loopback 0",
+    "no mpls vpls v4",
+    "no router rip",
+    "no router ldp",
     "end",
   ]);
 

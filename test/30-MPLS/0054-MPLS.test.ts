@@ -1,4 +1,8 @@
 import { Port } from "../../utils";
+import {
+  EthernetPacketBuilder,
+  EthernetPacketValidator,
+} from "../../utils/stream/packet";
 import { TestHelper } from "../../utils/TestHelper";
 
 let testHelper: TestHelper;
@@ -21,7 +25,7 @@ afterAll(async () => {
  *                               RenixB <=> PortD--|  DUTC  |--PortB
  *                                                 +--------+
  */
-test("支持在开启了flex模式的dot1q-tunne接口上配置vlan类型的 mpls-vpls ac", async () => {
+test("支持在开启了flex模式的dot1q-tunne接口上配置vlan + cvlan类型的 mpls-vpls ac", async () => {
   /** 配置 MPLS VPLS */
   testHelper.ExecConfigDutA([
     "configure terminal",
@@ -34,7 +38,7 @@ test("支持在开启了flex模式的dot1q-tunne接口上配置vlan类型的 mpl
     `interface ${Port.D}`,
     "switchport mode dot1q-tunnel",
     "switchport dot1q-tunnel type flex",
-    "mpls-vpls v1 vlan 2",
+    "mpls-vpls v1 vlan 2 cvlan 3",
     "exit",
     "interface loopback0",
     "ip address 11.11.1.1/32",
@@ -153,17 +157,17 @@ test("支持在开启了flex模式的dot1q-tunne接口上配置vlan类型的 mpl
   testHelper.sleep(45000);
 
   /**
-   * RenixA 发送 vlan 2的报文时, RenixB能够收到报文
+   * RenixA 发送 vlan 3 2 的报文时, RenixB能够收到报文
    * RenixA 发送 vlan 200的报文时, RenixC能够收到vlan 400的报文
    * RenixA 发送 vlan 201 202的报文时, RenixC能够收到vlan 201 401的报文
    * RenixA 发送 vlan 203的报文时, RenixC能够收到vlan 203 402的报文
    * RenixA 发送 vlan 不带vlan的报文时, RenixC能够收到vlan 403的报文
    * RenixA 发送 vlan 100-150的报文时, RenixC能够收到携带内层100-150, 外层404的报文
    * RenixA 发送 vlan 其他vlan的报文时, RenixC能够收到 报文原vlan + 外层 vlan 500的报文 (需要portB和portD都配置允许该vlan通行)
-   * 
+   *
    * (携带vlan 100 200的报文从PortB接口出时, 会剥离两层tag)
    * (携带vlan 200 300的报文从PortB接口出时, 会替换为vlan 123)
-   * 
+   *
    */
 
   testHelper.CleanConfigDutA([

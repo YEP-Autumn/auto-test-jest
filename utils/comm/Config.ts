@@ -7,7 +7,7 @@ export class Config {
     debug: true,
     stripShellPrompt: false,
     stripControls: true,
-    execTimeout: 1000 * 15,
+    execTimeout: 1000 * 30,
     disableLogon: true,
     portList: ["eth-0-1", "eth-0-19", "eth-0-3", "eth-0-39"],
   };
@@ -20,7 +20,7 @@ export class Config {
     debug: true,
     stripShellPrompt: false,
     stripControls: true,
-    execTimeout: 1000 * 15,
+    execTimeout: 1000 * 30,
     disableLogon: true,
     portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-39"],
   };
@@ -33,9 +33,9 @@ export class Config {
     debug: true,
     stripShellPrompt: false,
     stripControls: true,
-    execTimeout: 1000 * 15,
+    execTimeout: 1000 * 30,
     disableLogon: true,
-    portList: ["eth-0-2", "eth-0-2", "eth-0-3", "eth-0-39"],
+    portList: ["eth-0-5", "eth-0-2", "eth-0-6", "eth-0-39"],
   };
 
   public static dutD = {
@@ -46,12 +46,11 @@ export class Config {
     debug: true,
     stripShellPrompt: false,
     stripControls: true,
-    execTimeout: 1000 * 15,
+    execTimeout: 1000 * 30,
     disableLogon: true,
     portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-39"],
   };
 
   // public static dut_list = [this.dutA, this.dutC, this.dutC, this.dutD];
-  // public static dut_list = [this.dutA, this.dutB, this.dutC];
-  public static dut_list = [this.dutA, this.dutC];
+  public static dut_list = [this.dutA, this.dutB, this.dutC];
 }

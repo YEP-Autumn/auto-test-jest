@@ -19,14 +19,14 @@ test(
   "test",
   async () => {
     let pkt_buff = new EthernetPacketBuilder()
-      .setEthernet("00:aa:bb:cc:dd:ee", "11:22:33:44:55:66", 0x0800)
+      .setEthernet("00:aa:bb:cc:dd:ee", "11:22:33:44:55:66", 0x8100)
       .setVLAN(100, 0x0800)
       .setIPv4(0xc0a80001, 0xc0a80002)
       .build();
 
-    await streamBackendApi.streamPacketSend(pkt_buff, {
-      count: 5,
-      interval: 1000,
+    await streamBackendApi.streamPacketSendStart(pkt_buff, {
+      port: "eth1",
+      count: 100,
     });
   },
   1000 * 60 * 10

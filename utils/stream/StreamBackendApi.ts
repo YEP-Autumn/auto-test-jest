@@ -2,15 +2,15 @@ import axios, { AxiosError } from "axios";
 import FormData from "form-data";
 
 export class StreamBackendApi {
-  // api = axios.create({ baseURL: "http://127.0.0.1:8000/stream_backend" });
-  api = axios.create({ baseURL: "http://172.16.9.1:8000/stream_backend" });
+  api = axios.create({ baseURL: "http://127.0.0.1:8000/stream_backend" });
+  // api = axios.create({ baseURL: "http://172.16.9.1:8000/stream_backend" });
 
   /**
    * Send a packet as multipart/form-data. You can pass additional fields
    * via `fields`. The binary is sent under the `file` field (filename can
    * be overridden via `filename`).
    */
-  async streamPacketSend(
+  async streamPacketSendStart(
     binary: Buffer,
     fields?: Record<string, any>,
     filename = "packet.buffer"
@@ -61,4 +61,12 @@ export class StreamBackendApi {
       throw err;
     }
   }
+
+  async streamPacketSendStop(port: string) {}
+
+  async streamPacketCaptureStart(port: string) {}
+
+  async streamPacketCaptureStop(port: string) {}
+
+  async streamPacketCaptureGet(port: string) {}
 }

@@ -53,3 +53,7 @@ struct FieldMeta {
 struct Packet {
   1: list<FieldMeta> field_list
 }
+
+struct PacketList {
+  1: list<Packet> pkt_list
+}

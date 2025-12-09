@@ -1,6 +1,11 @@
 import axios, { AxiosError } from "axios";
 import FormData from "form-data";
 
+export enum RenixPort {
+  A = "//192.168.2.11/5/13",
+  B = "//192.168.2.11/5/14",
+}
+
 export class StreamBackendApi {
   api = axios.create({ baseURL: "http://127.0.0.1:8000/stream_backend" });
   // api = axios.create({ baseURL: "http://172.16.9.1:8000/stream_backend" });

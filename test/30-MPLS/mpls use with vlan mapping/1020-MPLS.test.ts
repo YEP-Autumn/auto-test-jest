@@ -1,9 +1,5 @@
-import { Port } from "../../utils";
-import {
-  EthernetPacketBuilder,
-  EthernetPacketValidator,
-} from "../../utils/stream/packet";
-import { TestHelper } from "../../utils/TestHelper";
+import { Port } from "../../../utils";
+import { TestHelper } from "../../../utils/TestHelper";
 
 let testHelper: TestHelper;
 
@@ -18,94 +14,61 @@ afterAll(async () => {
 /**
  *
  *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *  RenixC <=> PortB--|        |                   +--------+    |
- *                    +--------+                                 |
- *                                                 +--------+    |
- *                               RenixB <=> PortD--|  DUTC  |--PortB
- *                                                 +--------+
+ *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortD <=> RenixB
+ *  RenixC <=> PortB--|        |                   +--------+
+ *                    +--------+
  */
-test("支持在开启了flex模式的dot1q-tunne接口上配置vlan + cvlan类型的 mpls-vpls ac", async () => {
-  /** 配置 MPLS VPLS */
+
+test("支持在开启了flex模式的dot1q-tunne接口上配置vlan类型的 mpls-vpws ac", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
     "label-switching",
-    "ip address 11.11.9.1/24",
+    "ip address 8.8.8.1/24",
     "enable-ldp",
     "exit",
     `interface ${Port.D}`,
     "switchport mode dot1q-tunnel",
     "switchport dot1q-tunnel type flex",
-    "mpls-vpls v1 vlan 2 cvlan 3",
+    "mpls-l2-circuit t1 vlan 2",
     "exit",
     "interface loopback0",
-    "ip address 11.11.1.1/32",
-    "exit",
-    "mpls vpls v1 100",
-    "vpls-peer 11.11.4.4 raw",
+    "ip address 192.168.10.10/32",
     "exit",
     "router rip",
-    "network 11.11.0.0/16",
+    "network 0.0.0.0/0",
     "exit",
     "router ldp",
-    "router-id 11.11.1.1",
-    "targeted-peer 11.11.4.4",
-    "transport-address 11.11.1.1",
+    "router-id 192.168.10.10",
+    "targeted-peer 192.168.11.10",
+    "exit",
+    "mpls l2-circuit t1 200 192.168.11.10 raw",
     "end",
   ]);
 
   testHelper.ExecConfigDutB([
     "configure terminal",
-    `interface ${Port.B}`,
-    "no switchport",
-    "label-switching",
-    "ip address 11.11.13.2/24",
-    "enable-ldp",
-    "exit",
     `interface ${Port.A}`,
     "no switchport",
     "label-switching",
-    "ip address 11.11.9.2/24",
-    "enable-ldp",
-    "exit",
-    "interface loopback0",
-    "ip address 11.11.2.2/32",
-    "exit",
-    "router rip",
-    "network 11.11.0.0/16",
-    "exit",
-    "router ldp",
-    "router-id 11.11.2.2",
-    "end",
-  ]);
-
-  testHelper.ExecConfigDutC([
-    "configure terminal",
-    `interface ${Port.B}`,
-    "no switchport",
-    "label-switching",
-    "ip address 11.11.13.4/24",
+    "ip address 8.8.8.2/24",
     "enable-ldp",
     "exit",
     `interface ${Port.D}`,
-    "switchport mode trunk",
-    "mpls-vpls v4 vlan 2",
+    "mpls-l2-circuit t1 ethernet",
     "exit",
     "interface loopback0",
-    "ip address 11.11.4.4/32",
-    "exit",
-    "mpls vpls v4 100",
-    "vpls-peer 11.11.1.1 raw",
+    "ip address 192.168.11.10/32",
     "exit",
     "router rip",
-    "network 11.11.0.0/16",
+    "network 0.0.0.0/0",
     "exit",
     "router ldp",
-    "router-id 11.11.4.4",
-    "targeted-peer 11.11.1.1",
-    "transport-address 11.11.4.4",
+    "router-id 192.168.11.10",
+    "targeted-peer 192.168.10.10",
+    "exit",
+    "mpls l2-circuit t1 200 192.168.10.10 raw",
     "end",
   ]);
 
@@ -156,14 +119,20 @@ test("支持在开启了flex模式的dot1q-tunne接口上配置vlan + cvlan类�
 
   testHelper.sleep(45000);
 
+  testHelper.ExecRetMatchDutB("show mpls l2-circuit", /t1.*?200 /g);
+  testHelper.ExecRetMatchDutB(
+    "show mpls vc-table",
+    /200.*?192.168.10.10.*?Active/g
+  );
+
   /**
-   * RenixA 发送 vlan 3 2 的报文时, RenixB能够收到报文
+   * RenixA 发送 vlan 2的报文时, RenixB能够收到报文
    * RenixA 发送 vlan 200的报文时, RenixC能够收到vlan 400的报文
    * RenixA 发送 vlan 201 202的报文时, RenixC能够收到vlan 201 401的报文
    * RenixA 发送 vlan 203的报文时, RenixC能够收到vlan 203 402的报文
    * RenixA 发送 vlan 不带vlan的报文时, RenixC能够收到vlan 403的报文
    * RenixA 发送 vlan 100-150的报文时, RenixC能够收到携带内层100-150, 外层404的报文
-   * RenixA 发送 vlan 其他vlan的报文时, RenixC能够收到 报文原vlan + 外层 vlan 500的报文 (需要portB和portD都配置允许该vlan通行)
+   * RenixA 发送 vlan 其他vlan的报文时, RenixC能够收到vlan 500的报文 (需要portB和portD都配置允许该vlan通行)
    *
    * (携带vlan 100 200的报文从PortB接口出时, 会剥离两层tag)
    * (携带vlan 200 300的报文从PortB接口出时, 会替换为vlan 123)
@@ -180,7 +149,7 @@ test("支持在开启了flex模式的dot1q-tunne接口上配置vlan + cvlan类�
     "disable-ldp",
     "exit",
     `interface ${Port.D}`,
-    "no mpls-vpls v1 vlan 2",
+    "no mpls-l2-circuit t1",
     "switchport mode access",
     "exit",
     `interface ${Port.B}`,
@@ -195,42 +164,26 @@ test("支持在开启了flex模式的dot1q-tunne接口上配置vlan + cvlan类�
     "no ethernet evc 6",
     "no raw vlan group 1",
     "no interface loopback 0",
-    "no mpls vpls v1",
     "no router rip",
     "no router ldp",
+    "no mpls l2-circuit t1",
     "end",
   ]);
 
   testHelper.CleanConfigDutB([
     "configure terminal",
-    `interface ${Port.B}`,
-    "switchport",
-    "disable-ldp",
-    "exit",
     `interface ${Port.A}`,
     "switchport",
     "disable-ldp",
     "exit",
-    "no interface loopback 0",
-    "no router rip",
-    "no router ldp",
-    "end",
-  ]);
-
-  testHelper.CleanConfigDutC([
-    "configure terminal",
-    `interface ${Port.B}`,
-    "switchport",
-    "disable-ldp",
-    "exit",
     `interface ${Port.D}`,
-    "no mpls-vpls v4 vlan 2",
+    "no mpls-l2-circuit t1",
     "switchport mode access",
     "exit",
     "no interface loopback 0",
-    "no mpls vpls v4",
     "no router rip",
     "no router ldp",
+    "no mpls l2-circuit t1",
     "end",
   ]);
 

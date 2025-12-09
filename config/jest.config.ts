@@ -34,22 +34,22 @@ const config: Config = {
     // "test/30-MPLS/0010-MPLS.test.ts",
     // "test/30-MPLS/0020-MPLS.test.ts",
     // "test/30-MPLS/0030-MPLS.test.ts",
-    // "test/30-MPLS/0031-MPLS.test.ts",
-    // "test/30-MPLS/0032-MPLS.test.ts",
     // "test/30-MPLS/0040-MPLS.test.ts",
-    "test/30-MPLS/0050-MPLS.test.ts",
-    // "test/30-MPLS/0051-MPLS.test.ts",
-    // "test/30-MPLS/0052-MPLS.test.ts",
-    // "test/30-MPLS/0053-MPLS.test.ts",
-    // "test/30-MPLS/0054-MPLS.test.ts",
+    // "test/30-MPLS/0050-MPLS.test.ts",
     // "test/30-MPLS/0060-MPLS.test.ts",
-    // "test/30-MPLS/1000-MPLS.test.ts",
-    // "test/30-MPLS/1010-MPLS.test.ts",
-    // "test/30-MPLS/1020-MPLS.test.ts",
-    // "test/30-MPLS/1030-MPLS.test.ts",
-    // "test/30-MPLS/1040-MPLS.test.ts",
-    // "test/30-MPLS/1050-MPLS.test.ts",
-    // "test/30-MPLS/1060-MPLS.test.ts",
+    // "test/30-MPLS/mpls use with vlan mapping/1010-MPLS.test.ts",
+    // "test/30-MPLS/mpls use with vlan mapping/1020-MPLS.test.ts",
+    // "test/30-MPLS/mpls use with vlan mapping/1030-MPLS.test.ts",
+    // "test/30-MPLS/mpls use with vlan mapping/1040-MPLS.test.ts",
+    // "test/30-MPLS/mpls use with vlan mapping/1050-MPLS.test.ts",
+    // "test/30-MPLS/mpls use with vlan mapping/1060-MPLS.test.ts",
+    // "test/30-MPLS/1000-MPLS.test.ts", // 用于测试bug
+    // "test/30-MPLS/1010-MPLS.test.ts", // 用于测试bug
+    // "test/30-MPLS/1020-MPLS.test.ts", // 用于测试bug
+    // "test/30-MPLS/1030-MPLS.test.ts", // 用于测试bug
+    // "test/30-MPLS/1040-MPLS.test.ts", // 用于测试bug
+    // "test/30-MPLS/1050-MPLS.test.ts", // 用于测试bug
+    // "test/30-MPLS/1060-MPLS.test.ts", // 用于测试bug
     // "test/41-VLAN-DOT1Q-TUNNEL/0010-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0020-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0030-VLAN-TUNNEL.test.ts",

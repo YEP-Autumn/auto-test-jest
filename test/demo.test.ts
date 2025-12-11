@@ -1,6 +1,9 @@
 import { ControllerApi } from "../utils/controller/ControllerApi";
-import { EthernetPacketBuilder } from "../utils/stream/packet";
-import { StreamBackendApi } from "../utils/stream/StreamBackendApi";
+import {
+  EthernetPacketBuilder,
+  EthernetPacketParser,
+} from "../utils/stream/packet";
+import { RenixPort, StreamBackendApi } from "../utils/stream/StreamBackendApi";
 import { ThriftPresets } from "../utils/stream/thrift-protocol.factory";
 import { TestHelper } from "../utils/TestHelper";
 
@@ -19,15 +22,24 @@ test(
   "test",
   async () => {
     let pkt_buff = new EthernetPacketBuilder()
-      .setEthernet("00:aa:bb:cc:dd:ee", "11:22:33:44:55:66", 0x8100)
-      .setVLAN(100, 0x0800)
+      // .setEthernet("00:aa:bb:cc:dd:ee", "11:22:33:44:55:66", 0x8100)
+      .setEthernet("00:00:00:00:00:ee", "00:00:00:00:00:66", 0x8100)
+      .setVLAN(2, 0x0800)
       .setIPv4(0xc0a80001, 0xc0a80002)
-      .build();
+      .build(ThriftPresets.STREAMING);
 
-    await streamBackendApi.streamPacketSendStart(pkt_buff, {
-      port: "eth1",
-      count: 100,
-    });
+    const parser = new EthernetPacketParser();
+    const packet = parser.parse(pkt_buff);
+    console.log(JSON.stringify(packet)); // true
+    // 或直接获取校验器
+    const validator = parser.parseToValidator(pkt_buff);
+    console.log(validator.hasEthernet()); // true
+    console.log(validator.validateEthernet("00:00:00:00:00:ee"));
+
+    // await streamBackendApi.streamPacketSendStart(pkt_buff, {
+    //   port: RenixPort.A,
+    //   count: 100,
+    // });
   },
   1000 * 60 * 10
 );

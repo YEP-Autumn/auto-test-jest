@@ -3,12 +3,13 @@ import {
   Field,
   FieldMeta,
   FieldType,
-  IEthernetPacketBuilder,
-  IEthernetPacketValidator,
+  IEthernetII,
   IFieldMeta,
+  IIPv4,
   IPacket,
   IPv4,
   IValidationResult,
+  IVLAN,
   Packet,
   VLAN,
   thrift,
@@ -22,12 +23,12 @@ import {
 /**
  * 以太网报文构建器实现
  */
-export class EthernetPacketBuilder implements IEthernetPacketBuilder {
+export class EthernetPacketBuilder {
   private fieldList: IFieldMeta[] = [];
   /**
    * 设置以太网II帧
    */
-  setEthernet(dst: string, src: string, type: number): IEthernetPacketBuilder {
+  setEthernet(dst: string, src: string, type: number): EthernetPacketBuilder {
     const ethernet = new EthernetII({
       dst,
       src,
@@ -46,7 +47,7 @@ export class EthernetPacketBuilder implements IEthernetPacketBuilder {
   /**
    * 设置VLAN标签
    */
-  setVLAN(vlan: number, type: number): IEthernetPacketBuilder {
+  setVLAN(vlan: number, type: number): EthernetPacketBuilder {
     const vlanField = new VLAN({
       vlan,
       type,
@@ -64,7 +65,7 @@ export class EthernetPacketBuilder implements IEthernetPacketBuilder {
   /**
    * 设置IPv4协议头
    */
-  setIPv4(srcIp: number, dstIp: number): IEthernetPacketBuilder {
+  setIPv4(srcIp: number, dstIp: number): EthernetPacketBuilder {
     const ipv4 = new IPv4({
       src_ip: srcIp,
       dst_ip: dstIp,
@@ -116,7 +117,7 @@ export class EthernetPacketBuilder implements IEthernetPacketBuilder {
   /**
    * 清空所有字段
    */
-  clear(): IEthernetPacketBuilder {
+  clear(): EthernetPacketBuilder {
     this.fieldList = [];
     return this;
   }
@@ -125,7 +126,7 @@ export class EthernetPacketBuilder implements IEthernetPacketBuilder {
 /**
  * 以太网报文校验器实现
  */
-export class EthernetPacketValidator implements IEthernetPacketValidator {
+export class EthernetPacketValidator {
   private packet: IPacket;
 
   constructor(packet: IPacket) {
@@ -336,91 +337,300 @@ export class EthernetPacketValidator implements IEthernetPacketValidator {
   }
 }
 
-// function make_packet_buffer() {
+/**
+ * 解析结果接口
+ */
+export interface IParseResult {
+  /** 解析后的报文对象，解析失败时为 null */
+  packet: IPacket | null;
+  /** 解析过程中的错误列表 */
+  errors: string[];
+  /** 成功使用的策略名称，解析失败时为 null */
+  strategy: string | null;
+}
 
-//   let packet = new Packet();
+/**
+ * 解析策略定义
+ */
+interface IParseStrategy {
+  /** 策略名称 */
+  name: string;
+  /** 协议类型 */
+  protocolType: ThriftFullProtocolType;
+  /** 是否需要剥离帧头 */
+  stripFrame: boolean;
+  /** 帧头字节序 */
+  byteOrder?: "big" | "little";
+  /** 帧头长度 */
+  framePrefixLen?: number;
+}
 
-//   let ethernet = new EthernetII();
-//   ethernet.src = "0001.0203.1002";
-//   ethernet.dst = "0001.0203.1003";
-//   ethernet.type = 0x8100;
-//   console.log(ethernet);
+/**
+ * 以太网报文解析器实现
+ * 用于从二进制数据反序列化报文
+ * 支持自动识别多种 Transport + Protocol 组合
+ */
+export class EthernetPacketParser {
+  private factory: ThriftProtocolFactory;
 
-//   let vlan = new VLAN();
-//   vlan.vlan = 100;
-//   vlan.type = 0x0800;
-//   console.log(vlan);
+  /** 解析策略列表，按优先级排序 */
+  private static readonly PARSE_STRATEGIES: IParseStrategy[] = [
+    // 策略 1: Framed + Compact (big-endian)
+    {
+      name: "compact-framed-be-4byte",
+      protocolType: ThriftFullProtocolType.FRAMED_COMPACT,
+      stripFrame: true,
+      byteOrder: "big",
+      framePrefixLen: 4,
+    },
+    // 策略 2: Framed + Compact (little-endian)
+    {
+      name: "compact-framed-le-4byte",
+      protocolType: ThriftFullProtocolType.FRAMED_COMPACT,
+      stripFrame: true,
+      byteOrder: "little",
+      framePrefixLen: 4,
+    },
+    // 策略 3: Framed + Binary (big-endian)
+    {
+      name: "binary-framed-be-4byte",
+      protocolType: ThriftFullProtocolType.FRAMED_BINARY,
+      stripFrame: true,
+      byteOrder: "big",
+      framePrefixLen: 4,
+    },
+    // 策略 4: Framed + Binary (little-endian)
+    {
+      name: "binary-framed-le-4byte",
+      protocolType: ThriftFullProtocolType.FRAMED_BINARY,
+      stripFrame: true,
+      byteOrder: "little",
+      framePrefixLen: 4,
+    },
+    // 策略 5: Buffered + Compact (无帧)
+    {
+      name: "compact-as-is",
+      protocolType: ThriftFullProtocolType.BUFFERED_COMPACT,
+      stripFrame: false,
+    },
+    // 策略 6: Buffered + Binary (无帧)
+    {
+      name: "binary-as-is",
+      protocolType: ThriftFullProtocolType.BUFFERED_BINARY,
+      stripFrame: false,
+    },
+  ];
 
-//   let ipv4 = new IPv4();
-//   ipv4.src_ip = 100000;
-//   ipv4.dst_ip = 200000;
-//   console.log(ipv4);
+  constructor() {
+    this.factory = new ThriftProtocolFactory(thrift);
+  }
 
-//   let fieldMeta = new FieldMeta();
-//   let fieldMeta2 = new FieldMeta();
-//   let fieldMeta3 = new FieldMeta();
+  /**
+   * 尝试使用指定协议反序列化数据
+   * @param data 二进制数据
+   * @param protocolType 协议类型
+   * @returns 解析后的 Packet 对象，失败时抛出异常
+   */
+  private tryDeserializeWithProtocol(
+    data: Buffer,
+    protocolType: ThriftFullProtocolType
+  ): IPacket {
+    const { protocol } = this.factory.createReaderByFullType(protocolType, data);
+    const packet = new Packet();
+    packet.read(protocol);
+    return packet;
+  }
 
-//   let field = new Field();
-//   let field2 = new Field();
-//   let field3 = new Field();
+  /**
+   * 剥离帧头并尝试反序列化
+   * @param data 包含帧头的二进制数据
+   * @param framePrefixLen 帧头长度
+   * @param byteOrder 字节序
+   * @param protocolType 协议类型
+   * @returns 解析后的 Packet 对象，失败时返回 null
+   */
+  private tryStripFrameAndDeserialize(
+    data: Buffer,
+    framePrefixLen: number,
+    byteOrder: "big" | "little",
+    protocolType: ThriftFullProtocolType
+  ): IPacket | null {
+    if (data.length <= framePrefixLen) {
+      return null;
+    }
 
-//   field.ether = ethernet;
-//   field2.vlan = vlan;
-//   field3.ipv4 = ipv4;
+    try {
+      // 读取帧长度
+      let frameLen: number;
+      if (byteOrder === "big") {
+        frameLen = data.readUInt32BE(0);
+      } else {
+        frameLen = data.readUInt32LE(0);
+      }
 
-//   fieldMeta.field = field;
-//   fieldMeta.type = FieldType.EthernetII;
+      // 验证帧长度是否合理
+      if (frameLen <= 0 || frameLen > data.length - framePrefixLen) {
+        return null;
+      }
 
-//   fieldMeta2.field = field2;
-//   fieldMeta2.type = FieldType.VLAN;
+      // 剥离帧头
+      const stripped = data.subarray(
+        framePrefixLen,
+        framePrefixLen + frameLen
+      );
 
-//   fieldMeta3.field = field3;
-//   fieldMeta3.type = FieldType.IPV4;
+      return this.tryDeserializeWithProtocol(stripped, protocolType);
+    } catch {
+      return null;
+    }
+  }
 
-//   packet.field_list = [fieldMeta, fieldMeta2, fieldMeta3];
+  /**
+   * 从 Buffer 反序列化报文（自动识别协议）
+   * 尝试多种反序列化策略以处理不同的 Thrift 协议和帧格式
+   *
+   * 策略尝试顺序：
+   * 1. TFramedTransport (4字节 big-endian) + TCompactProtocol
+   * 2. TFramedTransport (4字节 little-endian) + TCompactProtocol
+   * 3. TFramedTransport (4字节 big-endian) + TBinaryProtocol
+   * 4. TFramedTransport (4字节 little-endian) + TBinaryProtocol
+   * 5. TCompactProtocol 无帧
+   * 6. TBinaryProtocol 无帧
+   *
+   * @param buffer 序列化后的报文数据
+   * @returns 解析结果，包含报文对象、错误列表和使用的策略
+   */
+  parse(buffer: Buffer): IParseResult {
+    const errors: string[] = [];
 
-//   console.log(packet.field_list[0]);
+    for (const strategy of EthernetPacketParser.PARSE_STRATEGIES) {
+      try {
+        let packet: IPacket | null = null;
 
-//   let capturedFlushBuffer: Buffer | null = null;
-//   const transport: any = new TBufferedTransport(null, (msg: Buffer) => {
-//     capturedFlushBuffer = msg;
-//   });
-//   // const transport: any = new TFramedTransport(null, (msg: Buffer) => {
-//   //   capturedFlushBuffer = msg;
-//   // });
-//   // const protocol: any = new TCompactProtocol(transport);
-//   const protocol: any = new TBinaryProtocol(transport);
+        if (strategy.stripFrame) {
+          packet = this.tryStripFrameAndDeserialize(
+            buffer,
+            strategy.framePrefixLen!,
+            strategy.byteOrder!,
+            strategy.protocolType
+          );
+        } else {
+          packet = this.tryDeserializeWithProtocol(buffer, strategy.protocolType);
+        }
 
-//   // 3. 执行写入操作
-//   packet.write(protocol);
-//   if (typeof transport.flush === "function") {
-//     transport.flush();
-//   }
+        if (packet && packet.field_list && packet.field_list.length > 0) {
+          return {
+            packet,
+            errors,
+            strategy: strategy.name,
+          };
+        }
+      } catch (e) {
+        const errorMsg = `${strategy.name}: ${e instanceof Error ? e.message : String(e)}`;
+        errors.push(errorMsg);
+      }
+    }
 
-//   // 4. 获取序列化后的 Buffer（优先使用 flush 回调提供的数据）
-//   let serializedBuffer: any = Buffer.alloc(0);
-//   if (capturedFlushBuffer && Buffer.isBuffer(capturedFlushBuffer)) {
-//     serializedBuffer = capturedFlushBuffer;
-//   } else if (
-//     Array.isArray(transport.outBuffers) &&
-//     transport.outBuffers.length > 0
-//   ) {
-//     const bufs = transport.outBuffers.map((b: any) =>
-//       Buffer.isBuffer(b) ? b : Buffer.from(b)
-//     );
-//     serializedBuffer = Buffer.concat(bufs);
-//   } else if (Buffer.isBuffer(transport.buffer)) {
-//     serializedBuffer = transport.buffer;
-//   } else if (typeof transport.getvalue === "function") {
-//     serializedBuffer = transport.getvalue();
-//   } else if (transport.outBuffer && Buffer.isBuffer(transport.outBuffer)) {
-//     serializedBuffer = transport.outBuffer;
-//   }
+    return {
+      packet: null,
+      errors,
+      strategy: null,
+    };
+  }
 
-//   console.log(
-//     "Serialized length:",
-//     serializedBuffer ? serializedBuffer.length : 0
-//   );
-//   console.log("Hex Data:", serializedBuffer.toString("hex"));
-//   return serializedBuffer;
-// }
+  /**
+   * 从 Buffer 反序列化报文（指定协议类型）
+   * @param buffer 序列化后的报文数据
+   * @param protocolType 协议类型
+   * @returns 解析后的 Packet 对象
+   */
+  parseWithProtocol(
+    buffer: Buffer,
+    protocolType: ThriftFullProtocolType
+  ): IPacket {
+    return this.tryDeserializeWithProtocol(buffer, protocolType);
+  }
+
+  /**
+   * 从 Buffer 反序列化并返回校验器（自动识别协议）
+   * @param buffer 序列化后的报文数据
+   * @returns 报文校验器实例
+   * @throws 如果所有策略都失败则抛出异常
+   */
+  parseToValidator(buffer: Buffer): EthernetPacketValidator {
+    const result = this.parse(buffer);
+    if (!result.packet) {
+      throw new Error(
+        `无法解析报文，尝试的策略均失败：\n${result.errors.join("\n")}`
+      );
+    }
+    return new EthernetPacketValidator(result.packet);
+  }
+
+  /**
+   * 从 Buffer 反序列化并返回校验器（指定协议类型）
+   * @param buffer 序列化后的报文数据
+   * @param protocolType 协议类型
+   * @returns 报文校验器实例
+   */
+  parseToValidatorWithProtocol(
+    buffer: Buffer,
+    protocolType: ThriftFullProtocolType
+  ): EthernetPacketValidator {
+    const packet = this.parseWithProtocol(buffer, protocolType);
+    return new EthernetPacketValidator(packet);
+  }
+
+  /**
+   * 提取以太网II帧信息（自动识别协议）
+   * @param buffer 序列化后的报文数据
+   * @returns 以太网II帧信息，如果不存在则返回 undefined
+   */
+  extractEthernet(buffer: Buffer): IEthernetII | undefined {
+    const result = this.parse(buffer);
+    if (!result.packet) return undefined;
+    const field = result.packet.field_list?.find(
+      (f: IFieldMeta) => f.type === FieldType.EthernetII
+    );
+    return field?.field?.ether;
+  }
+
+  /**
+   * 提取 VLAN 标签信息（自动识别协议）
+   * @param buffer 序列化后的报文数据
+   * @returns VLAN 标签信息数组
+   */
+  extractVLANs(buffer: Buffer): IVLAN[] {
+    const result = this.parse(buffer);
+    if (!result.packet) return [];
+    const fields =
+      result.packet.field_list?.filter(
+        (f: IFieldMeta) => f.type === FieldType.VLAN
+      ) || [];
+    return fields.map((f: IFieldMeta) => f.field?.vlan).filter(Boolean);
+  }
+
+  /**
+   * 提取 IPv4 协议头信息（自动识别协议）
+   * @param buffer 序列化后的报文数据
+   * @returns IPv4 协议头信息，如果不存在则返回 undefined
+   */
+  extractIPv4(buffer: Buffer): IIPv4 | undefined {
+    const result = this.parse(buffer);
+    if (!result.packet) return undefined;
+    const field = result.packet.field_list?.find(
+      (f: IFieldMeta) => f.type === FieldType.IPv4
+    );
+    return field?.field?.ipv4;
+  }
+
+  /**
+   * 提取所有字段列表（自动识别协议）
+   * @param buffer 序列化后的报文数据
+   * @returns 字段元数据列表
+   */
+  extractAllFields(buffer: Buffer): IFieldMeta[] {
+    const result = this.parse(buffer);
+    return result.packet?.field_list || [];
+  }
+}

@@ -177,6 +177,79 @@ export class ThriftProtocolFactory {
   }
 
   /**
+   * 创建用于读取的 Transport 实例
+   */
+  private createReaderTransport(
+    transportType: ThriftTransportType,
+    buffer: Buffer
+  ): any {
+    switch (transportType) {
+      case ThriftTransportType.BUFFERED: {
+        // TBufferedTransport 需要手动设置读取缓冲区
+        const transport = new this.thrift.TBufferedTransport();
+        transport.inBuf = buffer;
+        transport.writeCursor = buffer.length;
+        transport.readCursor = 0;
+        return transport;
+      }
+      case ThriftTransportType.FRAMED: {
+        // TFramedTransport 需要手动设置读取缓冲区
+        const transport = new this.thrift.TFramedTransport();
+        transport.inBuf = buffer;
+        transport.readPos = 0;
+        return transport;
+      }
+      default:
+        throw new Error(`Unknown transport type: ${transportType}`);
+    }
+  }
+
+  /**
+   * 使用完整协议类型创建用于读取的 Transport 和 Protocol
+   * @param fullType 完整协议类型
+   * @param buffer 要读取的数据缓冲区
+   */
+  createReaderByFullType(
+    fullType: ThriftFullProtocolType,
+    buffer: Buffer
+  ): IThriftProtocolInstance {
+    const config = this.parseFullProtocolType(fullType);
+    return this.createReaderByConfig(config, buffer);
+  }
+
+  /**
+   * 使用配置创建用于读取的 Transport 和 Protocol
+   * @param config 配置对象
+   * @param buffer 要读取的数据缓冲区
+   */
+  createReaderByConfig(
+    config: IThriftProtocolConfig,
+    buffer: Buffer
+  ): IThriftProtocolInstance {
+    const transport = this.createReaderTransport(config.transportType, buffer);
+    const protocol = this.createProtocol(config.protocolType, transport);
+
+    return {
+      transport,
+      protocol,
+    };
+  }
+
+  /**
+   * 使用传输和协议类型创建用于读取的实例
+   * @param transportType 传输类型
+   * @param protocolType 协议类型
+   * @param buffer 要读取的数据缓冲区
+   */
+  createReaderByTypes(
+    transportType: ThriftTransportType,
+    protocolType: ThriftProtocolType,
+    buffer: Buffer
+  ): IThriftProtocolInstance {
+    return this.createReaderByConfig({ transportType, protocolType }, buffer);
+  }
+
+  /**
    * 获取所有支持的完整协议类型
    */
   static getSupportedFullTypes(): ThriftFullProtocolType[] {

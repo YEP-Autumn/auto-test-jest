@@ -1,24 +1,51 @@
-import {
-  EthernetII,
-  Field,
-  FieldMeta,
-  FieldType,
-  IEthernetII,
-  IFieldMeta,
-  IIPv4,
-  IPacket,
-  IPv4,
-  IValidationResult,
-  IVLAN,
-  Packet,
-  VLAN,
-  thrift,
-} from "./packet.intf";
+export const thrift = require("thrift");
+const ttypes = require("../rpc/gen-nodejs/packet_types");
+
 import {
   ThriftProtocolFactory,
   ThriftFullProtocolType,
   ThriftPresets,
 } from "./thrift-protocol.factory";
+
+export const {
+  Packet,
+  EthernetII,
+  VLAN,
+  IPv4,
+  FieldMeta,
+  Field,
+  FieldType,
+  PacketList,
+} = ttypes;
+
+// 类型定义
+export type IPacket = any;
+export type IPacketList = any;
+export type IEthernetII = any;
+export type IVLAN = any;
+export type IIPv4 = any;
+export type IFieldMeta = any;
+export type IField = any;
+
+/**
+ * 验证结果接口
+ */
+export interface IValidationResult {
+  /**
+   * 验证是否通过
+   */
+  passed: boolean;
+
+  /**
+   * 错误消息
+   */
+  message?: string;
+
+  /**
+   * 实际值
+   */
+  actualValue?: any;
+}
 
 /**
  * 以太网报文构建器实现
@@ -435,7 +462,10 @@ export class EthernetPacketParser {
     data: Buffer,
     protocolType: ThriftFullProtocolType
   ): IPacket {
-    const { protocol } = this.factory.createReaderByFullType(protocolType, data);
+    const { protocol } = this.factory.createReaderByFullType(
+      protocolType,
+      data
+    );
     const packet = new Packet();
     packet.read(protocol);
     return packet;
@@ -474,10 +504,7 @@ export class EthernetPacketParser {
       }
 
       // 剥离帧头
-      const stripped = data.subarray(
-        framePrefixLen,
-        framePrefixLen + frameLen
-      );
+      const stripped = data.subarray(framePrefixLen, framePrefixLen + frameLen);
 
       return this.tryDeserializeWithProtocol(stripped, protocolType);
     } catch {
@@ -515,7 +542,10 @@ export class EthernetPacketParser {
             strategy.protocolType
           );
         } else {
-          packet = this.tryDeserializeWithProtocol(buffer, strategy.protocolType);
+          packet = this.tryDeserializeWithProtocol(
+            buffer,
+            strategy.protocolType
+          );
         }
 
         if (packet && packet.field_list && packet.field_list.length > 0) {
@@ -526,7 +556,9 @@ export class EthernetPacketParser {
           };
         }
       } catch (e) {
-        const errorMsg = `${strategy.name}: ${e instanceof Error ? e.message : String(e)}`;
+        const errorMsg = `${strategy.name}: ${
+          e instanceof Error ? e.message : String(e)
+        }`;
         errors.push(errorMsg);
       }
     }
@@ -632,5 +664,302 @@ export class EthernetPacketParser {
   extractAllFields(buffer: Buffer): IFieldMeta[] {
     const result = this.parse(buffer);
     return result.packet?.field_list || [];
+  }
+}
+
+/**
+ * PacketList 构建器实现
+ * 用于构建和序列化报文列表
+ */
+export class PacketListBuilder {
+  private packets: IPacket[] = [];
+
+  /**
+   * 添加单个报文
+   * @param packet 要添加的报文对象
+   */
+  addPacket(packet: IPacket): PacketListBuilder {
+    this.packets.push(packet);
+    return this;
+  }
+
+  /**
+   * 从 EthernetPacketBuilder 添加报文
+   * @param builder 以太网报文构建器
+   */
+  addFromBuilder(builder: EthernetPacketBuilder): PacketListBuilder {
+    const packet = new Packet({
+      field_list: builder.getFields(),
+    });
+    this.packets.push(packet);
+    return this;
+  }
+
+  /**
+   * 批量添加报文
+   * @param packets 报文数组
+   */
+  addPackets(packets: IPacket[]): PacketListBuilder {
+    this.packets.push(...packets);
+    return this;
+  }
+
+  /**
+   * 获取报文数量
+   */
+  getPacketCount(): number {
+    return this.packets.length;
+  }
+
+  /**
+   * 获取所有报文
+   */
+  getPackets(): IPacket[] {
+    return this.packets;
+  }
+
+  /**
+   * 清空报文列表
+   */
+  clear(): PacketListBuilder {
+    this.packets = [];
+    return this;
+  }
+
+  /**
+   * 构建并序列化报文列表
+   * @param protocolType 协议类型
+   * @returns 序列化后的 Buffer
+   */
+  build(protocolType: ThriftFullProtocolType = ThriftPresets.DEFAULT): Buffer {
+    let capturedFlushBuffer: Buffer | null = null;
+    const factory = new ThriftProtocolFactory(thrift);
+    const { transport, protocol } = factory.createByFullType(
+      protocolType,
+      (msg: Buffer) => {
+        capturedFlushBuffer = msg;
+      }
+    );
+
+    const packetList = new PacketList({
+      pkt_list: this.packets,
+    });
+
+    // 执行写入操作
+    packetList.write(protocol);
+    if (typeof transport.flush === "function") {
+      transport.flush();
+    }
+
+    return capturedFlushBuffer || Buffer.alloc(0);
+  }
+}
+
+/**
+ * PacketList 解析结果接口
+ */
+export interface IPacketListParseResult {
+  /** 解析后的报文列表对象，解析失败时为 null */
+  packetList: IPacketList | null;
+  /** 解析过程中的错误列表 */
+  errors: string[];
+  /** 成功使用的策略名称，解析失败时为 null */
+  strategy: string | null;
+}
+
+/**
+ * PacketList 解析器实现
+ * 用于从二进制数据反序列化报文列表
+ */
+export class PacketListParser {
+  private factory: ThriftProtocolFactory;
+
+  /** 复用与 EthernetPacketParser 相同的解析策略 */
+  private static readonly PARSE_STRATEGIES =
+    EthernetPacketParser["PARSE_STRATEGIES"];
+
+  constructor() {
+    this.factory = new ThriftProtocolFactory(thrift);
+  }
+
+  /**
+   * 尝试使用指定协议反序列化数据
+   * @param data 二进制数据
+   * @param protocolType 协议类型
+   * @returns 解析后的 PacketList 对象，失败时抛出异常
+   */
+  private tryDeserializeWithProtocol(
+    data: Buffer,
+    protocolType: ThriftFullProtocolType
+  ): IPacketList {
+    const { protocol } = this.factory.createReaderByFullType(
+      protocolType,
+      data
+    );
+    const packetList = new PacketList();
+    packetList.read(protocol);
+    return packetList;
+  }
+
+  /**
+   * 剥离帧头并尝试反序列化
+   * @param data 包含帧头的二进制数据
+   * @param framePrefixLen 帧头长度
+   * @param byteOrder 字节序
+   * @param protocolType 协议类型
+   * @returns 解析后的 PacketList 对象，失败时返回 null
+   */
+  private tryStripFrameAndDeserialize(
+    data: Buffer,
+    framePrefixLen: number,
+    byteOrder: "big" | "little",
+    protocolType: ThriftFullProtocolType
+  ): IPacketList | null {
+    if (data.length <= framePrefixLen) {
+      return null;
+    }
+
+    try {
+      // 读取帧长度
+      let frameLen: number;
+      if (byteOrder === "big") {
+        frameLen = data.readUInt32BE(0);
+      } else {
+        frameLen = data.readUInt32LE(0);
+      }
+
+      // 验证帧长度是否合理
+      if (frameLen <= 0 || frameLen > data.length - framePrefixLen) {
+        return null;
+      }
+
+      // 剥离帧头
+      const stripped = data.subarray(framePrefixLen, framePrefixLen + frameLen);
+
+      return this.tryDeserializeWithProtocol(stripped, protocolType);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * 从 Buffer 反序列化报文列表（自动识别协议）
+   * @param buffer 序列化后的报文列表数据
+   * @returns 解析结果，包含报文列表对象、错误列表和使用的策略
+   */
+  parse(buffer: Buffer): IPacketListParseResult {
+    const errors: string[] = [];
+
+    for (const strategy of PacketListParser.PARSE_STRATEGIES) {
+      try {
+        let packetList: IPacketList | null = null;
+
+        if (strategy.stripFrame) {
+          packetList = this.tryStripFrameAndDeserialize(
+            buffer,
+            strategy.framePrefixLen!,
+            strategy.byteOrder!,
+            strategy.protocolType
+          );
+        } else {
+          packetList = this.tryDeserializeWithProtocol(
+            buffer,
+            strategy.protocolType
+          );
+        }
+
+        if (
+          packetList &&
+          packetList.pkt_list &&
+          packetList.pkt_list.length > 0
+        ) {
+          return {
+            packetList,
+            errors,
+            strategy: strategy.name,
+          };
+        }
+      } catch (e) {
+        const errorMsg = `${strategy.name}: ${
+          e instanceof Error ? e.message : String(e)
+        }`;
+        errors.push(errorMsg);
+      }
+    }
+
+    return {
+      packetList: null,
+      errors,
+      strategy: null,
+    };
+  }
+
+  /**
+   * 从 Buffer 反序列化报文列表（指定协议类型）
+   * @param buffer 序列化后的报文列表数据
+   * @param protocolType 协议类型
+   * @returns 解析后的 PacketList 对象
+   */
+  parseWithProtocol(
+    buffer: Buffer,
+    protocolType: ThriftFullProtocolType
+  ): IPacketList {
+    return this.tryDeserializeWithProtocol(buffer, protocolType);
+  }
+
+  /**
+   * 获取报文列表中的所有报文
+   * @param buffer 序列化后的报文列表数据
+   * @returns 报文数组
+   */
+  extractPackets(buffer: Buffer): IPacket[] {
+    const result = this.parse(buffer);
+    return result.packetList?.pkt_list || [];
+  }
+
+  /**
+   * 获取报文数量
+   * @param buffer 序列化后的报文列表数据
+   * @returns 报文数量
+   */
+  getPacketCount(buffer: Buffer): number {
+    const result = this.parse(buffer);
+    return result.packetList?.pkt_list?.length || 0;
+  }
+
+  /**
+   * 从报文列表中提取指定索引的报文校验器
+   * @param buffer 序列化后的报文列表数据
+   * @param index 报文索引（从 0 开始）
+   * @returns 报文校验器实例，如果索引越界则返回 null
+   */
+  getValidatorAt(
+    buffer: Buffer,
+    index: number
+  ): EthernetPacketValidator | null {
+    const result = this.parse(buffer);
+    if (
+      !result.packetList?.pkt_list ||
+      index < 0 ||
+      index >= result.packetList.pkt_list.length
+    ) {
+      return null;
+    }
+    return new EthernetPacketValidator(result.packetList.pkt_list[index]);
+  }
+
+  /**
+   * 从报文列表中提取所有报文的校验器
+   * @param buffer 序列化后的报文列表数据
+   * @returns 报文校验器数组
+   */
+  getAllValidators(buffer: Buffer): EthernetPacketValidator[] {
+    const result = this.parse(buffer);
+    if (!result.packetList?.pkt_list) {
+      return [];
+    }
+    return result.packetList.pkt_list.map(
+      (packet: IPacket) => new EthernetPacketValidator(packet)
+    );
   }
 }

@@ -125,5 +125,15 @@ export class StreamBackendApi {
 
   async streamPacketCaptureStop(port: string) {}
 
-  async streamPacketCaptureGet(port: string) {}
+  async streamPacketCaptureGet(port: string) {
+    try {
+      const response = await this.api.post("/capture/download", {});
+      console.log("Success:", JSON.stringify(response.data));
+      return response.data;
+    } catch (err) {
+      const e = err as AxiosError;
+      console.error("Error sending packet:", e.message || err);
+      throw err;
+    }
+  }
 }

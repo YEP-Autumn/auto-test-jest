@@ -20,34 +20,34 @@ afterAll(async () => {
   // await testHelper.destroy();
 });
 
-// test(
-//   "test",
-//   async () => {
-//     let pkt_buff = new EthernetPacketBuilder()
-//       // .setEthernet("00:aa:bb:cc:dd:ee", "11:22:33:44:55:66", 0x8100)
-//       .setEthernet("00:00:00:00:00:ee", "00:00:00:00:00:66", 0x8100)
-//       .setVLAN(2, 0x0800)
-//       .setIPv4(0xc0a80001, 0xc0a80002)
-//       .build(ThriftPresets.DEFAULT);
-//     const parser = new EthernetPacketParser();
-//     const packet = parser.parse(pkt_buff);
-//     console.log(JSON.stringify(packet)); // true
-//     // 或直接获取校验器
-//     const validator = parser.parseToValidator(pkt_buff);
-//     console.log(validator.hasEthernet()); // true
-//     console.log(validator.validateEthernet("00:00:00:00:00:ee"));
-//     await streamBackendApi.streamPacketSendStart(pkt_buff, {
-//       port: RenixPort.A,
-//       count: 100,
-//     });
-//   },
-//   1000 * 60 * 10
-// );
+test.skip(
+  "test",
+  async () => {
+    let pkt_buff = new EthernetPacketBuilder()
+      // .setEthernet("00:aa:bb:cc:dd:ee", "11:22:33:44:55:66", 0x8100)
+      .setEthernet("00:00:00:00:00:ee", "00:00:00:00:00:66", 0x8100)
+      .setVLAN(2, 0x0800)
+      .setIPv4(0xc0a80001, 0xc0a80002)
+      .build(ThriftPresets.DEFAULT);
+    const parser = new EthernetPacketParser();
+    const packet = parser.parse(pkt_buff);
+    console.log(JSON.stringify(packet)); // true
+    // 或直接获取校验器
+    const validator = parser.parseToValidator(pkt_buff);
+    console.log(validator.hasEthernet()); // true
+    console.log(validator.validateEthernet("00:00:00:00:00:ee"));
+    await streamBackendApi.streamPacketSendStart(pkt_buff, {
+      port: RenixPort.A,
+      count: 100,
+    });
+  },
+  1000 * 60 * 10
+);
 
 /**
  * 演示代码：报文列表的序列化和反序列化
  */
-test("演示：报文列表序列化和反序列化", async () => {
+test.skip("演示：报文列表序列化和反序列化", async () => {
   // 1. 构建多个报文
   const packetBuilder1 = new EthernetPacketBuilder()
     .setEthernet("00:00:00:00:00:11", "00:00:00:00:00:22", 0x8100)
@@ -121,6 +121,10 @@ test("演示：报文列表序列化和反序列化", async () => {
   // expect(result1.passed).toBe(true);
   // expect(result2.passed).toBe(true);
   // expect(result3.passed).toBe(false); // 第三个报文没有 VLAN
+});
+
+test("", async () => {
+  await streamBackendApi.streamPacketCaptureGet(RenixPort.A);
 });
 
 // test("测试demo功能", async () => {

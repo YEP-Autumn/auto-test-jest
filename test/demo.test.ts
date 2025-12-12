@@ -124,7 +124,7 @@ test.skip("演示：报文列表序列化和反序列化", async () => {
 });
 
 test("", async () => {
-  await streamBackendApi.streamPacketCaptureGet(RenixPort.A);
+  await streamBackendApi.streamPacketCaptureGet(RenixPort.B);
 });
 
 // test("测试demo功能", async () => {

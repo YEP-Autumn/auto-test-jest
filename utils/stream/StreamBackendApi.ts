@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import FormData from "form-data";
+import { PacketListParser, IPacketListParseResult } from "./thrift_packet";
 
 export enum RenixPort {
   A = "//192.168.2.11/5/13",
@@ -125,14 +126,40 @@ export class StreamBackendApi {
 
   async streamPacketCaptureStop(port: string) {}
 
-  async streamPacketCaptureGet(port: string) {
+  /**
+   * 获取捕获的数据包并进行解析
+   * @param port 端口标识
+   * @returns 解析后的报文列表结果
+   */
+  async streamPacketCaptureGet(port: string): Promise<IPacketListParseResult> {
     try {
-      const response = await this.api.post("/capture/download", {});
-      console.log("Success:", JSON.stringify(response.data));
-      return response.data;
+      // 以二进制格式接收数据
+      const response = await this.api.post("/capture/download", { port }, {
+        responseType: "arraybuffer",
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+      });
+
+      const binaryData = response.data;
+      console.log(`Received capture data: ${binaryData.length} bytes from port ${port}`);
+
+      // 使用 PacketListParser 解析二进制数据
+      const parser = new PacketListParser();
+      const parseResult = parser.parse(Buffer.from(binaryData));
+
+      if (parseResult.packetList && parseResult.packetList.pkt_list) {
+        console.log(
+          `Successfully parsed ${parseResult.packetList.pkt_list.length} packets using strategy: ${parseResult.strategy}`
+        );
+        console.log("First packet data json:", JSON.stringify(parseResult.packetList));
+      } else {
+        console.warn("Failed to parse packet list. Errors:", parseResult.errors);
+      }
+
+      return parseResult;
     } catch (err) {
       const e = err as AxiosError;
-      console.error("Error sending packet:", e.message || err);
+      console.error("Error capturing packet:", e.message || err);
       throw err;
     }
   }

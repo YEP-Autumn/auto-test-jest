@@ -1,5 +1,4 @@
 import { Port } from ".";
-import config from "../jest.config";
 import {
   Actuator,
   CleanConfig,
@@ -9,17 +8,33 @@ import {
 } from "./comm/Components";
 import { Config } from "./comm/Config";
 import { Dut } from "./comm/Dut";
+import { Topolinks } from "./topo/LinkConstraint";
+import { TopoApi } from "./topo/TopoApi";
 
 export class TestHelper {
   private dut_list: Dut[] = [];
   private actuator: Actuator[] = [];
   private testResult: boolean = true;
-  constructor() {}
+  private topo: Topolinks | undefined;
+
+  private topoApi: TopoApi;
+
+  constructor() {
+    this.topoApi = new TopoApi();
+  }
 
   async init() {
     for (let i = 0; i < Config.dut_list.length; i++) {
       this.dut_list[i] = await new Dut(Config.dut_list[i]).connect();
     }
+    if (this.topo) {
+      await this.topoApi.topoLinksAdd(this.topo);
+    }
+    return this;
+  }
+
+  addTopo(topo: Topolinks) {
+    this.topo = topo;
     return this;
   }
 
@@ -28,6 +43,9 @@ export class TestHelper {
     this.dut_list.forEach((dut) => {
       promise.push(dut.disconnect());
     });
+    if (this.topo) {
+      await this.topoApi.topoLinksDelete(this.topo);
+    }
     return await Promise.all(promise);
   }
 
@@ -48,6 +66,10 @@ export class TestHelper {
   result() {
     return this.testResult;
   }
+
+  addPktSender() {}
+
+  addPktChecker() {}
 
   /** Exec Config */
   ExecConfigDutA(config: string[]) {

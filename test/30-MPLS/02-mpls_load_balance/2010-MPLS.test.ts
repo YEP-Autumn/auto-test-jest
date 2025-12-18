@@ -1,10 +1,13 @@
-import { Port } from "../../../utils";
+import { Port, sleep } from "../../../utils";
 import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper()
+    .addTopo(LinkConstraint.mpls_topo_links)
+    .init();
 });
 
 afterAll(async () => {
@@ -157,7 +160,7 @@ test("配置linkagg基于MPLS VPLS AC入口流量的负载均衡", async () => {
     "end",
   ]);
 
-  testHelper.CleanConfigDutB([
+  testHelper.CleanConfigDutA([
     "configure terminal",
     "hash-value global",
     "no port-channel select",

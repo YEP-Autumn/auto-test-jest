@@ -12,7 +12,21 @@ export class Dut {
   }
 
   public async connect() {
-    await this.connection.connect(this.conn_param);
+    await this.connection.connect(
+      Object.assign(
+        {
+          port: 23,
+          shellPrompt: "Switch.*#",
+          timeout: 1000 * 60 * 5,
+          debug: true,
+          stripShellPrompt: false,
+          stripControls: true,
+          execTimeout: 1000 * 30,
+          disableLogon: true,
+        },
+        this.conn_param
+      )
+    );
     return this;
   }
 
@@ -49,11 +63,11 @@ export class Dut {
 interface ICONN_PARAM {
   host: string /** e.g. "172.16.9.107" */;
   port?: number /** e.g. 23 */;
-  shellPrompt: string /** e.g. "Switch\\(.*\\)#" */;
-  timeout: number /** e.g. 1000 * 60 * 5 */;
-  debug: boolean /** e.g. true */;
-  stripShellPrompt: boolean /** e.g. false */;
-  stripControls: boolean /** e.g. true */;
-  execTimeout: number /** e.g. 1000 * 5 */;
-  disableLogon: boolean /** e.g. true */;
+  shellPrompt?: string /** e.g. "Switch\\(.*\\)#" */;
+  timeout?: number /** e.g. 1000 * 60 * 5 */;
+  debug?: boolean /** e.g. true */;
+  stripShellPrompt?: boolean /** e.g. false */;
+  stripControls?: boolean /** e.g. true */;
+  execTimeout?: number /** e.g. 1000 * 5 */;
+  disableLogon?: boolean /** e.g. true */;
 }

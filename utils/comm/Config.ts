@@ -43,10 +43,11 @@ export class Config {
   };
 
   public static Renix = {
-    portList: [RenixPort.A, RenixPort.B],
+    // portList: [RenixPort.A, RenixPort.B],
+    portList: [RenixPort.A],
     portMapping: ["eth-0-23", "eth-0-24"],
   };
 
   // public static dut_list = [this.dutA, this.dutC, this.dutC, this.dutD];
-  public static dut_list = [this.dutA, this.dutB, this.dutC];
+  public static dut_list = [this.dutA, this.dutB, this.dutD];
 }

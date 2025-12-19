@@ -4,10 +4,20 @@ import {
   CleanConfig,
   ExecConfig,
   ExecRetMatch,
+  PacketSender,
+  PacketSendParam,
+  ReadyCheck,
   Sleep,
+  ExecCustom,
+  DutHandle,
+  replaceIntfA,
+  replaceIntfB,
+  replaceIntfC,
+  replaceIntfD,
 } from "./comm/Components";
 import { Config } from "./comm/Config";
 import { Dut } from "./comm/Dut";
+import { StreamBackendApi } from "./stream/StreamBackendApi";
 import { Topolinks } from "./topo/LinkConstraint";
 import { TopoApi } from "./topo/TopoApi";
 
@@ -16,36 +26,71 @@ export class TestHelper {
   private actuator: Actuator[] = [];
   private testResult: boolean = true;
   private topo: Topolinks | undefined;
-
+  private streamBackendApi: StreamBackendApi | undefined;
   private topoApi: TopoApi;
 
-  constructor() {
+  constructor(topo?: Topolinks, use_renix?: boolean) {
     this.topoApi = new TopoApi();
+    this.topo = topo;
+    if (use_renix) {
+      this.streamBackendApi = new StreamBackendApi();
+    }
   }
 
   async init() {
+    /** 连接交换机 */
     for (let i = 0; i < Config.dut_list.length; i++) {
       this.dut_list[i] = await new Dut(Config.dut_list[i]).connect();
     }
+    /** 预约Renix端口 */
+    if (this.streamBackendApi) {
+      for (let i = 0; i < Config.Renix.portList.length; i++) {
+        await this.streamBackendApi.port_reserve(Config.Renix.portList[i]);
+      }
+    }
+
+    // 可选：健康检查拓扑服务（如果使用拓扑）
+    if (this.topo) {
+      const isHealthy = await this.topoApi.healthCheck(3, 500);
+      if (!isHealthy) {
+        console.warn(
+          "TopoApi health check failed, but proceeding with auto-retry logic"
+        );
+      }
+    }
+
+    /** 创建拓扑 */
     if (this.topo) {
       await this.topoApi.topoLinksAdd(this.topo);
     }
-    return this;
-  }
 
-  addTopo(topo: Topolinks) {
-    this.topo = topo;
+    // await new Promise((resolve) => setTimeout(resolve, 2000));
+
     return this;
   }
 
   async destroy() {
     let promise = new Array<Promise<Dut>>();
+
+    /** 释放交换机连接 */
     this.dut_list.forEach((dut) => {
       promise.push(dut.disconnect());
     });
-    if (this.topo) {
-      await this.topoApi.topoLinksDelete(this.topo);
+
+    /** 释放Renix端口 */
+    if (this.streamBackendApi) {
+      for (let i = 0; i < Config.Renix.portList.length; i++) {
+        promise.push(
+          this.streamBackendApi.port_release(Config.Renix.portList[i])
+        );
+      }
     }
+
+    /** 删除拓扑 */
+    if (this.topo) {
+      promise.push(this.topoApi.topoLinksDelete(this.topo));
+    }
+
     return await Promise.all(promise);
   }
 
@@ -54,6 +99,12 @@ export class TestHelper {
       if (this.actuator[i] instanceof CleanConfig) {
         let ret = await this.actuator[i].start();
         this.testResult = false == ret ? ret : this.testResult;
+      } else if (this.actuator[i] instanceof PacketSender) {
+        if (this.streamBackendApi) {
+          this.testResult = this.testResult
+            ? await this.actuator[i].start(this.streamBackendApi)
+            : this.testResult;
+        }
       } else {
         this.testResult = this.testResult
           ? await this.actuator[i].start()
@@ -67,9 +118,12 @@ export class TestHelper {
     return this.testResult;
   }
 
-  addPktSender() {}
+  addPktSender(packetSendParam: PacketSendParam) {
+    this.actuator.push(new PacketSender(packetSendParam));
+    return this;
+  }
 
-  addPktChecker() {}
+  addPktChecker(any: any) {}
 
   /** Exec Config */
   ExecConfigDutA(config: string[]) {
@@ -154,44 +208,72 @@ export class TestHelper {
     return this;
   }
 
+  ReadyCheckDutA(config: string, expect: RegExp, timeout: number) {
+    replaceIntfA([config]);
+    this.actuator.push(
+      new ReadyCheck(this.dut_list[0], config, expect, timeout)
+    );
+    return this;
+  }
+
+  ReadyCheckDutB(config: string, expect: RegExp, timeout: number) {
+    replaceIntfB([config]);
+    this.actuator.push(
+      new ReadyCheck(this.dut_list[1], config, expect, timeout)
+    );
+    return this;
+  }
+
+  ReadyCheckDutC(config: string, expect: RegExp, timeout: number) {
+    replaceIntfC([config]);
+    this.actuator.push(
+      new ReadyCheck(this.dut_list[2], config, expect, timeout)
+    );
+    return this;
+  }
+
+  ReadyCheckDutD(config: string, expect: RegExp, timeout: number) {
+    replaceIntfD([config]);
+    this.actuator.push(
+      new ReadyCheck(this.dut_list[3], config, expect, timeout)
+    );
+    return this;
+  }
+
   sleep(milliseconds: number) {
     this.actuator.push(new Sleep(milliseconds));
     return this;
   }
-}
 
-function replaceIntfA(configs: String[]) {
-  for (let i = 0; i < configs.length; i++) {
-    configs[i] = configs[i].replace(Port.A, Config.dut_list[0].portList[0]);
-    configs[i] = configs[i].replace(Port.B, Config.dut_list[0].portList[1]);
-    configs[i] = configs[i].replace(Port.C, Config.dut_list[0].portList[2]);
-    configs[i] = configs[i].replace(Port.D, Config.dut_list[0].portList[3]);
+  /**
+   * Exec Custom Callback (Read-only or controlled operations)
+   * The callback receives a safe `DutHandle` with port alias replacement.
+   */
+  ExecCustomDutA(cb: (h: DutHandle) => Promise<boolean> | boolean) {
+    this.actuator.push(
+      new ExecCustom(this.dut_list[0], Config.dut_list[0].portList, cb)
+    );
+    return this;
   }
-}
 
-function replaceIntfB(configs: String[]) {
-  for (let i = 0; i < configs.length; i++) {
-    configs[i] = configs[i].replace(Port.A, Config.dut_list[1].portList[0]);
-    configs[i] = configs[i].replace(Port.B, Config.dut_list[1].portList[1]);
-    configs[i] = configs[i].replace(Port.C, Config.dut_list[1].portList[2]);
-    configs[i] = configs[i].replace(Port.D, Config.dut_list[1].portList[3]);
+  ExecCustomDutB(cb: (h: DutHandle) => Promise<boolean> | boolean) {
+    this.actuator.push(
+      new ExecCustom(this.dut_list[1], Config.dut_list[1].portList, cb)
+    );
+    return this;
   }
-}
 
-function replaceIntfC(configs: String[]) {
-  for (let i = 0; i < configs.length; i++) {
-    configs[i] = configs[i].replace(Port.A, Config.dut_list[2].portList[0]);
-    configs[i] = configs[i].replace(Port.B, Config.dut_list[2].portList[1]);
-    configs[i] = configs[i].replace(Port.C, Config.dut_list[2].portList[2]);
-    configs[i] = configs[i].replace(Port.D, Config.dut_list[2].portList[3]);
+  ExecCustomDutC(cb: (h: DutHandle) => Promise<boolean> | boolean) {
+    this.actuator.push(
+      new ExecCustom(this.dut_list[2], Config.dut_list[2].portList, cb)
+    );
+    return this;
   }
-}
 
-function replaceIntfD(configs: String[]) {
-  for (let i = 0; i < configs.length; i++) {
-    configs[i] = configs[i].replace(Port.A, Config.dut_list[3].portList[0]);
-    configs[i] = configs[i].replace(Port.B, Config.dut_list[3].portList[1]);
-    configs[i] = configs[i].replace(Port.C, Config.dut_list[3].portList[2]);
-    configs[i] = configs[i].replace(Port.D, Config.dut_list[3].portList[3]);
+  ExecCustomDutD(cb: (h: DutHandle) => Promise<boolean> | boolean) {
+    this.actuator.push(
+      new ExecCustom(this.dut_list[3], Config.dut_list[3].portList, cb)
+    );
+    return this;
   }
 }

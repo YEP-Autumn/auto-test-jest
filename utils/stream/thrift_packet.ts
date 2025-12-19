@@ -90,12 +90,38 @@ export class EthernetPacketBuilder {
   }
 
   /**
-   * 设置IPv4协议头
+   * 将IP地址字符串转换为32位整数
+   * 例如: "192.168.1.1" -> 3232235777
    */
-  setIPv4(srcIp: number, dstIp: number): EthernetPacketBuilder {
+  private ipStringToNumber(ipString: string): number {
+    const parts = ipString.split('.');
+    if (parts.length !== 4) {
+      throw new Error(`无效的IP地址格式: ${ipString}`);
+    }
+    
+    const octets = parts.map((part) => {
+      const num = parseInt(part, 10);
+      if (isNaN(num) || num < 0 || num > 255) {
+        throw new Error(`无效的IP八位组: ${part} (必须是0-255之间的数字)`);
+      }
+      return num;
+    });
+    
+    return (octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3];
+  }
+
+  /**
+   * 设置IPv4协议头
+   * @param srcIp 源IP地址字符串，例如 "192.168.1.1"
+   * @param dstIp 目的IP地址字符串，例如 "192.168.1.2"
+   */
+  setIPv4(srcIp: string, dstIp: string): EthernetPacketBuilder {
+    const srcIpNum = this.ipStringToNumber(srcIp);
+    const dstIpNum = this.ipStringToNumber(dstIp);
+    
     const ipv4 = new IPv4({
-      src_ip: srcIp,
-      dst_ip: dstIp,
+      src_ip: srcIpNum,
+      dst_ip: dstIpNum,
     });
 
     const fieldMeta = new FieldMeta({

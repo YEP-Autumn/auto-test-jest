@@ -1,10 +1,13 @@
 import { Port } from "../../../utils";
 import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.three_devices_topo_links_type_2
+  ).init();
 });
 
 afterAll(async () => {
@@ -15,7 +18,7 @@ afterAll(async () => {
  *
  *                    +--------+                   +--------+
  *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *  RenixB <=> PortC--|        |                   |        |    |
+ *             PortC--|        |                   |        |    |
  *                    +--------+                   +--------+    |
  *                                                               |
  *                                                 +--------+    |
@@ -86,6 +89,7 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
   // 配置 DutA 基于macsa的负载均衡
   testHelper.ExecConfigDutA([
     "configure terminal",
+    "no mpls parser control-word exist",
     "hash-field mpls",
     "vpls inner-layer2 macsa",
     "exit",
@@ -125,8 +129,7 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
   testHelper.sleep(25000);
 
   /**
-   * 配置 write ParserMplsCtl 0 cwExist 0 后
-   * RneixA发送携带vlan2，源mac变化的报文, DutA的portA和portC均有ingress流量, DutB的portA和portC均有egress流量
+   * RneixB发送携带vlan2，源mac变化的报文, DutA的portC和portD均有Egress流量
    */
 
   testHelper.CleanConfigDutA([
@@ -152,6 +155,7 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
 
   testHelper.CleanConfigDutA([
     "configure terminal",
+    "mpls parser control-word exist",
     "hash-value global",
     "no port-channel select",
     "exit",

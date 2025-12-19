@@ -1,10 +1,13 @@
 import { Port } from "../../../utils";
 import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.three_devices_topo_links_type_1
+  ).init();
 });
 
 afterAll(async () => {
@@ -93,8 +96,9 @@ test("配置linkagg基于MPLS VPLS 中间节点流量的负载均衡", async () 
   // 配置 DutB 基于macsa的负载均衡
   testHelper.ExecConfigDutB([
     "configure terminal",
+    "no mpls parser control-word exist",
     `interface ${Port.B}`,
-    "vm-aware enable",
+    "snooping-parser enable",
     "exit",
     "hash-field mpls",
     "vpls inner-layer2 macsa",
@@ -135,7 +139,6 @@ test("配置linkagg基于MPLS VPLS 中间节点流量的负载均衡", async () 
   testHelper.sleep(25000);
 
   /**
-   * 配置 write ParserMplsCtl 0 cwExist 0 后
    * RneixA发送携带vlan2，源mac变化的报文, DutA的portA和portC均有ingress流量, DutB的portA和portC均有egress流量
    */
 
@@ -162,8 +165,9 @@ test("配置linkagg基于MPLS VPLS 中间节点流量的负载均衡", async () 
 
   testHelper.CleanConfigDutB([
     "configure terminal",
+    "mpls parser control-word exist",
     `interface ${Port.B}`,
-    "no vm-aware enable",
+    "no snooping-parser enable",
     "exit",
     "hash-value global",
     "no port-channel select",

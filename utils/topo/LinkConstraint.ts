@@ -57,8 +57,7 @@ export class LinkConstraint {
    *                               RenixB <=> PortD--|  DUTC  |--PortB
    *                                                 +--------+
    */
-
-  static mpls_topo_links: Topolinks = {
+  static three_devices_topo_links_type_1: Topolinks = {
     links: [
       {
         stream_id: 1,
@@ -82,6 +81,41 @@ export class LinkConstraint {
       },
       {
         stream_id: 5,
+        in_port: DutC.portD,
+        out_port: Renix.portB,
+      },
+    ],
+  };
+
+  /*
+   *                    +--------+                   +--------+
+   *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+   *             PortC--|        |                   |        |    |
+   *                    +--------+                   +--------+    |
+   *                                                               |
+   *                                                 +--------+    |
+   *                               RenixB <=> PortD--|  DUTC  |--PortB
+   *                                                 +--------+
+   */
+  static three_devices_topo_links_type_2: Topolinks = {
+    links: [
+      {
+        stream_id: 1,
+        in_port: Renix.portA,
+        out_port: DutA.portD,
+      },
+      {
+        stream_id: 2,
+        in_port: DutA.portA,
+        out_port: DutB.portA,
+      },
+      {
+        stream_id: 3,
+        in_port: DutB.portB,
+        out_port: DutC.portB,
+      },
+      {
+        stream_id: 4,
         in_port: DutC.portD,
         out_port: Renix.portB,
       },

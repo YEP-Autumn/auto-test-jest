@@ -8,26 +8,34 @@ import {
 import { RenixPort, StreamBackendApi } from "../utils/stream/StreamBackendApi";
 import { ThriftPresets } from "../utils/stream/thrift-protocol.factory";
 import { TestHelper } from "../utils/TestHelper";
+import { sleep } from "../utils";
+import {
+  ModifierField,
+  ModifierMode,
+  TransmitMode,
+} from "../utils/comm/Components";
+
+jest.setTimeout(1000 * 60 * 10);
 
 let testHelper: TestHelper;
 const streamBackendApi = new StreamBackendApi();
 
 beforeAll(async () => {
-  // testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(undefined, true).init();
 });
 
 afterAll(async () => {
-  // await testHelper.destroy();
+  await testHelper.destroy();
 });
 
-test.skip(
+test(
   "test",
   async () => {
     let pkt_buff = new EthernetPacketBuilder()
       // .setEthernet("00:aa:bb:cc:dd:ee", "11:22:33:44:55:66", 0x8100)
       .setEthernet("00:00:00:00:00:ee", "00:00:00:00:00:66", 0x8100)
       .setVLAN(2, 0x0800)
-      .setIPv4(0xc0a80001, 0xc0a80002)
+      .setIPv4("192.168.0.1", "192.168.0.2")
       .build(ThriftPresets.DEFAULT);
     const parser = new EthernetPacketParser();
     const packet = parser.parse(pkt_buff);
@@ -36,9 +44,9 @@ test.skip(
     const validator = parser.parseToValidator(pkt_buff);
     console.log(validator.hasEthernet()); // true
     console.log(validator.validateEthernet("00:00:00:00:00:ee"));
-    await streamBackendApi.streamPacketSendStart(pkt_buff, {
+    await streamBackendApi.streamPacketSend(pkt_buff, {
       port: RenixPort.A,
-      count: 100,
+      count: 1000,
     });
   },
   1000 * 60 * 10
@@ -47,21 +55,21 @@ test.skip(
 /**
  * 演示代码：报文列表的序列化和反序列化
  */
-test.skip("演示：报文列表序列化和反序列化", async () => {
+test("演示：报文列表序列化和反序列化", async () => {
   // 1. 构建多个报文
   const packetBuilder1 = new EthernetPacketBuilder()
     .setEthernet("00:00:00:00:00:11", "00:00:00:00:00:22", 0x8100)
     .setVLAN(100, 0x0800)
-    .setIPv4(0xc0a80001, 0xc0a80002);
+    .setIPv4("192.168.0.1", "192.168.0.2");
 
   const packetBuilder2 = new EthernetPacketBuilder()
     .setEthernet("00:00:00:00:00:33", "00:00:00:00:00:44", 0x8100)
     .setVLAN(200, 0x0800)
-    .setIPv4(0xc0a81001, 0xc0a81002);
+    .setIPv4("192.168.16.1", "192.168.16.2");
 
   const packetBuilder3 = new EthernetPacketBuilder()
     .setEthernet("00:00:00:00:00:55", "00:00:00:00:00:66", 0x0800)
-    .setIPv4(0xc0a82001, 0xc0a82002);
+    .setIPv4("192.168.32.1", "192.168.32.2");
 
   // 2. 使用 PacketListBuilder 构建报文列表
   const packetListBuilder = new PacketListBuilder()
@@ -75,7 +83,7 @@ test.skip("演示：报文列表序列化和反序列化", async () => {
   const packetListBuffer = packetListBuilder.build(ThriftPresets.DEFAULT);
   console.log("报文列表序列化后的大小:", packetListBuffer.length, "字节");
 
-  await streamBackendApi.streamPacketListSendStart(packetListBuffer, {
+  await streamBackendApi.streamPacketListSend(packetListBuffer, {
     port: RenixPort.A,
     count: 100,
   });
@@ -127,16 +135,36 @@ test("", async () => {
   await streamBackendApi.streamPacketCaptureGet(RenixPort.B);
 });
 
-// test("测试demo功能", async () => {
-//   testHelper.ExecConfigDutA(["configure terminal", "end"]);
+test("测试demo功能", async () => {
+  testHelper.ExecConfigDutA(["configure terminal", "end"]);
 
-//   testHelper.sleep(5000);
+  testHelper.sleep(5000);
 
-//   testHelper.ExecRetMatchDutA("ping 127.0.0.1", / 0% packet loss/g);
+  testHelper.ExecRetMatchDutA("ping 127.0.0.1", / 0% packet loss/g);
 
-//   testHelper.CleanConfigDutA(["configure terminal", "end"]);
+  testHelper.CleanConfigDutA(["configure terminal", "end"]);
 
-//   await testHelper.startTest();
+  await testHelper.startTest();
 
-//   expect(testHelper.result()).toBeTruthy();
-// });
+  expect(testHelper.result()).toBeTruthy();
+});
+
+test.only(
+  "user define packet send test",
+  async () => {
+    // testHelper.addPktChecker({
+    //   receive_port: RenixPort.B,
+    //   receive_cnt: 100,
+    //   validator: (pkt_buff: Buffer) => {
+    //     const parser = new EthernetPacketParser();
+    //     const validator = parser.parseToValidator(pkt_buff);
+    //     return validator.validateVLAN(2).passed;
+    //   },
+    // });
+
+    await sleep(3000);
+
+    await sleep(1000 * 5);
+  },
+  1000 * 60 * 10
+);

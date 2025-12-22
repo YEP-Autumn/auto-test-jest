@@ -145,8 +145,8 @@ test("测试MPLS AC入口支持agg接口对MPLS内层dst ip进行负载均衡", 
   testHelper.ReadyCheckDutA("show ldp vpls", /Up     ethernet/g, 1000 * 60);
   testHelper.ReadyCheckDutC("show ldp vpls", /Up     ethernet/g, 1000 * 60);
 
-  /** 当 vpls up 后, 等待 25s，将配置同步到芯片 */
-  testHelper.sleep(1000 * 25);
+  /** 当 vpls up 后, 等待 30s，将配置同步到芯片 */
+  testHelper.sleep(1000 * 30);
 
   /**
    * RneixA发送携带vlan2，目的IP变化的报文, DutA的portA和portC均有egress流量

@@ -14,8 +14,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.three_devices_topo_links_type_1,
-    true
+    LinkConstraint.three_devices_topo_links_type_1
   ).init();
 });
 
@@ -113,7 +112,7 @@ test("配置linkagg基于MPLS VPLS 中间节点流量的负载均衡", async () 
     "snooping-parser enable",
     "exit",
     "hash-field mpls",
-    "vpls inner-layer2 macsa",
+    "mpls inner macsa",
     "exit",
     "hash-value global",
     "port-channel select mpls",

@@ -14,8 +14,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.three_devices_topo_links_type_1,
-    true
+    LinkConstraint.three_devices_topo_links_type_1
   ).init();
 });
 

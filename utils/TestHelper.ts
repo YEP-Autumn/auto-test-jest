@@ -29,12 +29,9 @@ export class TestHelper {
   private streamBackendApi: StreamBackendApi | undefined;
   private topoApi: TopoApi;
 
-  constructor(topo?: Topolinks, use_renix?: boolean) {
+  constructor(topo?: Topolinks) {
     this.topoApi = new TopoApi();
     this.topo = topo;
-    if (use_renix) {
-      this.streamBackendApi = new StreamBackendApi();
-    }
   }
 
   async init() {
@@ -42,13 +39,6 @@ export class TestHelper {
     for (let i = 0; i < Config.dut_list.length; i++) {
       this.dut_list[i] = await new Dut(Config.dut_list[i]).connect();
     }
-    /** 预约Renix端口 */
-    if (this.streamBackendApi) {
-      for (let i = 0; i < Config.Renix.portList.length; i++) {
-        await this.streamBackendApi.port_reserve(Config.Renix.portList[i]);
-      }
-    }
-
     // 可选：健康检查拓扑服务（如果使用拓扑）
     if (this.topo) {
       const isHealthy = await this.topoApi.healthCheck(3, 500);
@@ -100,12 +90,20 @@ export class TestHelper {
         let ret = await this.actuator[i].start();
         this.testResult = false == ret ? ret : this.testResult;
       } else if (this.actuator[i] instanceof PacketSender) {
-        if (!this.streamBackendApi) {
-          console.error(
-            "PacketSender requires StreamBackendApi, but it's not initialized."
-          );
-          this.testResult = false;
-          continue;
+        if (this.streamBackendApi == undefined) {
+          try {
+            this.streamBackendApi = new StreamBackendApi();
+            /** 预约Renix端口 */
+            for (let i = 0; i < Config.Renix.portList.length; i++) {
+              await this.streamBackendApi.port_reserve(
+                Config.Renix.portList[i]
+              );
+            }
+          } catch (err) {
+            console.error("StreamBackendApi init or port_reserve error:", err);
+            this.testResult = false;
+            continue;
+          }
         }
         this.testResult = this.testResult
           ? await this.actuator[i].start(this.streamBackendApi)

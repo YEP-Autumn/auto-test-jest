@@ -14,8 +14,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.three_devices_topo_links_type_2,
-    true
+    LinkConstraint.three_devices_topo_links_type_2
   ).init();
 });
 
@@ -140,6 +139,9 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
 
   testHelper.ReadyCheckDutA("show ldp vpls", /Up     ethernet/g, 1000 * 60);
   testHelper.ReadyCheckDutC("show ldp vpls", /Up     ethernet/g, 1000 * 60);
+
+  /** 当 vpls up 后, 等待 3s，将配置同步到芯片 */
+  testHelper.sleep(1000 * 3);
 
   /**
    * RneixB发送携带vlan2，源mac变化的报文, DutA的portC和portD均有Egress流量

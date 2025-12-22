@@ -100,11 +100,16 @@ export class TestHelper {
         let ret = await this.actuator[i].start();
         this.testResult = false == ret ? ret : this.testResult;
       } else if (this.actuator[i] instanceof PacketSender) {
-        if (this.streamBackendApi) {
-          this.testResult = this.testResult
-            ? await this.actuator[i].start(this.streamBackendApi)
-            : this.testResult;
+        if (!this.streamBackendApi) {
+          console.error(
+            "PacketSender requires StreamBackendApi, but it's not initialized."
+          );
+          this.testResult = false;
+          continue;
         }
+        this.testResult = this.testResult
+          ? await this.actuator[i].start(this.streamBackendApi)
+          : this.testResult;
       } else {
         this.testResult = this.testResult
           ? await this.actuator[i].start()

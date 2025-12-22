@@ -43,8 +43,8 @@ const config: Config = {
     // "test/30-MPLS/01-mpls_use_with_vlan_mapping/1040-MPLS.test.ts",
     // "test/30-MPLS/01-mpls_use_with_vlan_mapping/1050-MPLS.test.ts",
     // "test/30-MPLS/01-mpls_use_with_vlan_mapping/1060-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2010-MPLS.test.ts",
-    // "test/30-MPLS/02-mpls_load_balance/2020-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2010-MPLS.test.ts",
+    "test/30-MPLS/02-mpls_load_balance/2020-MPLS.test.ts",
     // "test/30-MPLS/02-mpls_load_balance/2030-MPLS.test.ts",
     // "test/30-MPLS/1000-MPLS.test.ts", // 用于测试bug
     // "test/30-MPLS/1010-MPLS.test.ts", // 用于测试bug

@@ -1,4 +1,12 @@
 import { Port } from "../../../utils";
+import {
+  ModifierField,
+  ModifierMode,
+  TransmitMode,
+} from "../../../utils/comm/Components";
+import { RenixPort } from "../../../utils/stream/StreamBackendApi";
+import { ThriftPresets } from "../../../utils/stream/thrift-protocol.factory";
+import { EthernetPacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
 import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
@@ -6,7 +14,8 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.three_devices_topo_links_type_2
+    LinkConstraint.three_devices_topo_links_type_2,
+    true
   ).init();
 });
 
@@ -26,6 +35,7 @@ afterAll(async () => {
  *                                                 +--------+
  */
 test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
+  testHelper.ExecConfigDutA(["clear counters"]);
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -126,11 +136,61 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
     "end",
   ]);
 
-  testHelper.sleep(25000);
+  testHelper.sleep(1000 * 30);
+
+  testHelper.ReadyCheckDutA("show ldp vpls", /Up     ethernet/g, 1000 * 60);
+  testHelper.ReadyCheckDutC("show ldp vpls", /Up     ethernet/g, 1000 * 60);
 
   /**
    * RneixB发送携带vlan2，源mac变化的报文, DutA的portC和portD均有Egress流量
    */
+
+  testHelper.addPktSender({
+    port: RenixPort.B,
+    packet: new EthernetPacketBuilder()
+      .setEthernet("00:00:01:00:00:ee", "00:00:00:00:00:66", 0x8100)
+      .setVLAN(2, 0x0800)
+      .setIPv4("1.1.1.1", "2.2.2.2")
+      .build(ThriftPresets.DEFAULT),
+    modifier_param: [
+      {
+        modifier_field: ModifierField.EthernetII_MAC_SRC,
+        count: 1200,
+        mode: ModifierMode.Increment,
+        start_value: "00:00:0e:00:00:ee",
+        step: 1,
+      },
+    ],
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 1200,
+      },
+    },
+  });
+
+  testHelper.ExecCustomDutA(async (dut) => {
+    try {
+      let portC_output = await dut.exec(`show interface ${Port.C}`);
+      let portD_output = await dut.exec(`show interface ${Port.D}`);
+
+      console.log(portC_output);
+      console.log(portD_output);
+
+      // Parse transmitted unicast counts from Port A and Port C outputs
+      const matchC = portC_output.match(/Transmitted\s+(\d+)\s+unicast/i);
+      const matchD = portD_output.match(/Transmitted\s+(\d+)\s+unicast/i);
+      if (!matchC || !matchD) {
+        return false;
+      }
+      const unicastC = parseInt(matchC[1], 10);
+      const unicastD = parseInt(matchD[1], 10);
+      return unicastC > 500 && unicastD > 500;
+    } catch (err) {
+      console.error("ExecCustomDutA error:", err);
+      return false;
+    }
+  });
 
   testHelper.CleanConfigDutA([
     "configure terminal",

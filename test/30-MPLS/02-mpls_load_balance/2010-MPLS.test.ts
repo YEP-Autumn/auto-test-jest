@@ -143,7 +143,7 @@ test("配置linkagg基于MPLS VPLS AC入口流量的负载均衡", async () => {
     "end",
   ]);
 
-  testHelper.sleep(45000);
+  testHelper.sleep(1000 * 30);
 
   /**
    * RneixA发送携带vlan2，源mac变化的报文, DutA的portA和portC均有egress流量

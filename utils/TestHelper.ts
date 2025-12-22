@@ -28,6 +28,7 @@ export class TestHelper {
   private topo: Topolinks | undefined;
   private streamBackendApi: StreamBackendApi | undefined;
   private topoApi: TopoApi;
+  private _inner_debug: boolean = false;
 
   constructor(topo?: Topolinks) {
     this.topoApi = new TopoApi();
@@ -77,7 +78,7 @@ export class TestHelper {
     }
 
     /** 删除拓扑 */
-    if (this.topo) {
+    if (this.topo && this._inner_debug != true) {
       promise.push(this.topoApi.topoLinksDelete(this.topo));
     }
 
@@ -86,6 +87,9 @@ export class TestHelper {
 
   async startTest() {
     for (let i = 0; i < this.actuator.length; i++) {
+      if (this.testResult == false && this._inner_debug == true) {
+        break;
+      }
       if (this.actuator[i] instanceof CleanConfig) {
         let ret = await this.actuator[i].start();
         this.testResult = false == ret ? ret : this.testResult;

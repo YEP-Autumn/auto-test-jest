@@ -21,7 +21,7 @@ let testHelper: TestHelper;
 const streamBackendApi = new StreamBackendApi();
 
 beforeAll(async () => {
-  testHelper = await new TestHelper(undefined, true).init();
+  testHelper = await new TestHelper().init();
 });
 
 afterAll(async () => {
@@ -162,9 +162,39 @@ test.only(
     //   },
     // });
 
-    await sleep(3000);
+    testHelper.addPktSender({
+      port: RenixPort.A,
+      packet: new EthernetPacketBuilder()
+        .setEthernet("00:00:00:00:00:ee", "00:00:00:00:00:66", 0x8100)
+        .setVLAN(2, 0x0800)
+        .setIPv4("1.1.1.1", "2.2.2.2")
+        .build(),
+      transmit_param: {
+        mode: TransmitMode.STEP,
+        param: {
+          step_count: 600,
+        },
+      },
+      stream_name: "test1",
+    });
 
-    await sleep(1000 * 5);
+    testHelper.addPktSender({
+      port: RenixPort.A,
+      packet: new EthernetPacketBuilder()
+        .setEthernet("00:00:00:00:00:ee", "00:00:00:00:00:66", 0x8100)
+        .setVLAN(2, 0x0811)
+        .setIPv4("1.1.1.1", "2.2.2.2")
+        .build(),
+      transmit_param: {
+        mode: TransmitMode.STEP,
+        param: {
+          step_count: 600,
+        },
+      },
+      stream_name: "test2",
+    });
+
+    await testHelper.startTest();
   },
   1000 * 60 * 10
 );

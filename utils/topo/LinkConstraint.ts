@@ -89,7 +89,8 @@ export class LinkConstraint {
 
   /*
    *                    +--------+                   +--------+
-   *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+   *  RenixA <=> PortD--|        |                   |        |
+   *                    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
    *             PortC--|        |                   |        |    |
    *                    +--------+                   +--------+    |
    *                                                               |

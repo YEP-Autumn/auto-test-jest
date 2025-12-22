@@ -133,9 +133,15 @@ export class StreamBackendApi {
           filename,
           contentType: "application/octet-stream",
         });
-        appendFields(form, { port });
-        appendFields(form, { modifier_param });
-        appendFields(form, { transmit_param });
+        if (port) {
+          appendFields(form, { port });
+        }
+        if (modifier_param) {
+          appendFields(form, { modifier_param });
+        }
+        if (transmit_param) {
+          appendFields(form, { transmit_param });
+        }
 
         const headers: Record<string, any> = { ...form.getHeaders() };
         const len = await new Promise<number | null>((resolve) => {

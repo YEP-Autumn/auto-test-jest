@@ -33,7 +33,7 @@ afterAll(async () => {
  *                               RenixB <=> PortD--|  DUTC  |--PortB
  *                                                 +--------+
  */
-test("配置linkagg基于MPLS VPLS AC入口流量的负载均衡", async () => {
+test("测试MPLS AC入口支持agg接口对MPLS内层src mac进行负载均衡", async () => {
   testHelper.ExecConfigDutA(["clear counters"]);
   testHelper.ExecConfigDutA([
     "configure terminal",
@@ -144,13 +144,15 @@ test("配置linkagg基于MPLS VPLS AC入口流量的负载均衡", async () => {
 
   testHelper.sleep(1000 * 30);
 
-  /**
-   * RneixA发送携带vlan2，源mac变化的报文, DutA的portA和portC均有egress流量
-   */
-
   testHelper.ReadyCheckDutA("show ldp vpls", /Up     ethernet/g, 1000 * 60);
   testHelper.ReadyCheckDutC("show ldp vpls", /Up     ethernet/g, 1000 * 60);
 
+  /** 当 vpls up 后, 等待 25s，将配置同步到芯片 */
+  testHelper.sleep(1000 * 25);
+
+  /**
+   * RneixA发送携带vlan2，源mac变化的报文, DutA的portA和portC均有egress流量
+   */
   testHelper.addPktSender({
     port: RenixPort.A,
     packet: new EthernetPacketBuilder()

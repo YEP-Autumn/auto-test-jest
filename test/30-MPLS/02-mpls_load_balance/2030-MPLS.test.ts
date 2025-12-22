@@ -14,7 +14,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.three_devices_topo_links_type_2
+    LinkConstraint.three_devices_topo_links_type_1
   ).init();
 });
 
@@ -26,32 +26,32 @@ afterAll(async () => {
  *
  *                    +--------+                   +--------+
  *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *             PortC--|        |                   |        |    |
+ *                    |        |--PortC <=> PortC--|        |    |
  *                    +--------+                   +--------+    |
  *                                                               |
  *                                                 +--------+    |
  *                               RenixB <=> PortD--|  DUTC  |--PortB
  *                                                 +--------+
  */
-test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
-  testHelper.ExecConfigDutA(["clear counters"]);
+test("测试MPLS中间节点支持agg接口对MPLS内层src mac进行负载均衡", async () => {
+  testHelper.ExecConfigDutB(["clear counters"]);
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
+    "static-channel-group 1",
+    "exit",
+    `interface ${Port.C}`,
+    "no switchport",
+    "static-channel-group 1",
+    "exit",
+    "interface agg1",
     "label-switching",
     "ip address 11.11.9.1/24",
     "enable-ldp",
     "exit",
-    `interface ${Port.C}`,
-    "switchport mode trunk",
-    "static-channel-group 1",
-    "exit",
     `interface ${Port.D}`,
     "switchport mode trunk",
-    "static-channel-group 1",
-    "exit",
-    "interface agg1",
     "mpls-vpls v1 vlan 2",
     "exit",
     "interface loopback0",
@@ -80,6 +80,13 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
     "exit",
     `interface ${Port.A}`,
     "no switchport",
+    "static-channel-group 1",
+    "exit",
+    `interface ${Port.C}`,
+    "no switchport",
+    "static-channel-group 1",
+    "exit",
+    "interface agg1",
     "label-switching",
     "ip address 11.11.9.2/24",
     "enable-ldp",
@@ -95,12 +102,15 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
     "end",
   ]);
 
-  // 配置 DutA 基于macsa的负载均衡
-  testHelper.ExecConfigDutA([
+  // 配置 DutB 基于macsa的负载均衡
+  testHelper.ExecConfigDutB([
     "configure terminal",
     "no mpls parser control-word exist",
+    `interface ${Port.B}`,
+    "snooping-parser enable",
+    "exit",
     "hash-field mpls",
-    "vpls inner-layer2 macsa",
+    "mpls inner macsa",
     "exit",
     "hash-value global",
     "port-channel select mpls",
@@ -140,11 +150,11 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
   testHelper.ReadyCheckDutA("show ldp vpls", /Up     ethernet/g, 1000 * 60);
   testHelper.ReadyCheckDutC("show ldp vpls", /Up     ethernet/g, 1000 * 60);
 
-  /** 当 vpls up 后, 等待 3s，将配置同步到芯片 */
-  testHelper.sleep(1000 * 3);
+  /** 当 vpls up 后, 等待 25s，将配置同步到芯片 */
+  testHelper.sleep(1000 * 25);
 
   /**
-   * RneixB发送携带vlan2，源mac变化的报文, DutA的portC和portD均有Egress流量
+   * RneixB发送携带vlan2，源mac变化的报文, DutA的portA和portC均有ingress流量, DutB的portA和portC均有egress流量
    */
 
   testHelper.addPktSender({
@@ -159,7 +169,7 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
         modifier_field: ModifierField.EthernetII_MAC_SRC,
         count: 1200,
         mode: ModifierMode.Increment,
-        start_value: "00:00:0e:00:00:ee",
+        start_value: "00:00:00:01:00:ce",
         step: 1,
       },
     ],
@@ -171,23 +181,23 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
     },
   });
 
-  testHelper.ExecCustomDutA(async (dut) => {
+  testHelper.ExecCustomDutB(async (dut) => {
     try {
+      let portA_output = await dut.exec(`show interface ${Port.A}`);
       let portC_output = await dut.exec(`show interface ${Port.C}`);
-      let portD_output = await dut.exec(`show interface ${Port.D}`);
 
+      console.log(portA_output);
       console.log(portC_output);
-      console.log(portD_output);
 
       // Parse transmitted unicast counts from Port A and Port C outputs
+      const matchA = portA_output.match(/Transmitted\s+(\d+)\s+unicast/i);
       const matchC = portC_output.match(/Transmitted\s+(\d+)\s+unicast/i);
-      const matchD = portD_output.match(/Transmitted\s+(\d+)\s+unicast/i);
-      if (!matchC || !matchD) {
+      if (!matchA || !matchC) {
         return false;
       }
+      const unicastA = parseInt(matchA[1], 10);
       const unicastC = parseInt(matchC[1], 10);
-      const unicastD = parseInt(matchD[1], 10);
-      return unicastC > 500 && unicastD > 500;
+      return unicastA > 500 && unicastC > 500;
     } catch (err) {
       console.error("ExecCustomDutA error:", err);
       return false;
@@ -197,15 +207,15 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
   testHelper.CleanConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
+    "no static-channel-group",
     "switchport",
-    "disable-ldp",
     "exit",
     `interface ${Port.C}`,
     "no static-channel-group",
-    "switchport mode access",
+    "switchport",
     "exit",
     `interface ${Port.D}`,
-    "no static-channel-group",
+    "no mpls-vpls v1 vlan 2",
     "switchport mode access",
     "exit",
     "no interface loopback 0",
@@ -215,9 +225,12 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
     "end",
   ]);
 
-  testHelper.CleanConfigDutA([
+  testHelper.CleanConfigDutB([
     "configure terminal",
     "mpls parser control-word exist",
+    `interface ${Port.B}`,
+    "no snooping-parser enable",
+    "exit",
     "hash-value global",
     "no port-channel select",
     "exit",
@@ -232,8 +245,12 @@ test("配置linkagg基于MPLS VPLS AC出接口的负载均衡", async () => {
     "disable-ldp",
     "exit",
     `interface ${Port.A}`,
+    "no static-channel-group",
     "switchport",
-    "disable-ldp",
+    "exit",
+    `interface ${Port.C}`,
+    "no static-channel-group",
+    "switchport",
     "exit",
     "no interface loopback 0",
     "no router rip",

@@ -104,7 +104,7 @@ export class PacketSender implements Actuator {
 
   async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
     try {
-      streamBackendApi?.streamPacketUserdefineSend(
+      await streamBackendApi?.streamPacketUserdefineSend(
         this.param.packet,
         this.param.port,
         this.param.modifier_param,
@@ -345,6 +345,6 @@ export interface PacketTransmitModeParam {
 export interface PacketSendParam {
   port: RenixPort;
   packet: Buffer;
-  modifier_param: PacketModifierParam[];
+  modifier_param?: PacketModifierParam[];
   transmit_param: PacketTransmitModeParam;
 }

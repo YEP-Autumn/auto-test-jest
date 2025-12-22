@@ -1,19 +1,14 @@
-import { ControllerApi } from "../utils/controller/ControllerApi";
+import {
+  TransmitMode
+} from "../utils/comm/Components";
+import { RenixPort, StreamBackendApi } from "../utils/stream/StreamBackendApi";
+import { ThriftPresets } from "../utils/stream/thrift-protocol.factory";
 import {
   EthernetPacketBuilder,
   EthernetPacketParser,
-  PacketListBuilder,
-  PacketListParser,
+  PacketListBuilder
 } from "../utils/stream/thrift_packet";
-import { RenixPort, StreamBackendApi } from "../utils/stream/StreamBackendApi";
-import { ThriftPresets } from "../utils/stream/thrift-protocol.factory";
 import { TestHelper } from "../utils/TestHelper";
-import { sleep } from "../utils";
-import {
-  ModifierField,
-  ModifierMode,
-  TransmitMode,
-} from "../utils/comm/Components";
 
 jest.setTimeout(1000 * 60 * 10);
 
@@ -175,7 +170,6 @@ test.only(
           step_count: 600,
         },
       },
-      stream_name: "test1",
     });
 
     testHelper.addPktSender({
@@ -191,7 +185,6 @@ test.only(
           step_count: 600,
         },
       },
-      stream_name: "test2",
     });
 
     await testHelper.startTest();

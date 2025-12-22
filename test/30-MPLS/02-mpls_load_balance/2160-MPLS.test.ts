@@ -162,7 +162,7 @@ test("测试MPLS AC出口支持agg接口对MPLS内层vlan进行负载均衡", as
     port: RenixPort.B,
     packet: new EthernetPacketBuilder()
       .setEthernet("00:00:01:00:00:ee", "00:00:00:00:00:66", 0x8100)
-      .setVLAN(200, 0x0800)
+      .setVLAN(101, 0x0800)
       .setIPv4("1.1.1.1", "2.2.2.2")
       .build(),
     transmit_param: {

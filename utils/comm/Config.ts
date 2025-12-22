@@ -48,5 +48,5 @@ export class Config {
   };
 
   // public static dut_list = [this.dutA, this.dutC, this.dutC, this.dutD];
-  public static dut_list = [this.dutA, this.dutB, this.dutD];
+  public static dut_list = [this.dutD, this.dutA, this.dutB];
 }

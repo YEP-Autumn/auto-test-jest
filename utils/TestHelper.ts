@@ -1,19 +1,18 @@
-import { Port } from ".";
 import {
   Actuator,
   CleanConfig,
+  DutHandle,
   ExecConfig,
+  ExecCustom,
   ExecRetMatch,
   PacketSender,
   PacketSendParam,
   ReadyCheck,
-  Sleep,
-  ExecCustom,
-  DutHandle,
   replaceIntfA,
   replaceIntfB,
   replaceIntfC,
   replaceIntfD,
+  Sleep,
 } from "./comm/Components";
 import { Config } from "./comm/Config";
 import { Dut } from "./comm/Dut";

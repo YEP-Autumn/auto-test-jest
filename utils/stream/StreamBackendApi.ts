@@ -1,7 +1,6 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import FormData from "form-data";
-import { PacketListParser, IPacketListParseResult } from "./thrift_packet";
-import { convertCompilerOptionsFromJson } from "typescript";
+import { IPacketListParseResult, PacketListParser } from "./thrift_packet";
 
 export enum RenixPort {
   A = "//192.168.2.11/5/13",
@@ -9,12 +8,10 @@ export enum RenixPort {
 }
 
 export class StreamBackendApi {
-  // api = axios.create({ baseURL: "http://127.0.0.1:8000/stream_backend" });
   api = axios.create({
     baseURL: "http://172.16.9.1:8000/stream_backend",
     timeout: 5000,
   });
-  private baseURL = "http://172.16.9.1:8000/stream_backend";
 
   /**
    * 带重试的端口预约（指数退避）

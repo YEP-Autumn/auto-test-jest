@@ -1,6 +1,6 @@
 import axios from "axios";
 import FormData from "form-data";
-import { IPacketListParseResult, PacketListParser } from "./thrift_packet";
+import { IPacketList, PacketListParser } from "./thrift_packet";
 
 export enum RenixPort {
   A = "//192.168.2.11/5/13",
@@ -14,104 +14,80 @@ export class StreamBackendApi {
   });
 
   /**
-   * 带重试的端口预约（指数退避）
+   * 端口预约
    */
-  async port_reserve(port: string, maxRetries = 3, initialDelayMs = 500) {
-    return this.postWithRetry(
-      async () => this.api.post("/port/reserve", { port }),
-      `/port/reserve`,
-      maxRetries,
-      initialDelayMs
-    );
+  async port_reserve(port: string) {
+    const response = await this.api.post("/port/reserve", { port });
+    return response.data;
   }
 
   /**
-   * 带重试的端口释放（指数退避）
+   * 端口释放
    */
-  async port_release(port: string, maxRetries = 3, initialDelayMs = 500) {
-    return this.postWithRetry(
-      async () => this.api.post("/port/release", { port }),
-      `/port/release`,
-      maxRetries,
-      initialDelayMs
-    );
+  async port_release(port: string) {
+    const response = await this.api.post("/port/release", { port });
+    return response.data;
   }
 
   /**
    * Send a packet as multipart/form-data. You can pass additional fields
    * via `fields`. The binary is sent under the `file` field (filename can
-   * be overridden via `filename`). Supports auto-retry on network errors.
+   * be overridden via `filename`).
    */
   async streamPacketSend(
     binary: Buffer,
     fields?: Record<string, any>,
-    filename = "packet.buffer",
-    maxRetries = 3,
-    initialDelayMs = 500
+    filename = "packet.buffer"
   ): Promise<any> {
-    return this.postWithRetry(
-      async () => {
-        const form = new FormData();
-        form.append("file", binary, {
-          filename,
-          contentType: "application/octet-stream",
-        });
-        appendFields(form, fields);
+    const form = new FormData();
+    form.append("file", binary, {
+      filename,
+      contentType: "application/octet-stream",
+    });
+    appendFields(form, fields);
 
-        const headers: Record<string, any> = { ...form.getHeaders() };
-        const len = await new Promise<number | null>((resolve) => {
-          form.getLength((err: Error | null, len: number) => {
-            resolve(err ? null : len);
-          });
-        });
-        if (len !== null) headers["Content-Length"] = len;
+    const headers: Record<string, any> = { ...form.getHeaders() };
+    const len = await new Promise<number | null>((resolve) => {
+      form.getLength((err: Error | null, len: number) => {
+        resolve(err ? null : len);
+      });
+    });
+    if (len !== null) headers["Content-Length"] = len;
 
-        return this.api.post("/packet/send", form, {
-          headers,
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity,
-        });
-      },
-      "/packet/send",
-      maxRetries,
-      initialDelayMs
-    );
+    const response = await this.api.post("/packet/send", form, {
+      headers,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
+    return response.data;
   }
 
   async streamPacketListSend(
     binary: Buffer,
     fields?: Record<string, any>,
-    filename = "packet.buffer",
-    maxRetries = 3,
-    initialDelayMs = 500
+    filename = "packet.buffer"
   ): Promise<any> {
-    return this.postWithRetry(
-      async () => {
-        const form = new FormData();
-        form.append("file", binary, {
-          filename,
-          contentType: "application/octet-stream",
-        });
-        appendFields(form, fields);
+    const form = new FormData();
+    form.append("file", binary, {
+      filename,
+      contentType: "application/octet-stream",
+    });
+    appendFields(form, fields);
 
-        const headers: Record<string, any> = { ...form.getHeaders() };
-        const len = await new Promise<number | null>((resolve) => {
-          form.getLength((err: Error | null, len: number) => {
-            resolve(err ? null : len);
-          });
-        });
-        if (len !== null) headers["Content-Length"] = len;
+    const headers: Record<string, any> = { ...form.getHeaders() };
+    const len = await new Promise<number | null>((resolve) => {
+      form.getLength((err: Error | null, len: number) => {
+        resolve(err ? null : len);
+      });
+    });
+    if (len !== null) headers["Content-Length"] = len;
 
-        return this.api.post("/packetlist/send", form, {
-          headers,
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity,
-        });
-      },
-      "/packetlist/send",
-      maxRetries,
-      initialDelayMs
-    );
+    const response = await this.api.post("/packetlist/send", form, {
+      headers,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
+    return response.data;
   }
 
   async streamPacketUserdefineSend(
@@ -119,155 +95,79 @@ export class StreamBackendApi {
     port: RenixPort,
     modifier_param: any,
     transmit_param: any,
-    filename = "packet.buffer",
-    maxRetries = 3,
-    initialDelayMs = 500
+    filename = "packet.buffer"
   ): Promise<any> {
-    return this.postWithRetry(
-      async () => {
-        const form = new FormData();
-        form.append("file", binary, {
-          filename,
-          contentType: "application/octet-stream",
-        });
-        if (port) {
-          appendFields(form, { port });
-        }
-        if (modifier_param) {
-          appendFields(form, { modifier_param });
-        }
-        if (transmit_param) {
-          appendFields(form, { transmit_param });
-        }
+    const form = new FormData();
+    form.append("file", binary, {
+      filename,
+      contentType: "application/octet-stream",
+    });
+    if (port) {
+      appendFields(form, { port });
+    }
+    if (modifier_param) {
+      appendFields(form, { modifier_param });
+    }
+    if (transmit_param) {
+      appendFields(form, { transmit_param });
+    }
 
-        const headers: Record<string, any> = { ...form.getHeaders() };
-        const len = await new Promise<number | null>((resolve) => {
-          form.getLength((err: Error | null, len: number) => {
-            resolve(err ? null : len);
-          });
-        });
-        if (len !== null) headers["Content-Length"] = len;
+    const headers: Record<string, any> = { ...form.getHeaders() };
+    const len = await new Promise<number | null>((resolve) => {
+      form.getLength((err: Error | null, len: number) => {
+        resolve(err ? null : len);
+      });
+    });
+    if (len !== null) headers["Content-Length"] = len;
 
-        return this.api.post("/packet/send/userdefine", form, {
-          headers,
-          maxContentLength: Infinity,
-          maxBodyLength: Infinity,
-        });
-      },
-      "/packet/send/userdefine",
-      maxRetries,
-      initialDelayMs
-    );
+    const response = await this.api.post("/packet/send/userdefine", form, {
+      headers,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+    });
+    return response.data;
   }
 
   async streamPacketStreamStart(port: string) {}
   async streamPacketStreamStop(port: string) {}
 
-  async streamPacketCaptureStart(port: string) {}
-  async streamPacketCaptureStop(port: string) {}
+  async streamPacketCaptureStart(port: string) {
+    const response = await this.api.post("/capture/start", { port });
+    return response.data;
+  }
 
-  /**
-   * 获取捕获的数据包并进行解析（支持自动重试）
-   * @param port 端口标识
-   * @returns 解析后的报文列表结果
-   */
-  async streamPacketCaptureGet(
-    port: string,
-    maxRetries = 3,
-    initialDelayMs = 500
-  ): Promise<IPacketListParseResult> {
-    return this.postWithRetry(
-      async () => {
-        // 以二进制格式接收数据
-        return this.api.post(
-          "/capture/download",
-          { port },
-          {
-            responseType: "arraybuffer",
-            maxContentLength: Infinity,
-            maxBodyLength: Infinity,
-          }
-        );
-      },
-      `/capture/download`,
-      maxRetries,
-      initialDelayMs
-    ).then((binaryData) => {
-      // 使用 PacketListParser 解析二进制数据
-      const parser = new PacketListParser();
-      const parseResult = parser.parse(Buffer.from(binaryData));
-
-      if (parseResult.packetList && parseResult.packetList.pkt_list) {
-        console.log(
-          `Successfully parsed ${parseResult.packetList.pkt_list.length} packets using strategy: ${parseResult.strategy}`
-        );
-        console.log(
-          "First packet data json:",
-          JSON.stringify(parseResult.packetList)
-        );
-      } else {
-        console.warn(
-          "Failed to parse packet list. Errors:",
-          parseResult.errors
-        );
-      }
-
-      return parseResult;
-    });
+  async streamPacketCaptureStop(port: string) {
+    const response = await this.api.post("/capture/stop", { port });
+    return response.data;
   }
 
   /**
-   * 通用重试逻辑：遇到连接错误或 5xx 会自动重试（指数退避）
+   * 获取捕获的数据包并进行解析
+   * @param port 端口标识
+   * @returns 解析后的报文列表结果
    */
-  private async postWithRetry(
-    requestFn: () => Promise<any>,
-    path: string,
-    maxRetries: number,
-    initialDelayMs: number
-  ) {
-    let lastError: any;
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        const response = await requestFn();
-        const result = response.data;
-        if (attempt > 0) {
-          console.log(
-            `✓ StreamBackendApi ${path} succeeded on attempt ${attempt + 1}`
-          );
-        } else {
-          console.log(`✓ StreamBackendApi ${path}:`, JSON.stringify(result));
-        }
-        return result;
-      } catch (error: any) {
-        lastError = error;
-        const isRetryable =
-          !error.response || // 网络错误/超时
-          error.response?.status >= 500 || // 服务端错误
-          error.code === "ECONNREFUSED" ||
-          error.code === "ECONNRESET" ||
-          error.code === "ETIMEDOUT" ||
-          error.message?.includes("socket hang up");
-
-        if (!isRetryable || attempt === maxRetries - 1) {
-          break;
-        }
-
-        const delay = initialDelayMs * Math.pow(2, attempt);
-        console.warn(
-          `StreamBackendApi ${path} failed (attempt ${
-            attempt + 1
-          }/${maxRetries}): ${error.message}, ` + `retry after ${delay}ms...`
-        );
-        await new Promise((r) => setTimeout(r, delay));
+  async streamPacketCaptureGet(port: string): Promise<IPacketList> {
+    const response = await this.api.post(
+      "/capture/download",
+      { port },
+      {
+        responseType: "arraybuffer",
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
       }
+    );
+    const binaryData = response.data;
+
+    // 使用 PacketListParser 解析二进制数据
+    const parser = new PacketListParser();
+    const packetList = parser.parse(Buffer.from(binaryData));
+
+    if (packetList && packetList.pkt_list) {
+      console.log(`Successfully parsed ${packetList.pkt_list.length} packets`);
+      console.log("First packet data json:", JSON.stringify(packetList));
     }
 
-    // 所有重试都失败，抛出错误
-    throw new Error(
-      `StreamBackendApi ${path} failed after ${maxRetries} attempts: ${
-        lastError?.message || lastError
-      }`
-    );
+    return packetList;
   }
 }
 

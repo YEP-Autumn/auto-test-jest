@@ -39,15 +39,7 @@ export class TestHelper {
     for (let i = 0; i < Config.dut_list.length; i++) {
       this.dut_list[i] = await new Dut(Config.dut_list[i]).connect();
     }
-    // 可选：健康检查拓扑服务（如果使用拓扑）
-    if (this.topo) {
-      const isHealthy = await this.topoApi.healthCheck(3, 500);
-      if (!isHealthy) {
-        console.warn(
-          "TopoApi health check failed, but proceeding with auto-retry logic"
-        );
-      }
-    }
+    // 拓扑服务不再进行健康检查，直接进行后续操作
 
     /** 创建拓扑 */
     if (this.topo) {

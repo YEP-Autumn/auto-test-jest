@@ -1,0 +1,85 @@
+import { ThriftFullProtocolType } from "./thrift-protocol.factory";
+
+/**
+ * 将IP地址字符串转换为32位整数
+ * 例如: "192.168.1.1" -> 3232235777
+ */
+export function ipStringToNumber(ipString: string): number {
+  const parts = ipString.split(".");
+  if (parts.length !== 4) {
+    throw new Error(`无效的IP地址格式: ${ipString}`);
+  }
+
+  const octets = parts.map((part) => {
+    const num = parseInt(part, 10);
+    if (isNaN(num) || num < 0 || num > 255) {
+      throw new Error(`无效的IP八位组: ${part} (必须是0-255之间的数字)`);
+    }
+    return num;
+  });
+
+  return (octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3];
+}
+
+/**
+ * 解析策略定义
+ */
+interface IParseStrategy {
+  /** 策略名称 */
+  name: string;
+  /** 协议类型 */
+  protocolType: ThriftFullProtocolType;
+  /** 是否需要剥离帧头 */
+  stripFrame: boolean;
+  /** 帧头字节序 */
+  byteOrder?: "big" | "little";
+  /** 帧头长度 */
+  framePrefixLen?: number;
+}
+
+export const PARSE_STRATEGIES: IParseStrategy[] = [
+  // 策略 1: Framed + Compact (big-endian)
+  {
+    name: "compact-framed-be-4byte",
+    protocolType: ThriftFullProtocolType.FRAMED_COMPACT,
+    stripFrame: true,
+    byteOrder: "big",
+    framePrefixLen: 4,
+  },
+  // 策略 2: Framed + Compact (little-endian)
+  {
+    name: "compact-framed-le-4byte",
+    protocolType: ThriftFullProtocolType.FRAMED_COMPACT,
+    stripFrame: true,
+    byteOrder: "little",
+    framePrefixLen: 4,
+  },
+  // 策略 3: Framed + Binary (big-endian)
+  {
+    name: "binary-framed-be-4byte",
+    protocolType: ThriftFullProtocolType.FRAMED_BINARY,
+    stripFrame: true,
+    byteOrder: "big",
+    framePrefixLen: 4,
+  },
+  // 策略 4: Framed + Binary (little-endian)
+  {
+    name: "binary-framed-le-4byte",
+    protocolType: ThriftFullProtocolType.FRAMED_BINARY,
+    stripFrame: true,
+    byteOrder: "little",
+    framePrefixLen: 4,
+  },
+  // 策略 5: Buffered + Compact (无帧)
+  {
+    name: "compact-as-is",
+    protocolType: ThriftFullProtocolType.BUFFERED_COMPACT,
+    stripFrame: false,
+  },
+  // 策略 6: Buffered + Binary (无帧)
+  {
+    name: "binary-as-is",
+    protocolType: ThriftFullProtocolType.BUFFERED_BINARY,
+    stripFrame: false,
+  },
+];

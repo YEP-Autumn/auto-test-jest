@@ -20,7 +20,7 @@ This is a **Jest-based automated testing framework** for network device testing.
 - Requires static IP config in `utils/comm/Config.ts`
 
 **Packet Generation** (`utils/stream/`)
-- `EthernetPacketBuilder` / `Parser` - Layer 2-3 packet construction/validation
+- `PacketBuilder` / `Parser` - Layer 2-3 packet construction/validation
 - `PacketListBuilder` / `Parser` - Serialize multiple packets to binary buffer
 - `StreamBackendApi` - HTTP multipart endpoint to `http://127.0.0.1:8000/stream_backend` for packet injection
 

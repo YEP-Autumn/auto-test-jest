@@ -31,13 +31,13 @@ export class Config {
   };
 
   public static dut_e670 = {
-    host: "172.16.9.111",
+    host: "172.16.9.110",
     portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
     portMapping: ["eth-0-25", "eth-0-26", "eth-0-27", "eth-0-28"],
   };
 
   public static dut_e680 = {
-    host: "172.16.9.122",
+    host: "172.16.9.120",
     portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
     portMapping: ["eth-0-9", "eth-0-10", "eth-0-11", "eth-0-12"],
   };
@@ -53,6 +53,6 @@ export class Config {
     portMapping: ["eth-0-23", "eth-0-24"],
   };
 
-  // public static dut_list = [this.dutA, this.dutC, this.dutC, this.dutD];
-  public static dut_list = [this.dut_e780, this.dut_e670, this.dut_e680];
+  public static dut_list = [this.dut_e780, this.dut_e680, this.dut_e670];
+  // public static dut_list = [this.dut_e530_1, this.dut_e530_2];
 }

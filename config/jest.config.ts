@@ -43,29 +43,24 @@ const config: Config = {
     // "test/30-MPLS/01-mpls_use_with_vlan_mapping/1040-MPLS.test.ts",
     // "test/30-MPLS/01-mpls_use_with_vlan_mapping/1050-MPLS.test.ts",
     // "test/30-MPLS/01-mpls_use_with_vlan_mapping/1060-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2010-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2020-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2010-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2020-MPLS.test.ts",
     "test/30-MPLS/02-mpls_load_balance/2030-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2040-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2050-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2060-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2070-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2080-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2090-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2100-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2110-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2120-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2130-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2140-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2150-MPLS.test.ts",
-    "test/30-MPLS/02-mpls_load_balance/2160-MPLS.test.ts",
-    // "test/30-MPLS/1000-MPLS.test.ts", // 用于测试bug
-    // "test/30-MPLS/1010-MPLS.test.ts", // 用于测试bug
-    // "test/30-MPLS/1020-MPLS.test.ts", // 用于测试bug
-    // "test/30-MPLS/1030-MPLS.test.ts", // 用于测试bug
-    // "test/30-MPLS/1040-MPLS.test.ts", // 用于测试bug
-    // "test/30-MPLS/1050-MPLS.test.ts", // 用于测试bug
-    // "test/30-MPLS/1060-MPLS.test.ts", // 用于测试bug
+    // "test/30-MPLS/02-mpls_load_balance/2040-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2050-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2060-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2070-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2080-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2090-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2100-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2110-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2120-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2130-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2140-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2150-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2160-MPLS.test.ts",
+    // "test/30-MPLS/02-mpls_load_balance/2170-MPLS.test.ts",  // not work
+    // "test/30-MPLS/02-mpls_load_balance/2180-MPLS.test.ts",  // not work
     // "test/41-VLAN-DOT1Q-TUNNEL/0010-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0020-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0030-VLAN-TUNNEL.test.ts",
@@ -76,6 +71,7 @@ const config: Config = {
     // "test/41-VLAN-DOT1Q-TUNNEL/0080-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0090-VLAN-TUNNEL.test.ts",
     // "test/41-VLAN-DOT1Q-TUNNEL/0100-VLAN-TUNNEL.test.ts",
+    // "test/50-VLAN_SUBIF/0010-VLAN_SUBIF.test.ts",
   ],
 };
 

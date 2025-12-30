@@ -164,7 +164,10 @@ export class StreamBackendApi {
 
     if (packetList && packetList.pkt_list) {
       console.log(`Successfully parsed ${packetList.pkt_list.length} packets`);
-      console.log("First packet data json:", JSON.stringify(packetList));
+      console.log(
+        "First packet data json:",
+        JSON.stringify(packetList, null, 2)
+      );
     }
 
     return packetList;

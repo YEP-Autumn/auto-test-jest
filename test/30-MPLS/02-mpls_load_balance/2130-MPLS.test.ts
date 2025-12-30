@@ -1,7 +1,5 @@
 import { Port } from "../../../utils";
-import {
-    TransmitMode
-} from "../../../utils/comm/Components";
+import { TransmitMode } from "../../../utils/comm/Components";
 import { RenixPort } from "../../../utils/stream/StreamBackendApi";
 import { PacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
@@ -152,10 +150,9 @@ test("测试MPLS AC入口支持agg接口对MPLS内层eth-type进行负载均衡"
   testHelper.addPktSender({
     port: RenixPort.A,
     packet: new PacketBuilder()
-      .setEthernet("00:00:00:00:00:ee", "00:00:00:00:00:66", 0x8100)
-      .setVLAN(2, 0x0800)
-      .setIPv4("1.1.1.1", "2.2.2.2")
-      .build(),
+      .setEthernet({ dst: "00:00:00:00:00:ee", src: "00:00:00:00:00:66", type: 0x8100 })
+      .setVLAN({ vlan: 2, type: 0x0800 })
+      .setIPv4({ srcIp: "1.1.1.1", dstIp: "2.2.2.2" }),
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -167,10 +164,9 @@ test("测试MPLS AC入口支持agg接口对MPLS内层eth-type进行负载均衡"
   testHelper.addPktSender({
     port: RenixPort.A,
     packet: new PacketBuilder()
-      .setEthernet("00:00:00:00:00:ee", "00:00:00:00:00:66", 0x8100)
-      .setVLAN(2, 0x0801)
-      .setIPv4("1.1.1.1", "2.2.2.2")
-      .build(),
+      .setEthernet({ dst: "00:00:00:00:00:ee", src: "00:00:00:00:00:66", type: 0x8100 })
+      .setVLAN({ vlan: 2, type: 0x0801 })
+      .setIPv4({ srcIp: "1.1.1.1", dstIp: "2.2.2.2" }),
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {

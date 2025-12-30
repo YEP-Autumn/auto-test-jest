@@ -1,11 +1,10 @@
 import { Port } from "../../../utils";
 import {
-    ModifierField,
-    ModifierMode,
-    TransmitMode,
+  ModifierField,
+  ModifierMode,
+  TransmitMode,
 } from "../../../utils/comm/Components";
 import { RenixPort } from "../../../utils/stream/StreamBackendApi";
-import { ThriftPresets } from "../../../utils/stream/thrift-protocol.factory";
 import { PacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
 import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
@@ -156,10 +155,9 @@ test("测试MPLS AC入口支持agg接口对MPLS内层src mac进行负载均衡",
   testHelper.addPktSender({
     port: RenixPort.A,
     packet: new PacketBuilder()
-      .setEthernet("00:00:01:00:00:ee", "00:00:a0:0a:00:66", 0x8100)
-      .setVLAN(2, 0x0800)
-      .setIPv4("1.1.1.1", "2.2.2.2")
-      .build(ThriftPresets.DEFAULT),
+      .setEthernet({ dst: "00:00:01:00:00:ee", src: "00:00:a0:0a:00:66", type: 0x8100 })
+      .setVLAN({ vlan: 2, type: 0x0800 })
+      .setIPv4({ srcIp: "1.1.1.1", dstIp: "2.2.2.2" }),
     modifier_param: [
       {
         modifier_field: ModifierField.EthernetII_MAC_SRC,

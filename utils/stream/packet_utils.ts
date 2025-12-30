@@ -1,4 +1,9 @@
-import { ThriftFullProtocolType } from "./thrift-protocol.factory";
+import {
+  ThriftFullProtocolType,
+  ThriftPresets,
+  ThriftProtocolFactory,
+} from "./thrift-protocol.factory";
+import { IFieldMeta, Packet, thrift } from "./thrift_packet";
 
 /**
  * 将IP地址字符串转换为32位整数
@@ -19,6 +24,36 @@ export function ipStringToNumber(ipString: string): number {
   });
 
   return (octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3];
+}
+
+/**
+ * 获取构建的报文
+ * 使用配置的 Thrift 协议类型序列化报文
+ */
+export function packet_thrift_buffer_build(
+  fieldList: IFieldMeta[],
+  protocolType: ThriftFullProtocolType = ThriftPresets.DEFAULT
+): Buffer {
+  let capturedFlushBuffer: Buffer | null = null;
+  const factory = new ThriftProtocolFactory(thrift);
+  const { transport, protocol } = factory.createByFullType(
+    protocolType,
+    (msg: Buffer) => {
+      capturedFlushBuffer = msg;
+    }
+  );
+
+  const packet = new Packet({
+    field_list: fieldList,
+  });
+
+  // 执行写入操作
+  packet.write(protocol);
+  if (typeof transport.flush === "function") {
+    transport.flush();
+  }
+
+  return capturedFlushBuffer || Buffer.alloc(0);
 }
 
 /**

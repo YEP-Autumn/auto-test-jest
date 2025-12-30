@@ -53,6 +53,6 @@ export class Config {
     portMapping: ["eth-0-23", "eth-0-24"],
   };
 
-  public static dut_list = [this.dut_e780, this.dut_e680, this.dut_e670];
+  public static dut_list = [this.dut_e530_1, this.dut_e680, this.dut_e670];
   // public static dut_list = [this.dut_e530_1, this.dut_e530_2];
 }

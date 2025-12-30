@@ -156,24 +156,4 @@ export class LinkConstraint {
       },
     ],
   };
-
-  static test: Topolinks = {
-    links: [
-      {
-        stream_id: 1,
-        in_port: Renix.portA,
-        out_port: DutA.portA,
-      },
-      {
-        stream_id: 2,
-        in_port: DutA.portB,
-        out_port: DutB.portB,
-      },
-      {
-        stream_id: 3,
-        in_port: DutB.portA,
-        out_port: Renix.portB,
-      },
-    ],
-  };
 }

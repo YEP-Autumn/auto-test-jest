@@ -1,5 +1,7 @@
 import { Port, sleep } from "..";
+import { packet_thrift_buffer_build } from "../stream/packet_utils";
 import { RenixPort, StreamBackendApi } from "../stream/StreamBackendApi";
+import { PacketBuilder } from "../stream/thrift_packet";
 import { Config } from "./Config";
 import { Dut } from "./Dut";
 
@@ -104,8 +106,11 @@ export class PacketSender implements Actuator {
 
   async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
     try {
+      let packet_buffer = packet_thrift_buffer_build(
+        this.param.packet.getFields()
+      );
       await streamBackendApi?.streamPacketUserdefineSend(
-        this.param.packet,
+        packet_buffer,
         this.param.port,
         this.param.modifier_param,
         this.param.transmit_param
@@ -344,7 +349,7 @@ export interface PacketTransmitModeParam {
 
 export interface PacketSendParam {
   port: RenixPort;
-  packet: Buffer;
+  packet: PacketBuilder;
   modifier_param?: PacketModifierParam[];
   transmit_param: PacketTransmitModeParam;
 }

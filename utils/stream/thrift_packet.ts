@@ -4,7 +4,6 @@ const ttypes = require("../rpc/gen-nodejs/packet_types");
 import { ipStringToNumber, PARSE_STRATEGIES } from "./packet_utils";
 import {
   ThriftFullProtocolType,
-  ThriftPresets,
   ThriftProtocolFactory,
 } from "./thrift-protocol.factory";
 
@@ -28,6 +27,23 @@ export type IIPv4 = any;
 export type IFieldMeta = any;
 export type IField = any;
 
+// PacketBuilder 参数接口定义
+interface EthernetOptions {
+  dst?: string;
+  src?: string;
+  type?: number;
+}
+
+interface VLANOptions {
+  vlan?: number;
+  type?: number;
+}
+
+interface IPv4Options {
+  srcIp?: string;
+  dstIp?: string;
+}
+
 /**
  * 以太网报文构建器实现
  */
@@ -36,7 +52,11 @@ export class PacketBuilder {
   /**
    * 设置以太网II帧
    */
-  setEthernet(dst: string, src: string, type: number): PacketBuilder {
+  setEthernet({
+    dst = '00:00:00:00:00:00',
+    src = '00:00:00:00:00:00',
+    type = 0x0800
+  }: EthernetOptions = {}): PacketBuilder {
     const ethernet = new EthernetII({
       dst,
       src,
@@ -55,7 +75,10 @@ export class PacketBuilder {
   /**
    * 设置VLAN标签
    */
-  setVLAN(vlan: number, type: number): PacketBuilder {
+  setVLAN({
+    vlan = 1,
+    type = 0x0800
+  }: VLANOptions = {}): PacketBuilder {
     const vlanField = new VLAN({
       vlan,
       type,
@@ -72,10 +95,11 @@ export class PacketBuilder {
 
   /**
    * 设置IPv4协议头
-   * @param srcIp 源IP地址字符串，例如 "192.168.1.1"
-   * @param dstIp 目的IP地址字符串，例如 "192.168.1.2"
    */
-  setIPv4(srcIp: string, dstIp: string): PacketBuilder {
+  setIPv4({
+    srcIp = '0.0.0.0',
+    dstIp = '0.0.0.0'
+  }: IPv4Options = {}): PacketBuilder {
     const srcIpNum = ipStringToNumber(srcIp);
     const dstIpNum = ipStringToNumber(dstIp);
 
@@ -94,33 +118,6 @@ export class PacketBuilder {
   }
 
   /**
-   * 获取构建的报文
-   * 使用配置的 Thrift 协议类型序列化报文
-   */
-  build(protocolType: ThriftFullProtocolType = ThriftPresets.DEFAULT): Buffer {
-    let capturedFlushBuffer: Buffer | null = null;
-    const factory = new ThriftProtocolFactory(thrift);
-    const { transport, protocol } = factory.createByFullType(
-      protocolType,
-      (msg: Buffer) => {
-        capturedFlushBuffer = msg;
-      }
-    );
-
-    const packet = new Packet({
-      field_list: this.fieldList,
-    });
-
-    // 执行写入操作
-    packet.write(protocol);
-    if (typeof transport.flush === "function") {
-      transport.flush();
-    }
-
-    return capturedFlushBuffer || Buffer.alloc(0);
-  }
-
-  /**
    * 获取字段列表
    */
   getFields(): IFieldMeta[] {
@@ -133,17 +130,6 @@ export class PacketBuilder {
   clear(): PacketBuilder {
     this.fieldList = [];
     return this;
-  }
-}
-
-/**
- * 以太网报文校验器实现
- */
-export class PacketValidator {
-  private packet: IPacket;
-
-  constructor(packet: IPacket) {
-    this.packet = packet;
   }
 }
 

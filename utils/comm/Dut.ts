@@ -16,7 +16,7 @@ export class Dut {
       Object.assign(
         {
           port: 23,
-          shellPrompt: "Switch.*#",
+          shellPrompt: "(Switch.*#|password:)",
           timeout: 1000 * 60 * 5,
           debug: true,
           stripShellPrompt: false,

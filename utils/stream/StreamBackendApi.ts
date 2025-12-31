@@ -157,18 +157,11 @@ export class StreamBackendApi {
       }
     );
     const binaryData = response.data;
+    // console.log(response);
 
     // 使用 PacketListParser 解析二进制数据
     const parser = new PacketListParser();
     const packetList = parser.parse(Buffer.from(binaryData));
-
-    if (packetList && packetList.pkt_list) {
-      console.log(`Successfully parsed ${packetList.pkt_list.length} packets`);
-      console.log(
-        "First packet data json:",
-        JSON.stringify(packetList, null, 2)
-      );
-    }
 
     return packetList;
   }

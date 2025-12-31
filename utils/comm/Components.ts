@@ -38,10 +38,15 @@ export class CleanConfig implements Actuator {
     this.config = config;
   }
   async start(): Promise<boolean> {
+    let result = true;
     for (let i = 0; i < this.config.length; i++) {
-      await this.conn.safeExec(this.config[i]);
+      try {
+        await this.conn.exec(this.config[i]);
+      } catch (error) {
+        result = false;
+      }
     }
-    return true;
+    return result;
   }
 }
 
@@ -97,6 +102,17 @@ export class ReadyCheck implements Actuator {
   }
 }
 
+export class StartCapture implements Actuator {
+  private renix_port: RenixPort;
+  constructor(renix_port: RenixPort) {
+    this.renix_port = renix_port;
+  }
+  async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
+    await streamBackendApi?.streamPacketCaptureStart(this.renix_port);
+    return true;
+  }
+}
+
 export class PacketSender implements Actuator {
   private param: PacketSendParam;
 
@@ -121,6 +137,28 @@ export class PacketSender implements Actuator {
     }
 
     await sleep(3000);
+
+    return true;
+  }
+}
+
+export class PacketChecker implements Actuator {
+  private param: PacketCheckParam;
+
+  constructor(param: PacketCheckParam) {
+    this.param = param;
+  }
+
+  async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
+    await streamBackendApi?.streamPacketCaptureStop(this.param.port);
+    let result = await streamBackendApi?.streamPacketCaptureGet(
+      this.param.port
+    );
+
+    if (result && result.pkt_list) {
+      console.log(`Successfully parsed ${result.pkt_list.length} packets`);
+      console.log("First packet data json:", JSON.stringify(result, null, 2));
+    }
 
     return true;
   }
@@ -345,6 +383,7 @@ export interface PacketTransmitModeParam {
     | TransmitStepParam
     | TransmitContinuousParam
     | TransmitTimeParam;
+  fixed_len?: number;
 }
 
 export interface PacketSendParam {
@@ -352,4 +391,10 @@ export interface PacketSendParam {
   packet: PacketBuilder;
   modifier_param?: PacketModifierParam[];
   transmit_param: PacketTransmitModeParam;
+}
+
+export interface PacketCheckParam {
+  port: RenixPort;
+  expected_count: number;
+  packet: PacketBuilder;
 }

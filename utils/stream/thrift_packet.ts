@@ -53,8 +53,8 @@ export class PacketBuilder {
    * 设置以太网II帧
    */
   setEthernet({
-    dst = '00:00:00:00:00:00',
-    src = '00:00:00:00:00:00',
+    dst = '00:00:00:12:30:10',
+    src = '00:00:00:12:30:20',
     type = 0x0800
   }: EthernetOptions = {}): PacketBuilder {
     const ethernet = new EthernetII({
@@ -228,8 +228,6 @@ export class PacketBuilder {
 export class PacketListParser {
   private factory: ThriftProtocolFactory;
 
-  private static readonly PARSE_STRATEGIES = PARSE_STRATEGIES;
-
   constructor() {
     this.factory = new ThriftProtocolFactory(thrift);
   }
@@ -302,7 +300,7 @@ export class PacketListParser {
   parse(buffer: Buffer): IPacketList | null {
     const errors: string[] = [];
 
-    for (const strategy of PacketListParser.PARSE_STRATEGIES) {
+    for (const strategy of PARSE_STRATEGIES) {
       try {
         let packetList: IPacketList | null = null;
 

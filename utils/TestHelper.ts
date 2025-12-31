@@ -5,6 +5,8 @@ import {
   ExecConfig,
   ExecCustom,
   ExecRetMatch,
+  PacketChecker,
+  PacketCheckParam,
   PacketSender,
   PacketSendParam,
   ReadyCheck,
@@ -13,10 +15,11 @@ import {
   replaceIntfC,
   replaceIntfD,
   Sleep,
+  StartCapture,
 } from "./comm/Components";
 import { Config } from "./comm/Config";
 import { Dut } from "./comm/Dut";
-import { StreamBackendApi } from "./stream/StreamBackendApi";
+import { RenixPort, StreamBackendApi } from "./stream/StreamBackendApi";
 import { Topolinks } from "./topo/LinkConstraint";
 import { TopoApi } from "./topo/TopoApi";
 
@@ -84,7 +87,11 @@ export class TestHelper {
       if (this.actuator[i] instanceof CleanConfig) {
         let ret = await this.actuator[i].start();
         this.testResult = false == ret ? ret : this.testResult;
-      } else if (this.actuator[i] instanceof PacketSender) {
+      } else if (
+        this.actuator[i] instanceof PacketSender ||
+        this.actuator[i] instanceof StartCapture ||
+        this.actuator[i] instanceof PacketChecker
+      ) {
         if (this.streamBackendApi == undefined) {
           try {
             this.streamBackendApi = new StreamBackendApi();
@@ -116,12 +123,20 @@ export class TestHelper {
     return this.testResult;
   }
 
+  startCapture(renix_port: RenixPort) {
+    this.actuator.push(new StartCapture(renix_port));
+    return this;
+  }
+
   addPktSender(packetSendParam: PacketSendParam) {
     this.actuator.push(new PacketSender(packetSendParam));
     return this;
   }
 
-  addPktChecker(any: any) {}
+  addPktChecker(packetCheckParam: PacketCheckParam) {
+    this.actuator.push(new PacketChecker(packetCheckParam));
+    return this;
+  }
 
   /** Exec Config */
   ExecConfigDutA(config: string[]) {

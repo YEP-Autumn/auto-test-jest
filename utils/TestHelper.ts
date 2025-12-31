@@ -38,18 +38,13 @@ export class TestHelper {
   }
 
   async init() {
-    /** 连接交换机 */
     for (let i = 0; i < Config.dut_list.length; i++) {
       this.dut_list[i] = await new Dut(Config.dut_list[i]).connect();
     }
-    // 拓扑服务不再进行健康检查，直接进行后续操作
 
-    /** 创建拓扑 */
     if (this.topo) {
       await this.topoApi.topoLinksAdd(this.topo);
     }
-
-    // await new Promise((resolve) => setTimeout(resolve, 2000));
 
     return this;
   }
@@ -57,12 +52,10 @@ export class TestHelper {
   async destroy() {
     let promise = new Array<Promise<Dut>>();
 
-    /** 释放交换机连接 */
     this.dut_list.forEach((dut) => {
       promise.push(dut.disconnect());
     });
 
-    /** 释放Renix端口 */
     if (this.streamBackendApi) {
       for (let i = 0; i < Config.Renix.portList.length; i++) {
         promise.push(
@@ -71,7 +64,6 @@ export class TestHelper {
       }
     }
 
-    /** 删除拓扑 */
     if (this.topo && this._inner_debug != true) {
       promise.push(this.topoApi.topoLinksDelete(this.topo));
     }

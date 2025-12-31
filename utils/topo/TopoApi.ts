@@ -16,9 +16,7 @@ export class TopoApi {
     return response.data;
   }
 
-  async topoLinksDelete(
-    links: Topolinks
-  ) {
+  async topoLinksDelete(links: Topolinks) {
     const response = await this.api.post(
       "/stream/link/delete",
       _tmp_set_topo_links_two_way(links)

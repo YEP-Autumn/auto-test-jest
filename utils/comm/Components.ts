@@ -156,8 +156,7 @@ export class PacketChecker implements Actuator {
     );
 
     if (result && result.pkt_list) {
-      console.log(`Successfully parsed ${result.pkt_list.length} packets`);
-      console.log("First packet data json:", JSON.stringify(result, null, 2));
+      
     }
 
     return true;

@@ -1,4 +1,5 @@
 import { Telnet } from "telnet-client";
+import { Config } from "./Config";
 
 export class Dut {
   private conn_param: ICONN_PARAM;
@@ -13,19 +14,7 @@ export class Dut {
 
   public async connect() {
     await this.connection.connect(
-      Object.assign(
-        {
-          port: 23,
-          shellPrompt: "(Switch.*#|password:)",
-          timeout: 1000 * 60 * 5,
-          debug: true,
-          stripShellPrompt: false,
-          stripControls: true,
-          execTimeout: 1000 * 30,
-          disableLogon: true,
-        },
-        this.conn_param
-      )
+      Object.assign(Config.default_cfg, this.conn_param)
     );
     return this;
   }

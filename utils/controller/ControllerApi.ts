@@ -1,5 +1,12 @@
-import axios, { AxiosError } from "axios";
-import { TopolopyLink } from "./ControllerApi.Intf";
+import axios from "axios";
+
+export interface TopolopyLink {
+  src_port_index: number;
+  src_device: number;
+  dst_port_index: number;
+  dst_device: number;
+  is_two_way: boolean;
+}
 
 export class ControllerApi {
   // api = axios.create({ baseURL: "http://localhost:8000/" });
@@ -56,5 +63,4 @@ export class ControllerApi {
         console.error("Error:", error);
       });
   }
-
 }

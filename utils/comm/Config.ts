@@ -18,6 +18,17 @@ export class Config {
     };
    */
 
+  public static default_cfg = {
+    port: 23,
+    shellPrompt: "(Switch.*#|password:)",
+    timeout: 1000 * 60 * 5,
+    debug: true,
+    stripShellPrompt: false,
+    stripControls: true,
+    execTimeout: 1000 * 30,
+    disableLogon: true,
+  };
+
   public static dut_e530_1 = {
     host: "172.16.9.106",
     portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
@@ -49,7 +60,8 @@ export class Config {
   };
 
   public static Renix = {
-    portList: [RenixPort.A, RenixPort.B],
+    // portList: [RenixPort.A, RenixPort.B],
+    portList: [RenixPort.A],
     portMapping: ["eth-0-23", "eth-0-24"],
   };
 

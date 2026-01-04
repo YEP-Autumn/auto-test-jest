@@ -149,17 +149,162 @@ export class PacketChecker implements Actuator {
     this.param = param;
   }
 
+  /**
+   * 检查数量是否满足期望条件
+   * @param actual 实际数量
+   * @param expected 期望条件（NumberCompare 或 number）
+   * @returns 是否满足条件
+   */
+  private checkCount(
+    actual: number,
+    expected: NumberCompare | number
+  ): boolean {
+    if (typeof expected === "number") {
+      return actual === expected;
+    }
+
+    // NumberCompare 类型
+    switch (expected.type) {
+      case CompareType.E_GreaterThan:
+        return actual > expected.count;
+      case CompareType.E_LessThan:
+        return actual < expected.count;
+      case CompareType.E_EqualTo:
+        return actual === expected.count;
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * 检查两个字段是否匹配
+   * @param expected 期望的字段（来自 PacketBuilder）
+   * @param actual 实际捕获的字段
+   * @returns 是否匹配
+   */
+  private fieldsMatch(expected: any, actual: any): boolean {
+    if (!expected || !actual) return false;
+    if (expected.type !== actual.type) return false;
+
+    const field = expected.field;
+    const actualField = actual.field;
+
+    if (!field || !actualField) return false;
+
+    // 根据字段类型比较具体内容
+    switch (expected.type) {
+      case 1: // EthernetII
+        return (
+          field.ether &&
+          actualField.ether &&
+          field.ether.dst === actualField.ether.dst &&
+          field.ether.src === actualField.ether.src &&
+          field.ether.type === actualField.ether.type
+        );
+      case 2: // VLAN
+        return (
+          field.vlan &&
+          actualField.vlan &&
+          field.vlan.vlan === actualField.vlan.vlan &&
+          field.vlan.type === actualField.vlan.type
+        );
+      case 3: // IPv4
+        return (
+          field.ipv4 &&
+          actualField.ipv4 &&
+          field.ipv4.src_ip === actualField.ipv4.src_ip &&
+          field.ipv4.dst_ip === actualField.ipv4.dst_ip
+        );
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * 检查期望的字段列表是否按顺序存在于实际字段列表中
+   * @param expectedFields 期望的字段列表
+   * @param actualFields 实际字段列表
+   * @returns 是否匹配
+   */
+  private fieldListMatches(
+    expectedFields: any[],
+    actualFields: any[]
+  ): boolean {
+    if (!expectedFields || expectedFields.length === 0) return true;
+    if (!actualFields || actualFields.length === 0) return false;
+
+    let expectedIndex = 0;
+    let actualIndex = 0;
+
+    // 遍历实际字段列表，按顺序查找期望字段
+    while (
+      expectedIndex < expectedFields.length &&
+      actualIndex < actualFields.length
+    ) {
+      if (
+        this.fieldsMatch(
+          expectedFields[expectedIndex],
+          actualFields[actualIndex]
+        )
+      ) {
+        expectedIndex++; // 找到匹配，移动到下一个期望字段
+      }
+      actualIndex++; // 总是移动实际字段索引
+    }
+
+    // 如果所有期望字段都找到了，返回 true
+    return expectedIndex === expectedFields.length;
+  }
+
   async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
     await streamBackendApi?.streamPacketCaptureStop(this.param.port);
     let result = await streamBackendApi?.streamPacketCaptureGet(
       this.param.port
     );
 
-    if (result && result.pkt_list) {
-      
+    if (!result || !result.pkt_list) {
+      console.error("❌ No packets captured");
+      return false;
     }
 
-    return true;
+    console.log(`📦 Captured ${result.pkt_list.length} packet(s)`);
+    console.log(JSON.stringify(result.pkt_list, null, 2));
+
+    // 获取期望的字段列表
+    const expectedFields = this.param.packet.getFields();
+
+    // 遍历捕获的包，检查是否有匹配的
+    let matchCount = 0;
+    for (let i = 0; i < result.pkt_list.length; i++) {
+      const packet = result.pkt_list[i];
+      if (
+        packet.field_list &&
+        this.fieldListMatches(expectedFields, packet.field_list)
+      ) {
+        matchCount++;
+        console.log(`✅ Packet ${i + 1} matches expected pattern`);
+      }
+    }
+
+    // 判断匹配数量是否满足预期
+    const expectedCountStr =
+      typeof this.param.expected_count === "number"
+        ? `${this.param.expected_count}`
+        : `${CompareType[this.param.expected_count.type].replace("E_", "")} ${
+            this.param.expected_count.count
+          }`;
+
+    if (this.checkCount(matchCount, this.param.expected_count)) {
+      console.log(
+        `✅ Found ${matchCount} matching packet(s) (expected: ${expectedCountStr})`
+      );
+      return true;
+    } else {
+      console.error(
+        `❌ Only found ${matchCount} matching packet(s), expected ${expectedCountStr}`
+      );
+      return false;
+    }
   }
 }
 
@@ -392,8 +537,31 @@ export interface PacketSendParam {
   transmit_param: PacketTransmitModeParam;
 }
 
+enum CompareType {
+  E_GreaterThan,
+  E_LessThan,
+  E_EqualTo,
+}
+
+interface NumberCompare {
+  type: CompareType;
+  count: number;
+}
+
+export function GreaterThan(cnt: number): NumberCompare {
+  return { type: CompareType.E_GreaterThan, count: cnt };
+}
+
+export function LessThan(cnt: number): NumberCompare {
+  return { type: CompareType.E_LessThan, count: cnt };
+}
+
+export function EqualTo(cnt: number): NumberCompare {
+  return { type: CompareType.E_EqualTo, count: cnt };
+}
+
 export interface PacketCheckParam {
   port: RenixPort;
-  expected_count: number;
+  expected_count: NumberCompare | number;
   packet: PacketBuilder;
 }

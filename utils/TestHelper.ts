@@ -56,10 +56,6 @@ export class TestHelper {
         DeviceDRouteMac = match?.[1] || "";
       }
     }
-    console.log("Device A Route MAC:", DeviceARouteMac);
-    console.log("Device B Route MAC:", DeviceBRouteMac);
-    console.log("Device C Route MAC:", DeviceCRouteMac);
-    console.log("Device D Route MAC:", DeviceDRouteMac);
 
     if (this.topo) {
       await this.topoApi.topoLinksAdd(this.topo);

@@ -158,9 +158,11 @@ export class StreamBackendApi {
     );
     const binaryData = response.data;
 
+    const buffer = Buffer.from(binaryData);
+
     // 使用 PacketListParser 解析二进制数据
     const parser = new PacketListParser();
-    const packetList = parser.parse(Buffer.from(binaryData));
+    const packetList = parser.parse(buffer);
 
     return packetList;
   }

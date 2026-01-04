@@ -45,6 +45,41 @@ interface IPv4Options {
 }
 
 /**
+ * 将MAC地址转换为冒号分隔的格式
+ * 支持三种格式：
+ * - 冒号分隔格式：00:00:00:12:30:10
+ * - 点分十六进制格式：0000.0012.3010
+ * - 点分十六进制缩写格式：1.1.1（会扩展为 00:01:00:01:00:01）
+ * @param macAddress MAC地址字符串
+ * @returns 冒号分隔格式的MAC地址
+ */
+function normalizeMacAddress(macAddress: string): string {
+  // 如果已经是冒号分隔的格式，直接返回
+  if (macAddress.includes(':')) {
+    return macAddress;
+  }
+
+  // 处理点分十六进制格式（如 0000.0012.3010 或缩写 1.1.1）
+  if (macAddress.includes('.')) {
+    const parts = macAddress.split('.');
+    if (parts.length === 3) {
+      // 每个部分是十六进制数字，需要补零到4位，然后分成两个2位数字
+      const expanded = parts
+        .map(part => {
+          // 补零到4位
+          const padded = part.padStart(4, '0');
+          return `${padded.substring(0, 2)}:${padded.substring(2, 4)}`;
+        })
+        .join(':');
+      return expanded;
+    }
+  }
+
+  // 如果格式无法识别，返回原始值
+  return macAddress;
+}
+
+/**
  * 以太网报文构建器实现
  */
 export class PacketBuilder {
@@ -57,9 +92,12 @@ export class PacketBuilder {
     src = '00:00:00:12:30:20',
     type = 0x0800
   }: EthernetOptions = {}): PacketBuilder {
+    const normalizedDst = normalizeMacAddress(dst);
+    const normalizedSrc = normalizeMacAddress(src);
+
     const ethernet = new EthernetII({
-      dst,
-      src,
+      dst: normalizedDst,
+      src: normalizedSrc,
       type,
     });
 
@@ -318,11 +356,8 @@ export class PacketListParser {
           );
         }
 
-        if (
-          packetList &&
-          packetList.pkt_list &&
-          packetList.pkt_list.length > 0
-        ) {
+        // 只要成功解析出 PacketList 对象就返回，即使 pkt_list 为空
+        if (packetList && packetList.pkt_list !== undefined) {
           return packetList;
         }
       } catch (e) {

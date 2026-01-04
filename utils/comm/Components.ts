@@ -1,5 +1,5 @@
 import { Port, sleep } from "..";
-import { packet_thrift_buffer_build } from "../stream/packet_utils";
+import { i16_to_u16, packet_thrift_buffer_build } from "../stream/packet_utils";
 import { RenixPort, StreamBackendApi } from "../stream/StreamBackendApi";
 import { PacketBuilder } from "../stream/thrift_packet";
 import { Config } from "./Config";
@@ -194,21 +194,53 @@ export class PacketChecker implements Actuator {
     // 根据字段类型比较具体内容
     switch (expected.type) {
       case 1: // EthernetII
-        return (
-          field.ether &&
-          actualField.ether &&
-          field.ether.dst === actualField.ether.dst &&
-          field.ether.src === actualField.ether.src &&
-          field.ether.type === actualField.ether.type
-        );
+        console.log("Comparing EthernetII fields:", field, actualField);
+        if (field.ether == null || actualField.ether == null) {
+          console.log("EthernetII field is null.");
+          return false;
+        }
+
+        if (field.ether.type !== i16_to_u16(actualField.ether.type)) {
+          console.log(
+            "EthernetII type field does not match. expected:",
+            field.ether.type,
+            "actual:",
+            i16_to_u16(actualField.ether.type)
+          );
+          return false;
+        }
+
+        if (field.ether.dst !== actualField.ether.dst) {
+          console.log(
+            "EthernetII dst field does not match. expected:",
+            field.ether.dst,
+            "actual:",
+            actualField.ether.dst
+          );
+          return false;
+        }
+        if (field.ether.src !== actualField.ether.src) {
+          console.log(
+            "EthernetII src field does not match. expected:",
+            field.ether.src,
+            "actual:",
+            actualField.ether.src
+          );
+          return false;
+        }
+
+        return true;
+
       case 2: // VLAN
+        console.log("Comparing VLAN fields:", field, actualField);
         return (
           field.vlan &&
           actualField.vlan &&
-          field.vlan.vlan === actualField.vlan.vlan &&
-          field.vlan.type === actualField.vlan.type
+          field.vlan.vlan === i16_to_u16(actualField.vlan.vlan) &&
+          field.vlan.type === i16_to_u16(actualField.vlan.type)
         );
       case 3: // IPv4
+        console.log("Comparing IPv4 fields:", field, actualField);
         return (
           field.ipv4 &&
           actualField.ipv4 &&
@@ -262,8 +294,8 @@ export class PacketChecker implements Actuator {
       this.param.port
     );
 
-    if (!result || !result.pkt_list) {
-      console.error("❌ No packets captured");
+    if (!result || !Array.isArray(result.pkt_list)) {
+      console.error("❌ No packets captured, result: ", result);
       return false;
     }
 

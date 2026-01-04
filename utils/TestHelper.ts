@@ -182,66 +182,59 @@ export class TestHelper {
 
   /** Exec Match */
   ExecRetMatchDutA(config: string, expect: RegExp, notMatch: boolean = false) {
-    replaceIntfA([config]);
+    const [cmd] = replaceIntfA([config]);
     this.actuator.push(
-      new ExecRetMatch(this.dut_list[0], config, expect, notMatch)
+      new ExecRetMatch(this.dut_list[0], cmd, expect, notMatch)
     );
     return this;
   }
 
   ExecRetMatchDutB(config: string, expect: RegExp, notMatch: boolean = false) {
-    replaceIntfB([config]);
+    const [cmd] = replaceIntfB([config]);
     this.actuator.push(
-      new ExecRetMatch(this.dut_list[1], config, expect, notMatch)
+      new ExecRetMatch(this.dut_list[1], cmd, expect, notMatch)
     );
     return this;
   }
 
   ExecRetMatchDutC(config: string, expect: RegExp, notMatch: boolean = false) {
-    replaceIntfC([config]);
+    const [cmd] = replaceIntfC([config]);
     this.actuator.push(
-      new ExecRetMatch(this.dut_list[2], config, expect, notMatch)
+      new ExecRetMatch(this.dut_list[2], cmd, expect, notMatch)
     );
     return this;
   }
 
   ExecRetMatchDutD(config: string, expect: RegExp, notMatch: boolean = false) {
-    replaceIntfD([config]);
+    const [cmd] = replaceIntfD([config]);
     this.actuator.push(
-      new ExecRetMatch(this.dut_list[3], config, expect, notMatch)
+      new ExecRetMatch(this.dut_list[3], cmd, expect, notMatch)
     );
     return this;
   }
 
   ReadyCheckDutA(config: string, expect: RegExp, timeout: number) {
-    replaceIntfA([config]);
-    this.actuator.push(
-      new ReadyCheck(this.dut_list[0], config, expect, timeout)
-    );
+    const [cmd] = replaceIntfA([config]);
+    console.log(cmd);
+    this.actuator.push(new ReadyCheck(this.dut_list[0], cmd, expect, timeout));
     return this;
   }
 
   ReadyCheckDutB(config: string, expect: RegExp, timeout: number) {
-    replaceIntfB([config]);
-    this.actuator.push(
-      new ReadyCheck(this.dut_list[1], config, expect, timeout)
-    );
+    const [cmd] = replaceIntfB([config]);
+    this.actuator.push(new ReadyCheck(this.dut_list[1], cmd, expect, timeout));
     return this;
   }
 
   ReadyCheckDutC(config: string, expect: RegExp, timeout: number) {
-    replaceIntfC([config]);
-    this.actuator.push(
-      new ReadyCheck(this.dut_list[2], config, expect, timeout)
-    );
+    const [cmd] = replaceIntfC([config]);
+    this.actuator.push(new ReadyCheck(this.dut_list[2], cmd, expect, timeout));
     return this;
   }
 
   ReadyCheckDutD(config: string, expect: RegExp, timeout: number) {
-    replaceIntfD([config]);
-    this.actuator.push(
-      new ReadyCheck(this.dut_list[3], config, expect, timeout)
-    );
+    const [cmd] = replaceIntfD([config]);
+    this.actuator.push(new ReadyCheck(this.dut_list[3], cmd, expect, timeout));
     return this;
   }
 

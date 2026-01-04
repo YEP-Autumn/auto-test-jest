@@ -1,9 +1,12 @@
-
 import { Port } from "../../utils";
 import { TransmitMode } from "../../utils/comm/Components";
 import { RenixPort } from "../../utils/stream/StreamBackendApi";
 import { PacketBuilder } from "../../utils/stream/thrift_packet";
-import { DeviceARouteMac, DeviceBRouteMac, TestHelper } from "../../utils/TestHelper";
+import {
+  DeviceARouteMac,
+  DeviceBRouteMac,
+  TestHelper,
+} from "../../utils/TestHelper";
 import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
@@ -28,7 +31,6 @@ afterAll(async () => {
  *
  */
 test("支持通过VLAN子接口建立OSPF邻居连接", async () => {
-
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -45,9 +47,9 @@ test("支持通过VLAN子接口建立OSPF邻居连接", async () => {
     "dot1q termination vid 200",
     "ip address 2.2.2.1/24",
     "exit",
-    "router rip",
-    "network 1.1.1.0/24",
-    "network 2.2.2.0/24",
+    "router ospf",
+    "network 1.1.1.0/24 area 0",
+    "network 2.2.2.0/24 area 0",
     "end",
   ]);
 
@@ -67,9 +69,9 @@ test("支持通过VLAN子接口建立OSPF邻居连接", async () => {
     "dot1q termination vid 300",
     "ip address 3.3.3.1/24",
     "exit",
-    "router rip",
-    "network 1.1.1.0/24",
-    "network 3.3.3.0/24",
+    "router ospf",
+    "network 1.1.1.0/24 area 0",
+    "network 3.3.3.0/24 area 0",
     "redistribute static",
     "exit",
     "arp 3.3.3.3 0003.0003.0003",
@@ -77,7 +79,14 @@ test("支持通过VLAN子接口建立OSPF邻居连接", async () => {
     "end",
   ]);
 
-  testHelper.ReadyCheckDutA("show ip route", /10.10.10.0\/24/g, 1000 * 60);
+  testHelper.sleep(1000 * 40);
+
+  testHelper.ReadyCheckDutA(
+    "show ip ospf neighbor",
+    /1.1.1.2.*?Full/g,
+    1000 * 30
+  );
+  testHelper.ReadyCheckDutA("show ip route", /10.10.10.0\/24/g, 1000 * 30);
 
   testHelper.sleep(3000);
 
@@ -124,7 +133,7 @@ test("支持通过VLAN子接口建立OSPF邻居连接", async () => {
     `interface ${Port.D}`,
     "switchport",
     "exit",
-    "no router rip",
+    "no router ospf",
     "end",
   ]);
 
@@ -138,7 +147,7 @@ test("支持通过VLAN子接口建立OSPF邻居连接", async () => {
     `interface ${Port.D}`,
     "switchport",
     "exit",
-    "no router rip",
+    "no router ospf",
     "no ip route 10.10.10.0/24",
     "no arp 3.3.3.3",
     "end",

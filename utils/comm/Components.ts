@@ -2,7 +2,6 @@ import { Port, sleep } from "..";
 import { i16_to_u16, packet_thrift_buffer_build } from "../stream/packet_utils";
 import { RenixPort, StreamBackendApi } from "../stream/StreamBackendApi";
 import { PacketBuilder } from "../stream/thrift_packet";
-import { Config } from "./Config";
 import { Dut } from "./Dut";
 
 export interface Actuator {
@@ -85,18 +84,23 @@ export class ReadyCheck implements Actuator {
   }
 
   async start(): Promise<boolean> {
-    let retry_cnt = 0;
-    let startTime = Date.now();
-    while (Date.now() - startTime < this.timeout) {
-      let result = await this.conn.safeExec(this.config);
-      if (this.expect.exec(result)) {
-        return true;
-      }
-      console.log(
-        `Waiting for condition: ${this.expect} retry cnt${++retry_cnt}...`
-      );
+    try {
+      let retry_cnt = 0;
+      let startTime = Date.now();
+      while (Date.now() - startTime < this.timeout) {
+        let result = await this.conn.safeExec(this.config);
+        if (this.expect.exec(result)) {
+          return true;
+        }
+        console.log(
+          `Waiting for condition: ${this.expect} retry cnt: ${++retry_cnt}...`
+        );
 
-      await sleep(2000);
+        await sleep(2000);
+      }
+    } catch (error) {
+      console.error("Error: ", error);
+      return false;
     }
     return false;
   }
@@ -108,7 +112,12 @@ export class StartCapture implements Actuator {
     this.renix_port = renix_port;
   }
   async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
-    await streamBackendApi?.streamPacketCaptureStart(this.renix_port);
+    try {
+      await streamBackendApi?.streamPacketCaptureStart(this.renix_port);
+    } catch (error) {
+      console.error("Error: ", error);
+      return false;
+    }
     return true;
   }
 }
@@ -352,96 +361,41 @@ export class Sleep implements Actuator {
   }
 }
 
-/**
- * Generic interface placeholder replacer. Supports single string or array.
- * Uses global replacement so multiple occurrences are handled.
- */
-export function replaceIntf(configs: string[] | string, portList: string[]) {
+export function replaceCmdTemplate(configs: string, dut: Dut): string {
   const repl = (s: string) =>
     s
-      .replace(new RegExp(Port.A, "g"), portList[0] ?? Port.A)
-      .replace(new RegExp(Port.B, "g"), portList[1] ?? Port.B)
-      .replace(new RegExp(Port.C, "g"), portList[2] ?? Port.C)
-      .replace(new RegExp(Port.D, "g"), portList[3] ?? Port.D);
+      .replace(new RegExp(Port.A, "g"), dut.getPortList()[0] ?? Port.A)
+      .replace(new RegExp(Port.B, "g"), dut.getPortList()[1] ?? Port.B)
+      .replace(new RegExp(Port.C, "g"), dut.getPortList()[2] ?? Port.C)
+      .replace(new RegExp(Port.D, "g"), dut.getPortList()[3] ?? Port.D);
 
-  if (Array.isArray(configs)) {
-    for (let i = 0; i < configs.length; i++) {
-      configs[i] = repl(configs[i]);
-    }
-    return configs;
-  }
+  
+
   return repl(configs);
 }
 
-export function replaceIntfA(configs: string[]) {
-  return replaceIntf(configs, Config.dut_list[0].portList);
+export function replaceCmdTemplates(configs: string[], dut: Dut): string[] {
+  for (let i = 0; i < configs.length; i++) {
+    configs[i] = replaceCmdTemplate(configs[i], dut);
+  }
+
+  return configs;
 }
 
-export function replaceIntfB(configs: string[]) {
-  return replaceIntf(configs, Config.dut_list[1].portList);
-}
-
-export function replaceIntfC(configs: string[]) {
-  return replaceIntf(configs, Config.dut_list[2].portList);
-}
-
-export function replaceIntfD(configs: string[]) {
-  return replaceIntf(configs, Config.dut_list[3].portList);
-}
-
-/**
- * A lightweight, safe proxy handle for executing commands with port alias replacement.
- * Prevents leaking raw interface names by enforcing Port placeholders.
- */
 export class DutHandle {
   private conn: Dut;
-  private portMap: Record<string, string>;
 
-  constructor(conn: Dut, portList: string[]) {
+  constructor(conn: Dut) {
     this.conn = conn;
-    this.portMap = {
-      [Port.A]: portList[0],
-      [Port.B]: portList[1],
-      [Port.C]: portList[2],
-      [Port.D]: portList[3],
-    };
-  }
-
-  /** Tagged template helper: h.cmd`show interface ${Port.A} counters` */
-  cmd(strings: TemplateStringsArray, ...values: any[]): string {
-    let out = "";
-    for (let i = 0; i < strings.length; i++) {
-      out += strings[i];
-      if (i < values.length) {
-        out += String(values[i]);
-      }
-    }
-    return out;
-  }
-
-  /** Resolve a single port alias to the physical interface */
-  resolvePort(alias: Port | string): string {
-    return this.portMap[String(alias)] ?? String(alias);
-  }
-
-  /** Internal: replace Port placeholders in a command string */
-  private replacePorts(command: string): string {
-    const list = [
-      this.portMap[Port.A],
-      this.portMap[Port.B],
-      this.portMap[Port.C],
-      this.portMap[Port.D],
-    ];
-    return replaceIntf(command, list) as string;
   }
 
   async exec(command: string): Promise<string> {
-    const cmd = this.replacePorts(command);
+    const cmd = replaceCmdTemplate(command, this.conn);
     return await this.conn.exec(cmd);
   }
 
   async safeExec(command: string): Promise<string> {
-    const cmd = this.replacePorts(command);
+    const cmd = replaceCmdTemplate(command, this.conn);
     return await this.conn.safeExec(cmd);
   }
 
@@ -476,7 +430,7 @@ export class ExecCustom implements Actuator {
 
   async start(): Promise<boolean> {
     try {
-      const handle = new DutHandle(this.conn, this.portList);
+      const handle = new DutHandle(this.conn);
       const ret = await this.cb(handle);
       return !!ret;
     } catch (e) {

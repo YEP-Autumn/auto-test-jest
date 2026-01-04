@@ -16,6 +16,7 @@ export class Dut {
     await this.connection.connect(
       Object.assign(Config.default_cfg, this.conn_param)
     );
+
     return this;
   }
 
@@ -47,6 +48,10 @@ export class Dut {
     await this.connection.end();
     return this;
   }
+
+  public getPortList(): string[] {
+    return this.conn_param.portList ?? [];
+  }
 }
 
 interface ICONN_PARAM {
@@ -59,4 +64,6 @@ interface ICONN_PARAM {
   stripControls?: boolean /** e.g. true */;
   execTimeout?: number /** e.g. 1000 * 5 */;
   disableLogon?: boolean /** e.g. true */;
+  portList?: string[];
+  portMapping?: string[];
 }

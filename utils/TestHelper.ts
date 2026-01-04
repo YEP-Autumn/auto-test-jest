@@ -10,10 +10,8 @@ import {
   PacketSender,
   PacketSendParam,
   ReadyCheck,
-  replaceIntfA,
-  replaceIntfB,
-  replaceIntfC,
-  replaceIntfD,
+  replaceCmdTemplate,
+  replaceCmdTemplates,
   Sleep,
   StartCapture,
 } from "./comm/Components";
@@ -22,6 +20,11 @@ import { Dut } from "./comm/Dut";
 import { RenixPort, StreamBackendApi } from "./stream/StreamBackendApi";
 import { Topolinks } from "./topo/LinkConstraint";
 import { TopoApi } from "./topo/TopoApi";
+
+export let DeviceARouteMac: string;
+export let DeviceBRouteMac: string;
+export let DeviceCRouteMac: string;
+export let DeviceDRouteMac: string;
 
 export class TestHelper {
   private dut_list: Dut[] = [];
@@ -40,7 +43,23 @@ export class TestHelper {
   async init() {
     for (let i = 0; i < Config.dut_list.length; i++) {
       this.dut_list[i] = await new Dut(Config.dut_list[i]).connect();
+
+      let route_mac = await this.dut_list[i].exec("show route-mac");
+      let match = /\s+([0-9a-fA-F:.]+)/.exec(route_mac);
+      if (0 == i) {
+        DeviceARouteMac = match?.[1] || "";
+      } else if (1 == i) {
+        DeviceBRouteMac = match?.[1] || "";
+      } else if (2 == i) {
+        DeviceCRouteMac = match?.[1] || "";
+      } else if (3 == i) {
+        DeviceDRouteMac = match?.[1] || "";
+      }
     }
+    console.log("Device A Route MAC:", DeviceARouteMac);
+    console.log("Device B Route MAC:", DeviceBRouteMac);
+    console.log("Device C Route MAC:", DeviceCRouteMac);
+    console.log("Device D Route MAC:", DeviceDRouteMac);
 
     if (this.topo) {
       await this.topoApi.topoLinksAdd(this.topo);
@@ -132,57 +151,57 @@ export class TestHelper {
 
   /** Exec Config */
   ExecConfigDutA(config: string[]) {
-    replaceIntfA(config);
+    replaceCmdTemplates(config, this.dut_list[0]);
     this.actuator.push(new ExecConfig(this.dut_list[0], config));
     return this;
   }
 
   ExecConfigDutB(config: string[]) {
-    replaceIntfB(config);
+    replaceCmdTemplates(config, this.dut_list[1]);
     this.actuator.push(new ExecConfig(this.dut_list[1], config));
     return this;
   }
 
   ExecConfigDutC(config: string[]) {
-    replaceIntfC(config);
+    replaceCmdTemplates(config, this.dut_list[2]);
     this.actuator.push(new ExecConfig(this.dut_list[2], config));
     return this;
   }
 
   ExecConfigDutD(config: string[]) {
-    replaceIntfD(config);
+    replaceCmdTemplates(config, this.dut_list[3]);
     this.actuator.push(new ExecConfig(this.dut_list[3], config));
     return this;
   }
 
   /** Clean Config */
   CleanConfigDutA(config: string[]) {
-    replaceIntfA(config);
+    replaceCmdTemplates(config, this.dut_list[0]);
     this.actuator.push(new CleanConfig(this.dut_list[0], config));
     return this;
   }
 
   CleanConfigDutB(config: string[]) {
-    replaceIntfB(config);
+    replaceCmdTemplates(config, this.dut_list[1]);
     this.actuator.push(new CleanConfig(this.dut_list[1], config));
     return this;
   }
 
   CleanConfigDutC(config: string[]) {
-    replaceIntfC(config);
+    replaceCmdTemplates(config, this.dut_list[2]);
     this.actuator.push(new CleanConfig(this.dut_list[2], config));
     return this;
   }
 
   CleanConfigDutD(config: string[]) {
-    replaceIntfD(config);
+    replaceCmdTemplates(config, this.dut_list[3]);
     this.actuator.push(new CleanConfig(this.dut_list[3], config));
     return this;
   }
 
   /** Exec Match */
   ExecRetMatchDutA(config: string, expect: RegExp, notMatch: boolean = false) {
-    const [cmd] = replaceIntfA([config]);
+    const cmd = replaceCmdTemplate(config, this.dut_list[0]);
     this.actuator.push(
       new ExecRetMatch(this.dut_list[0], cmd, expect, notMatch)
     );
@@ -190,7 +209,7 @@ export class TestHelper {
   }
 
   ExecRetMatchDutB(config: string, expect: RegExp, notMatch: boolean = false) {
-    const [cmd] = replaceIntfB([config]);
+    const cmd = replaceCmdTemplate(config, this.dut_list[1]);
     this.actuator.push(
       new ExecRetMatch(this.dut_list[1], cmd, expect, notMatch)
     );
@@ -198,7 +217,7 @@ export class TestHelper {
   }
 
   ExecRetMatchDutC(config: string, expect: RegExp, notMatch: boolean = false) {
-    const [cmd] = replaceIntfC([config]);
+    const cmd = replaceCmdTemplate(config, this.dut_list[2]);
     this.actuator.push(
       new ExecRetMatch(this.dut_list[2], cmd, expect, notMatch)
     );
@@ -206,7 +225,7 @@ export class TestHelper {
   }
 
   ExecRetMatchDutD(config: string, expect: RegExp, notMatch: boolean = false) {
-    const [cmd] = replaceIntfD([config]);
+    const cmd = replaceCmdTemplate(config, this.dut_list[3]);
     this.actuator.push(
       new ExecRetMatch(this.dut_list[3], cmd, expect, notMatch)
     );
@@ -214,26 +233,25 @@ export class TestHelper {
   }
 
   ReadyCheckDutA(config: string, expect: RegExp, timeout: number) {
-    const [cmd] = replaceIntfA([config]);
-    console.log(cmd);
+    const cmd = replaceCmdTemplate(config, this.dut_list[0]);
     this.actuator.push(new ReadyCheck(this.dut_list[0], cmd, expect, timeout));
     return this;
   }
 
   ReadyCheckDutB(config: string, expect: RegExp, timeout: number) {
-    const [cmd] = replaceIntfB([config]);
+    const cmd = replaceCmdTemplate(config, this.dut_list[1]);
     this.actuator.push(new ReadyCheck(this.dut_list[1], cmd, expect, timeout));
     return this;
   }
 
   ReadyCheckDutC(config: string, expect: RegExp, timeout: number) {
-    const [cmd] = replaceIntfC([config]);
+    const cmd = replaceCmdTemplate(config, this.dut_list[2]);
     this.actuator.push(new ReadyCheck(this.dut_list[2], cmd, expect, timeout));
     return this;
   }
 
   ReadyCheckDutD(config: string, expect: RegExp, timeout: number) {
-    const [cmd] = replaceIntfD([config]);
+    const cmd = replaceCmdTemplate(config, this.dut_list[3]);
     this.actuator.push(new ReadyCheck(this.dut_list[3], cmd, expect, timeout));
     return this;
   }

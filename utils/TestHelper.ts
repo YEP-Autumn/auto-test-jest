@@ -44,7 +44,7 @@ export class TestHelper {
     for (let i = 0; i < Config.dut_list.length; i++) {
       this.dut_list[i] = await new Dut(Config.dut_list[i]).connect();
 
-      let route_mac = await this.dut_list[i].exec("show route-mac");
+      let route_mac = await this.dut_list[i].exec("show route-mac", true);
       let match = /\s+([0-9a-fA-F:.]+)/.exec(route_mac);
       if (0 == i) {
         DeviceARouteMac = match?.[1] || "";
@@ -140,6 +140,11 @@ export class TestHelper {
     return this;
   }
 
+  /**
+   * 获取从startCapture开始到当前的所有报文，并进行报文校验。（会自动调用stopCapture）
+   * @param packetCheckParam
+   * @returns
+   */
   addPktChecker(packetCheckParam: PacketCheckParam) {
     this.actuator.push(new PacketChecker(packetCheckParam));
     return this;

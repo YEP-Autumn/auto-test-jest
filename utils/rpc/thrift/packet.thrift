@@ -8,11 +8,6 @@ namespace perl trpc_packet
 namespace haxe trpc_packet
 namespace netstd trpc_packet
 
-typedef i32 MyInteger
-
-const i32 INT32CONSTANT = 9853
-const map<string,string> MAPCONSTANT = {'hello':'world', 'goodnight':'moon'}
-
 enum FieldType {
   EthernetII = 1,
   VLAN = 2,
@@ -26,7 +21,7 @@ enum FieldType {
 struct EthernetII {
     1: string dst,
     2: string src,
-    3: i16 type;
+    3: i16 type
 }
 
 struct VLAN {
@@ -35,14 +30,20 @@ struct VLAN {
 }
 
 struct IPv4 {
-    1: i32 src_ip,
-    2: i32 dst_ip
+    1: i32 src,
+    2: i32 dst
+}
+
+struct IPv6 {
+    1: string src,
+    2: string dst
 }
 
 union Field {
     1: EthernetII ether,
     2: VLAN vlan,
-    3: IPv4 ipv4
+    3: IPv4 ipv4,
+    4: IPv6 ipv6
 }
 
 struct FieldMeta {

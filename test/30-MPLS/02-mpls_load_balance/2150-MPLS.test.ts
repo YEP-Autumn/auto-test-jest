@@ -151,7 +151,7 @@ test("测试MPLS AC入口支持agg接口对MPLS内层vlan进行负载均衡", as
     packet: new PacketBuilder()
       .setEthernet({ dst: "00:00:00:00:00:ee", src: "00:00:00:00:00:66", type: 0x8100 })
       .setVLAN({ vlan: 100, type: 0x0800 })
-      .setIPv4({ srcIp: "1.1.1.1", dstIp: "2.2.2.2" }),
+      .setIPv4({ src: "1.1.1.1", dst: "2.2.2.2" }),
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -165,7 +165,7 @@ test("测试MPLS AC入口支持agg接口对MPLS内层vlan进行负载均衡", as
     packet: new PacketBuilder()
       .setEthernet({ dst: "00:00:00:00:00:ee", src: "00:00:00:00:00:66", type: 0x8100 })
       .setVLAN({ vlan: 101, type: 0x0801 })
-      .setIPv4({ srcIp: "1.1.1.1", dstIp: "2.2.2.2" }),
+      .setIPv4({ src: "1.1.1.1", dst: "2.2.2.2" }),
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {

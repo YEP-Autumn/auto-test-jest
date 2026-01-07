@@ -1,5 +1,7 @@
-export async function sleep(timeout: number) {
-  console.log(`Sleeping for ${timeout} milliseconds...`);
+export async function sleep(timeout: number, debug: boolean = true) {
+  if (debug) {
+    console.log(`Sleeping for ${timeout} milliseconds...`);
+  }
   return new Promise((resolve) => setTimeout(resolve, timeout));
 }
 

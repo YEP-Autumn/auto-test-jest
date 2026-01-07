@@ -42,6 +42,7 @@ export class CleanConfig implements Actuator {
       try {
         await this.conn.exec(this.config[i]);
       } catch (error) {
+        console.error(error);
         result = false;
       }
     }
@@ -131,6 +132,7 @@ export class PacketSender implements Actuator {
 
   async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
     try {
+      await sleep(1000 * 2, false);
       let packet_buffer = packet_thrift_buffer_build(
         this.param.packet.getFields()
       );
@@ -253,8 +255,16 @@ export class PacketChecker implements Actuator {
         return (
           field.ipv4 &&
           actualField.ipv4 &&
-          field.ipv4.src_ip === actualField.ipv4.src_ip &&
-          field.ipv4.dst_ip === actualField.ipv4.dst_ip
+          field.ipv4.src === actualField.ipv4.src &&
+          field.ipv4.dst === actualField.ipv4.dst
+        );
+      case 4:
+        console.log("Comparing IPv6 fields:", field, actualField);
+        return (
+          field.ipv6 &&
+          actualField.ipv6 &&
+          field.ipv6.src === actualField.ipv6.src &&
+          field.ipv6.dst === actualField.ipv6.dst
         );
       default:
         return false;
@@ -355,8 +365,7 @@ export class Sleep implements Actuator {
     this.milliseconds = milliseconds;
   }
   async start(): Promise<boolean> {
-    console.log(`Sleeping for ${this.milliseconds} milliseconds...`);
-    await new Promise((resolve) => setTimeout(resolve, this.milliseconds));
+    await sleep(this.milliseconds);
     return true;
   }
 }
@@ -368,8 +377,6 @@ export function replaceCmdTemplate(configs: string, dut: Dut): string {
       .replace(new RegExp(Port.B, "g"), dut.getPortList()[1] ?? Port.B)
       .replace(new RegExp(Port.C, "g"), dut.getPortList()[2] ?? Port.C)
       .replace(new RegExp(Port.D, "g"), dut.getPortList()[3] ?? Port.D);
-
-  
 
   return repl(configs);
 }

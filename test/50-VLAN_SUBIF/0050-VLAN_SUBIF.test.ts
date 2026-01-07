@@ -82,8 +82,8 @@ test("测试设备支持配置VLAN子接口MTU", async () => {
       })
       .setVLAN({ vlan: 100, type: 0x0800 })
       .setIPv4({
-        srcIp: "100.100.100.1",
-        dstIp: "10.10.10.100",
+        src: "100.100.100.1",
+        dst: "10.10.10.100",
       }),
     port: RenixPort.A,
     transmit_param: {
@@ -103,8 +103,8 @@ test("测试设备支持配置VLAN子接口MTU", async () => {
       })
       .setVLAN({ vlan: 200, type: 0x0800 })
       .setIPv4({
-        srcIp: "100.100.100.1",
-        dstIp: "10.10.10.100",
+        src: "100.100.100.1",
+        dst: "10.10.10.100",
       }),
     expected_count: 20,
   });

@@ -105,7 +105,7 @@ test("支持通过VLAN子接口建立BGP邻居连接", async () => {
         type: 0x8100,
       })
       .setVLAN({ vlan: 100, type: 0x0800 })
-      .setIPv4({ dstIp: "10.10.10.100", srcIp: "1.2.3.4" }),
+      .setIPv4({ dst: "10.10.10.100", src: "1.2.3.4" }),
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -123,7 +123,7 @@ test("支持通过VLAN子接口建立BGP邻居连接", async () => {
         type: 0x8100,
       })
       .setVLAN({ vlan: 300, type: 0x0800 })
-      .setIPv4({ dstIp: "10.10.10.100", srcIp: "1.2.3.4" }),
+      .setIPv4({ dst: "10.10.10.100", src: "1.2.3.4" }),
     expected_count: 100,
   });
 

@@ -103,6 +103,30 @@ export class LinkConstraint {
   };
 
   /**
+   *
+   *   +--------+                   +--------+
+   *   |        |--PortA <=> PortA--|        |
+   *   |  DUTA  |                   |  DUTB  |
+   *   |        |--PortB <=> PortB--|        |
+   *   +--------+                   +--------+
+   *
+   */
+  static two_devices_topo_links_type_2: Topolinks = {
+    links: [
+      {
+        stream_id: 1,
+        in_port: DutA.portA,
+        out_port: DutB.portA,
+      },
+      {
+        stream_id: 2,
+        in_port: DutA.portB,
+        out_port: DutB.portB,
+      },
+    ],
+  };
+
+  /**
    *                    +--------+                   +--------+
    *                    |        |--PortA <=> PortA--|        |
    *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortB

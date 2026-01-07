@@ -12,6 +12,7 @@ export const {
   EthernetII,
   VLAN,
   IPv4,
+  IPv6,
   FieldMeta,
   Field,
   FieldType,
@@ -19,13 +20,13 @@ export const {
 } = ttypes;
 
 // 类型定义
-export type IPacket = any;
+// export type IPacket = any;
 export type IPacketList = any;
-export type IEthernetII = any;
-export type IVLAN = any;
-export type IIPv4 = any;
+// export type IEthernetII = any;
+// export type IVLAN = any;
+// export type IIPv4 = any;
 export type IFieldMeta = any;
-export type IField = any;
+// export type IField = any;
 
 // PacketBuilder 参数接口定义
 interface EthernetOptions {
@@ -40,8 +41,13 @@ interface VLANOptions {
 }
 
 interface IPv4Options {
-  srcIp?: string;
-  dstIp?: string;
+  src?: string;
+  dst?: string;
+}
+
+interface IPv6Options {
+  src?: string;
+  dst?: string;
 }
 
 /**
@@ -55,22 +61,22 @@ interface IPv4Options {
  */
 function normalizeMacAddress(macAddress: string): string {
   // 如果已经是冒号分隔的格式，直接返回
-  if (macAddress.includes(':')) {
+  if (macAddress.includes(":")) {
     return macAddress;
   }
 
   // 处理点分十六进制格式（如 0000.0012.3010 或缩写 1.1.1）
-  if (macAddress.includes('.')) {
-    const parts = macAddress.split('.');
+  if (macAddress.includes(".")) {
+    const parts = macAddress.split(".");
     if (parts.length === 3) {
       // 每个部分是十六进制数字，需要补零到4位，然后分成两个2位数字
       const expanded = parts
-        .map(part => {
+        .map((part) => {
           // 补零到4位
-          const padded = part.padStart(4, '0');
+          const padded = part.padStart(4, "0");
           return `${padded.substring(0, 2)}:${padded.substring(2, 4)}`;
         })
-        .join(':');
+        .join(":");
       return expanded;
     }
   }
@@ -88,9 +94,9 @@ export class PacketBuilder {
    * 设置以太网II帧
    */
   setEthernet({
-    dst = '00:00:00:12:30:10',
-    src = '00:00:00:12:30:20',
-    type = 0x0800
+    dst = "00:00:00:12:30:10",
+    src = "00:00:00:12:30:20",
+    type = 0x0800,
   }: EthernetOptions = {}): PacketBuilder {
     const normalizedDst = normalizeMacAddress(dst);
     const normalizedSrc = normalizeMacAddress(src);
@@ -113,10 +119,7 @@ export class PacketBuilder {
   /**
    * 设置VLAN标签
    */
-  setVLAN({
-    vlan = 1,
-    type = 0x0800
-  }: VLANOptions = {}): PacketBuilder {
+  setVLAN({ vlan = 1, type = 0x0800 }: VLANOptions = {}): PacketBuilder {
     const vlanField = new VLAN({
       vlan,
       type,
@@ -135,15 +138,15 @@ export class PacketBuilder {
    * 设置IPv4协议头
    */
   setIPv4({
-    srcIp = '0.0.0.0',
-    dstIp = '0.0.0.0'
+    src: srcIp = "1.1.1.1",
+    dst: dstIp = "2.2.2.2",
   }: IPv4Options = {}): PacketBuilder {
     const srcIpNum = ipStringToNumber(srcIp);
     const dstIpNum = ipStringToNumber(dstIp);
 
     const ipv4 = new IPv4({
-      src_ip: srcIpNum,
-      dst_ip: dstIpNum,
+      src: srcIpNum,
+      dst: dstIpNum,
     });
 
     const fieldMeta = new FieldMeta({
@@ -152,6 +155,25 @@ export class PacketBuilder {
     });
 
     this.fieldList.push(fieldMeta);
+    return this;
+  }
+
+  setIPv6({
+    dst = "2001::1",
+    src = "3001::1",
+  }: IPv6Options = {}): PacketBuilder {
+    const ipv6 = new IPv6({
+      dst: dst,
+      src: src,
+    });
+
+    const fieldMeta = new FieldMeta({
+      type: FieldType.IPv6,
+      field: new Field({ ipv6: ipv6 }),
+    });
+
+    this.fieldList.push(fieldMeta);
+
     return this;
   }
 

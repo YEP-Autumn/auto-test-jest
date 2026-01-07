@@ -20,10 +20,12 @@ export class Dut {
     return this;
   }
 
-  public async exec(command: string) {
+  public async exec(command: string, silence: boolean = false) {
     let result = await this.connection.exec(command);
-    console.log(`[${this.conn_param.host}] ` + this.lastCmdMode + command);
-    console.log(result);
+    if (!silence) {
+      console.log(`[${this.conn_param.host}] ` + this.lastCmdMode + command);
+      console.log(result);
+    }
     let error = new RegExp(`(\r|\n)% `).exec(result);
     if (error || result.startsWith("% ")) {
       throw new Error(
@@ -35,10 +37,12 @@ export class Dut {
     return result;
   }
 
-  public async safeExec(command: string) {
+  public async safeExec(command: string, silence: boolean = false) {
     let result = await this.connection.exec(command);
-    console.log(`[${this.conn_param.host}][s] ` + this.lastCmdMode + command);
-    console.log(result);
+    if (!silence) {
+      console.log(`[${this.conn_param.host}][s] ` + this.lastCmdMode + command);
+      console.log(result);
+    }
     let split = new RegExp("Switch.*?# ").exec(result);
     this.lastCmdMode = split ? split[0] : this.lastCmdMode;
     return result;

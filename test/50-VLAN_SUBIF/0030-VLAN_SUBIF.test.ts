@@ -47,7 +47,20 @@ test("测试设备能够通过VLAN子接口telnet", async () => {
   ]);
 
   /** For wait interface up */
-  testHelper.sleep(8000);
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.A}.1`,
+    /Interface current state: UP/g,
+    1000 * 10
+  );
+
+  testHelper.ReadyCheckDutB(
+    `show interface ${Port.A}.1`,
+    /Interface current state: UP/g,
+    1000 * 10
+  );
+
+  /** For wait route install */
+  testHelper.sleep(2000);
 
   testHelper.ExecConfigDutA(["telnet 1.1.1.2", "exit"]);
   testHelper.ExecConfigDutB(["telnet 1.1.1.1", "exit"]);

@@ -57,7 +57,20 @@ test("测试设备支持创建AGG VLAN子接口", async () => {
   ]);
 
   /** For wait interface up */
-  testHelper.sleep(8000);
+  testHelper.ReadyCheckDutA(
+    `show interface agg 1.1`,
+    /Interface current state: UP/g,
+    1000 * 10
+  );
+
+  testHelper.ReadyCheckDutB(
+    `show interface agg 1.1`,
+    /Interface current state: UP/g,
+    1000 * 10
+  );
+
+  /** For wait route install */
+  testHelper.sleep(2000);
 
   testHelper.ExecRetMatchDutA("ping 1.1.1.2", / 0% packet loss/g);
   testHelper.ExecRetMatchDutB("ping 1.1.1.1", / 0% packet loss/g);

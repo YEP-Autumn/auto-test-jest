@@ -24,7 +24,7 @@ afterAll(async () => {
  *                    +--------+
  *
  */
-test("支持配置单播路由指定下一跳为VLAN子接口邻居", async () => {
+test("支持配置静态路由指定下一跳为VLAN子接口邻居", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -81,8 +81,8 @@ test("支持配置单播路由指定下一跳为VLAN子接口邻居", async () =
       })
       .setVLAN({ vlan: 100, type: 0x0800 })
       .setIPv4({
-        srcIp: "100.100.100.1",
-        dstIp: "10.10.10.100",
+        src: "100.100.100.1",
+        dst: "10.10.10.100",
       }),
     port: RenixPort.A,
     transmit_param: {
@@ -101,8 +101,8 @@ test("支持配置单播路由指定下一跳为VLAN子接口邻居", async () =
       })
       .setVLAN({ vlan: 200, type: 0x0800 })
       .setIPv4({
-        srcIp: "100.100.100.1",
-        dstIp: "10.10.10.100",
+        src: "100.100.100.1",
+        dst: "10.10.10.100",
       }),
     expected_count: 10,
   });

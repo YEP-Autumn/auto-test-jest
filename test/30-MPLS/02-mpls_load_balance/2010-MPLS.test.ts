@@ -155,9 +155,13 @@ test("测试MPLS AC入口支持agg接口对MPLS内层src mac进行负载均衡",
   testHelper.addPktSender({
     port: RenixPort.A,
     packet: new PacketBuilder()
-      .setEthernet({ dst: "00:00:01:00:00:ee", src: "00:00:a0:0a:00:66", type: 0x8100 })
+      .setEthernet({
+        dst: "00:00:01:00:00:ee",
+        src: "00:00:a0:0a:00:66",
+        type: 0x8100,
+      })
       .setVLAN({ vlan: 2, type: 0x0800 })
-      .setIPv4({ srcIp: "1.1.1.1", dstIp: "2.2.2.2" }),
+      .setIPv4({ src: "1.1.1.1", dst: "2.2.2.2" }),
     modifier_param: [
       {
         modifier_field: ModifierField.EthernetII_MAC_SRC,

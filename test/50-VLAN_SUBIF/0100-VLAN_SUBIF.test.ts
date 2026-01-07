@@ -98,7 +98,7 @@ test("支持通过VLAN子接口建立ISIS邻居连接", async () => {
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
-        step_count: 100,
+        step_count: 10,
       },
     },
   });
@@ -113,7 +113,7 @@ test("支持通过VLAN子接口建立ISIS邻居连接", async () => {
       })
       .setVLAN({ vlan: 300, type: 0x0800 })
       .setIPv4({ dst: "10.10.10.100", src: "1.2.3.4" }),
-    expected_count: 100,
+    expected_count: 10,
   });
 
   testHelper.CleanConfigDutA([

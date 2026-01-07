@@ -1,4 +1,4 @@
-import { Port, sleep } from "..";
+import { Port, sleep, STR_DEBUG_INFO, STR_FAILED, STR_SUCCESS } from "..";
 import { i16_to_u16, packet_thrift_buffer_build } from "../stream/packet_utils";
 import { RenixPort, StreamBackendApi } from "../stream/StreamBackendApi";
 import { PacketBuilder } from "../stream/thrift_packet";
@@ -22,7 +22,7 @@ export class ExecConfig implements Actuator {
       }
     } catch (e) {
       console.error("\x1b[31m" + e);
-      await this.conn.exec("end");
+      await this.conn.safeExec("end");
       return false;
     }
     return true;
@@ -333,7 +333,10 @@ export class PacketChecker implements Actuator {
         this.fieldListMatches(expectedFields, packet.field_list)
       ) {
         matchCount++;
-        console.log(`✅ Packet ${i + 1} matches expected pattern`);
+        console.log(
+          STR_DEBUG_INFO,
+          `✅ Packet ${i + 1} matches expected pattern`
+        );
       }
     }
 
@@ -347,11 +350,13 @@ export class PacketChecker implements Actuator {
 
     if (this.checkCount(matchCount, this.param.expected_count)) {
       console.log(
+        STR_SUCCESS,
         `✅ Found ${matchCount} matching packet(s) (expected: ${expectedCountStr})`
       );
       return true;
     } else {
       console.error(
+        STR_FAILED,
         `❌ Only found ${matchCount} matching packet(s), expected ${expectedCountStr}`
       );
       return false;

@@ -1,5 +1,12 @@
 import chalk from "chalk";
 
+/**
+ * Example:
+ * 成功标签：chalk.bgGreen.black(' PASS ')
+ * 失败标签：chalk.bgRed.white.bold(' FAIL ')
+ * 运行中：chalk.bgBlue.black(' RUNS ')
+ */
+
 console.log(chalk.bgBlueBright.white(`蓝底白字`));
 console.log(chalk.bgRed.white("红底白字"));
 console.log(chalk.bgRed.black("红底黑字"));

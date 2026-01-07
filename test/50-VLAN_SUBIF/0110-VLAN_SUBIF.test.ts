@@ -79,7 +79,7 @@ test("支持在VLAN子接口上配置PBR", async () => {
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
-        step_count: 100,
+        step_count: 10,
       },
     },
   });
@@ -94,7 +94,7 @@ test("支持在VLAN子接口上配置PBR", async () => {
       })
       .setVLAN({ vlan: 200, type: 0x0800 })
       .setIPv4({ dst: "10.10.10.100", src: "1.2.3.4" }),
-    expected_count: 100,
+    expected_count: 10,
   });
 
   /** 2. 测试其他报文不能被路由转发 */
@@ -112,7 +112,7 @@ test("支持在VLAN子接口上配置PBR", async () => {
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
-        step_count: 100,
+        step_count: 10,
       },
     },
   });

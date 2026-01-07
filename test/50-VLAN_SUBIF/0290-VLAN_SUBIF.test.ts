@@ -26,12 +26,16 @@ afterAll(async () => {
 test("支持在VLAN子接口上配置VRF", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
+    "ip vrf test",
+    "exit",
     `interface ${Port.A}`,
     "no switchport",
     "exit",
     `interface ${Port.A}.1`,
+    "ip vrf forwarding test",
     "dot1q termination vid 100",
     "ip address 1.1.1.1/24",
+    "exit",
     "end",
   ]);
 
@@ -62,11 +66,12 @@ test("支持在VLAN子接口上配置VRF", async () => {
   /** For wait route install */
   testHelper.sleep(2000);
 
-  testHelper.ExecRetMatchDutA("ping 1.1.1.2", / 0% packet loss/g);
+  testHelper.ExecRetMatchDutA("ping vrf test 1.1.1.2", / 0% packet loss/g);
   testHelper.ExecRetMatchDutB("ping 1.1.1.1", / 0% packet loss/g);
 
   testHelper.CleanConfigDutA([
     "configure terminal",
+    "no ip vrf test",
     `no interface ${Port.A}.1`,
     `interface ${Port.A}`,
     "switchport",

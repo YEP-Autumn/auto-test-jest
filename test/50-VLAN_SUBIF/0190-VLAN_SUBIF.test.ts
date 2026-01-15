@@ -52,13 +52,13 @@ test("支持在VLAN子接口上配置IPv6地址", async () => {
 
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
 
   testHelper.ReadyCheckDutB(
     `show interface ${Port.A}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
 
@@ -66,11 +66,11 @@ test("支持在VLAN子接口上配置IPv6地址", async () => {
 
   testHelper.ExecRetMatchDutA(
     "ping ipv6 2001::2",
-    /5 packets transmitted, 5 received, 0% packet loss/
+    `5 packets transmitted, 5 received, 0% packet loss`
   );
   testHelper.ExecRetMatchDutB(
     "ping ipv6 2001::1",
-    /5 packets transmitted, 5 received, 0% packet loss/
+    `5 packets transmitted, 5 received, 0% packet loss`
   );
 
   testHelper.CleanConfigDutA([

@@ -50,22 +50,22 @@ test("测试设备支持配置VLAN子接口MTU", async () => {
   /** For wait interface up */
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.B}`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.B}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
 

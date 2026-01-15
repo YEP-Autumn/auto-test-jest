@@ -48,6 +48,7 @@ test("支持通过VLAN子接口建立OSPF邻居连接", async () => {
     "ip address 2.2.2.1/24",
     "exit",
     "router ospf",
+    "router-id 1.1.1.1",
     "network 1.1.1.0/24 area 0",
     "network 2.2.2.0/24 area 0",
     "end",
@@ -70,6 +71,7 @@ test("支持通过VLAN子接口建立OSPF邻居连接", async () => {
     "ip address 3.3.3.1/24",
     "exit",
     "router ospf",
+    "router-id 1.1.1.2",
     "network 1.1.1.0/24 area 0",
     "network 3.3.3.0/24 area 0",
     "redistribute static",
@@ -83,10 +85,10 @@ test("支持通过VLAN子接口建立OSPF邻居连接", async () => {
 
   testHelper.ReadyCheckDutA(
     "show ip ospf neighbor",
-    /1.1.1.2.*?Full/g,
+    `1.1.1.2.*?Full`,
     1000 * 30
   );
-  testHelper.ReadyCheckDutA("show ip route", /10.10.10.0\/24/g, 1000 * 30);
+  testHelper.ReadyCheckDutA("show ip route", `10.10.10.0\/24`, 1000 * 30);
 
   testHelper.sleep(3000);
 

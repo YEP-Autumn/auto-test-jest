@@ -85,15 +85,11 @@ test("支持通过VLAN子接口建立OSPFv3邻居连接", async () => {
 
   testHelper.ReadyCheckDutA(
     "show ipv6 ospf neighbor",
-    /2.2.2.2.*?Full/g,
+    `2.2.2.2.*?Full`,
     1000 * 30
   );
 
-  testHelper.ReadyCheckDutA(
-    "show ipv6 route",
-    /O E2    4000::\/64/g,
-    1000 * 30
-  );
+  testHelper.ReadyCheckDutA("show ipv6 route", `O E2    4000::\/64`, 1000 * 30);
 
   testHelper.startCapture(RenixPort.B);
 

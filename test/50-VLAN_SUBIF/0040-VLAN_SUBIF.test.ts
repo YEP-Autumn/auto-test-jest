@@ -51,13 +51,13 @@ test("测试设备能够通过VLAN子接口ssh", async () => {
   /** For wait interface up */
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
 
   testHelper.ReadyCheckDutB(
     `show interface ${Port.A}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
 

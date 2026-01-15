@@ -50,22 +50,22 @@ test("支持配置IPv6静态路由指定下一跳为VLAN子接口邻居", async 
   /** For wait interface up */
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.B}`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.B}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
 

@@ -81,7 +81,7 @@ test("支持通过VLAN子接口建立ISIS邻居连接", async () => {
 
   testHelper.sleep(1000 * 20);
 
-  testHelper.ReadyCheckDutA("show ip route", /10.10.10.0\/24/g, 1000 * 30);
+  testHelper.ReadyCheckDutA("show ip route", `10.10.10.0\/24`, 1000 * 30);
 
   testHelper.startCapture(RenixPort.B);
 

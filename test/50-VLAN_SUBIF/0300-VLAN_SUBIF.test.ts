@@ -62,12 +62,12 @@ test("支持配置VRRP指定VLAN子接口", async () => {
 
   testHelper.ReadyCheckDutA(
     "show vrrp",
-    /State               : Master/g,
+    `State               : Master`,
     1000 * 20
   );
   testHelper.ReadyCheckDutB(
     "show vrrp",
-    /State               : Backup/g,
+    `State               : Backup`,
     1000 * 10
   );
 

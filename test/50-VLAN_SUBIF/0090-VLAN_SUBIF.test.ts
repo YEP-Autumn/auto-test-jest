@@ -87,10 +87,10 @@ test("支持通过VLAN子接口建立BGP邻居连接", async () => {
 
   testHelper.ReadyCheckDutA(
     "show ip bgp neighbors",
-    /BGP state = Established/g,
+    `BGP state = Established`,
     1000 * 30
   );
-  testHelper.ReadyCheckDutA("show ip route", /10.10.10.0\/24/g, 1000 * 30);
+  testHelper.ReadyCheckDutA("show ip route", `10.10.10.0\/24`, 1000 * 30);
 
   testHelper.sleep(3000);
 

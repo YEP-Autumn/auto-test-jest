@@ -83,7 +83,7 @@ test("支持通过VLAN子接口建立RIPng邻居连接", async () => {
 
   testHelper.ReadyCheckDutA(
     "show ipv6 route",
-    /R       4000::\/64/g,
+    `R       4000::\/64`,
     1000 * 30
   );
 

@@ -52,13 +52,13 @@ test("支持配置BFD指定VLAN子接口", async () => {
 
   testHelper.ReadyCheckDutA(
     "show bfd session detail",
-    /Session State : Up/g,
+    `Session State : Up`,
     1000 * 20
   );
 
   testHelper.ReadyCheckDutB(
     "show bfd session detail",
-    /Session State : Up/g,
+    `Session State : Up`,
     1000 * 10
   );
 

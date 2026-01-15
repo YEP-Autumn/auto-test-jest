@@ -56,12 +56,12 @@ test("支持在VLAN子接口上配置IPv6 PBR", async () => {
 
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.B}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
 

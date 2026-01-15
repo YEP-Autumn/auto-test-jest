@@ -51,7 +51,7 @@ test("设备支持查看和清除子接口统计信息", async () => {
   /** For wait interface up */
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
 
@@ -91,14 +91,11 @@ test("设备支持查看和清除子接口统计信息", async () => {
     expected_count: 10,
   });
 
-  testHelper.ExecRetMatchDutA(
-    `show interface ${Port.A}.1`,
-    /10 packets input/g
-  );
+  testHelper.ExecRetMatchDutA(`show interface ${Port.A}.1`, `10 packets input`);
 
   testHelper.ExecRetMatchDutA(
     `show interface ${Port.B}.1`,
-    /10 packets output/g
+    `10 packets output`
   );
 
   testHelper.CleanConfigDutA([

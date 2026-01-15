@@ -77,7 +77,7 @@ test("支持通过VLAN子接口建立RIP邻居连接", async () => {
     "end",
   ]);
 
-  testHelper.ReadyCheckDutA("show ip route", /10.10.10.0\/24/g, 1000 * 60);
+  testHelper.ReadyCheckDutA("show ip route", `10.10.10.0\/24`, 1000 * 60);
 
   testHelper.sleep(3000);
 

@@ -53,21 +53,21 @@ test("支持在VLAN子接口上配置VRF", async () => {
   /** For wait interface up */
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
 
   testHelper.ReadyCheckDutB(
     `show interface ${Port.A}.1`,
-    /Interface current state: UP/g,
+    `Interface current state: UP`,
     1000 * 10
   );
 
   /** For wait route install */
   testHelper.sleep(2000);
 
-  testHelper.ExecRetMatchDutA("ping vrf test 1.1.1.2", / 0% packet loss/g);
-  testHelper.ExecRetMatchDutB("ping 1.1.1.1", / 0% packet loss/g);
+  testHelper.ExecRetMatchDutA("ping vrf test 1.1.1.2", ` 0% packet loss`);
+  testHelper.ExecRetMatchDutB("ping 1.1.1.1", ` 0% packet loss`);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

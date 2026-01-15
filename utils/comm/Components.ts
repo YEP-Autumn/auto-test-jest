@@ -62,12 +62,23 @@ export class ExecRetMatch implements Actuator {
     this.expect = expect;
     this.notMatch = notMatch;
   }
+
   async start(): Promise<boolean> {
+    let success: boolean;
     let result = await this.conn.safeExec(this.config);
     if (this.notMatch) {
-      return !this.expect.exec(result);
+      success = !this.expect.exec(result);
+    } else {
+      success = !!this.expect.exec(result);
     }
-    return !!this.expect.exec(result);
+
+    if (!success) {
+      console.error(
+        `ExecRetMatch failed:\n  Command: ${this.config}\n  Expected: ${this.expect}\n  Output: ${result}\n  IsNotMatch: ${this.notMatch}`
+      );
+    }
+
+    return success;
   }
 }
 
@@ -103,6 +114,7 @@ export class ReadyCheck implements Actuator {
       console.error("Error: ", error);
       return false;
     }
+    console.error("ReadyCheck Waiting timeout.");
     return false;
   }
 }

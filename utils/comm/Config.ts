@@ -55,16 +55,20 @@ export class Config {
 
   public static dut_e780 = {
     host: "172.16.9.130",
-    portList: ["eth-0-29", "eth-0-30", "eth-0-31", "eth-0-32"],
+    portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
     portMapping: ["eth-0-29", "eth-0-30", "eth-0-31", "eth-0-32"],
   };
 
   public static Renix = {
     portList: [RenixPort.A, RenixPort.B],
-    // portList: [RenixPort.A],
     portMapping: ["eth-0-23", "eth-0-24"],
   };
 
-  public static dut_list = [this.dut_e530_1, this.dut_e530_2, this.dut_e670];
+  public static dut_list = [
+    this.dut_e670,
+    this.dut_e680,
+    this.dut_e530_1,
+    this.dut_e530_2,
+  ];
   // public static dut_list = [this.dut_e530_1, this.dut_e530_2];
 }

@@ -23,10 +23,9 @@ afterAll(async () => {
  *                    +--------+                   +--------+
  *
  */
-test("测试设备能够通过VLAN子接口ssh", async () => {
+test("测试设备能够通过VLAN子接口telnet", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
-    "username test privilege 4 password test",
     `interface ${Port.A}`,
     "no switchport",
     "exit",
@@ -38,7 +37,6 @@ test("测试设备能够通过VLAN子接口ssh", async () => {
 
   testHelper.ExecConfigDutB([
     "configure terminal",
-    "username test privilege 4 password test",
     `interface ${Port.A}`,
     "no switchport",
     "exit",
@@ -64,12 +62,11 @@ test("测试设备能够通过VLAN子接口ssh", async () => {
   /** For wait route install */
   testHelper.sleep(2000);
 
-  testHelper.ExecConfigDutA(["ssh -l test 1.1.1.2", "test", "exit"]);
-  testHelper.ExecConfigDutB(["ssh -l test 1.1.1.1", "test", "exit"]);
+  testHelper.ExecConfigDutA(["telnet 1.1.1.2", "exit"]);
+  testHelper.ExecConfigDutB(["telnet 1.1.1.1", "exit"]);
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    "no username test",
     `no interface ${Port.A}.1`,
     `interface ${Port.A}`,
     "switchport",
@@ -78,7 +75,6 @@ test("测试设备能够通过VLAN子接口ssh", async () => {
 
   testHelper.CleanConfigDutB([
     "configure terminal",
-    "no username test",
     `no interface ${Port.A}.1`,
     `interface ${Port.A}`,
     "switchport",

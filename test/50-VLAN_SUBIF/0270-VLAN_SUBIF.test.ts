@@ -1,9 +1,5 @@
-
 import { Port } from "../../utils";
-import { TransmitMode } from "../../utils/comm/Components";
-import { RenixPort } from "../../utils/stream/StreamBackendApi";
-import { PacketBuilder } from "../../utils/stream/thrift_packet";
-import { DeviceARouteMac, DeviceBRouteMac, TestHelper } from "../../utils/TestHelper";
+import { TestHelper } from "../../utils/TestHelper";
 import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
@@ -27,95 +23,82 @@ afterAll(async () => {
  *                    +--------+                   +--------+
  *
  */
-test("支持通过VLAN子接口建立RIP邻居连接", async () => {
-
+test("支持在VLAN子接口上配置PIMv6-SM", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
+    "ipv6 enable",
     `interface ${Port.A}`,
     "no switchport",
     "exit",
     `interface ${Port.A}.1`,
     "dot1q termination vid 100",
-    "ip address 1.1.1.1/24",
+    "ipv6 address 2001:9::1/64",
+    "ipv6 pim sparse-mode",
     "exit",
     `interface ${Port.D}`,
     "no switchport",
     "exit",
     `interface ${Port.D}.1`,
     "dot1q termination vid 200",
-    "ip address 2.2.2.1/24",
+    "ipv6 address 2001:1::1/64",
+    "ipv6 pim sparse-mode",
     "exit",
-    "router rip",
-    "network 1.1.1.0/24",
-    "network 2.2.2.0/24",
+    "ipv6 pim rp-address 2001:1::1",
+    "ipv6 route 2001:2::/64 2001:9::2",
     "end",
   ]);
 
   testHelper.ExecConfigDutB([
     "configure terminal",
+    "ipv6 enable",
     `interface ${Port.A}`,
     "no switchport",
     "exit",
     `interface ${Port.A}.1`,
     "dot1q termination vid 100",
-    "ip address 1.1.1.2/24",
+    "ipv6 address 2001:9::2/64",
+    "ipv6 pim sparse-mode",
     "exit",
     `interface ${Port.D}`,
     "no switchport",
     "exit",
     `interface ${Port.D}.1`,
-    "dot1q termination vid 300",
-    "ip address 3.3.3.1/24",
+    "dot1q termination vid 200",
+    "ipv6 address 2001:2::1/64",
+    "ipv6 pim sparse-mode",
     "exit",
-    "router rip",
-    "network 1.1.1.0/24",
-    "network 3.3.3.0/24",
-    "redistribute static",
-    "exit",
-    "arp 3.3.3.3 0003.0003.0003",
-    "ip route 10.10.10.0/24 3.3.3.3",
+    "ipv6 pim rp-address 2001:1::1",
+    "ipv6 route 2001:1::/64 2001:9::1",
     "end",
   ]);
 
-  testHelper.ReadyCheckDutA("show ip route", `10.10.10.0\/24`, 1000 * 60);
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.A}.1`,
+    `Interface current state: UP`,
+    1000 * 10
+  );
 
-  testHelper.sleep(3000);
-
-  testHelper.startCapture(RenixPort.B);
-
-  testHelper.addPktSender({
-    port: RenixPort.A,
-    packet: new PacketBuilder()
-      .setEthernet({
-        dst: DeviceARouteMac,
-        src: "00:00:00:11:22:33",
-        type: 0x8100,
-      })
-      .setVLAN({ vlan: 100, type: 0x0800 })
-      .setIPv4({ dst: "10.10.10.100", src: "1.2.3.4" }),
-    transmit_param: {
-      mode: TransmitMode.STEP,
-      param: {
-        step_count: 10,
-      },
-    },
-  });
-
-  testHelper.addPktChecker({
-    port: RenixPort.B,
-    packet: new PacketBuilder()
-      .setEthernet({
-        dst: "3.3.3",
-        src: DeviceBRouteMac,
-        type: 0x8100,
-      })
-      .setVLAN({ vlan: 300, type: 0x0800 })
-      .setIPv4({ dst: "10.10.10.100", src: "1.2.3.4" }),
-    expected_count: 10,
-  });
+  testHelper.sleep(1000 * 5);
+  testHelper.ExecRetMatchDutA(
+    "show ipv6 pim sparse-mode rp mapping",
+    "RP: 2001:1::1"
+  );
+  testHelper.ExecRetMatchDutB(
+    "show ipv6 pim sparse-mode rp mapping",
+    "RP: 2001:1::1"
+  );
+  testHelper.ExecRetMatchDutA(
+    "show ipv6 pim sparse-mode interface",
+    `${Port.A}.1`
+  );
+  testHelper.ExecRetMatchDutB(
+    "show ipv6 pim sparse-mode interface",
+    `${Port.A}.1`
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",
+    "no ipv6 enable",
     `no interface ${Port.A}.1`,
     `no interface ${Port.D}.1`,
     `interface ${Port.A}`,
@@ -124,12 +107,13 @@ test("支持通过VLAN子接口建立RIP邻居连接", async () => {
     `interface ${Port.D}`,
     "switchport",
     "exit",
-    "no router rip",
+    "no ipv6 pim rp-address 2001:1::1",
+    "no ipv6 route 2001:2::/64",
     "end",
   ]);
-
   testHelper.CleanConfigDutB([
     "configure terminal",
+    "no ipv6 enable",
     `no interface ${Port.A}.1`,
     `no interface ${Port.D}.1`,
     `interface ${Port.A}`,
@@ -138,9 +122,8 @@ test("支持通过VLAN子接口建立RIP邻居连接", async () => {
     `interface ${Port.D}`,
     "switchport",
     "exit",
-    "no router rip",
-    "no ip route 10.10.10.0/24",
-    "no arp 3.3.3.3",
+    "no ipv6 pim rp-address 2001:1::1",
+    "no ipv6 route 2001:1::/64",
     "end",
   ]);
 

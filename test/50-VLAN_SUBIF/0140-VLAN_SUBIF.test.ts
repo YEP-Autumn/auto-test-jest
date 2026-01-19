@@ -1,5 +1,12 @@
 import { Port } from "../../utils";
-import { TestHelper } from "../../utils/TestHelper";
+import { TransmitMode } from "../../utils/comm/Components";
+import { RenixPort } from "../../utils/stream/StreamBackendApi";
+import { PacketBuilder } from "../../utils/stream/thrift_packet";
+import {
+  DeviceARouteMac,
+  DeviceBRouteMac,
+  TestHelper,
+} from "../../utils/TestHelper";
 import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
@@ -23,116 +30,119 @@ afterAll(async () => {
  *                    +--------+                   +--------+
  *
  */
-test("支持在VLAN子接口上配置PIM-DM", async () => {
+test("支持通过VLAN子接口建立ISIS邻居连接", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
-    `interface ${Port.D}`,
-    "no switchport",
-    "exit",
-    `interface ${Port.D}.1`,
-    "dot1q termination vid 100",
-    "ip address 11.1.1.1/24",
-    "ip pim dense-mode",
-    "exit",
     `interface ${Port.A}`,
     "no switchport",
     "exit",
     `interface ${Port.A}.1`,
+    "dot1q termination vid 100",
+    "ip address 1.1.1.1/24",
+    "ip router isis",
+    "exit",
+    `interface ${Port.D}`,
+    "no switchport",
+    "exit",
+    `interface ${Port.D}.1`,
     "dot1q termination vid 200",
-    "ip address 12.1.1.1/24",
-    "ip pim dense-mode",
+    "ip address 2.2.2.1/24",
+    "exit",
+    "router isis",
+    "net 49.0001.0000.0000.0006.00",
     "end",
   ]);
 
   testHelper.ExecConfigDutB([
     "configure terminal",
-    `interface ${Port.D}`,
-    "no switchport",
-    "exit",
-    `interface ${Port.D}.1`,
-    "dot1q termination vid 100",
-    "ip address 22.1.1.2/24",
-    "ip pim dense-mode",
-    "exit",
     `interface ${Port.A}`,
     "no switchport",
     "exit",
     `interface ${Port.A}.1`,
-    "dot1q termination vid 200",
-    "ip address 12.1.1.2/24",
-    "ip pim dense-mode",
+    "dot1q termination vid 100",
+    "ip address 1.1.1.2/24",
+    "ip router isis",
+    "exit",
+    `interface ${Port.D}`,
+    "no switchport",
+    "exit",
+    `interface ${Port.D}.1`,
+    "dot1q termination vid 300",
+    "ip address 3.3.3.1/24",
+    "exit",
+    "router isis",
+    "net 49.0001.0000.0000.0007.00",
+    "redistribute static",
+    "exit",
+    "arp 3.3.3.3 0003.0003.0003",
+    "ip route 10.10.10.0/24 3.3.3.3",
     "end",
   ]);
 
-  testHelper.ExecConfigDutA([
-    "configure terminal",
-    "ip route 22.1.1.0/24 12.1.1.2",
-    "end",
-  ]);
+  testHelper.sleep(1000 * 20);
 
-  testHelper.ExecConfigDutB([
-    "configure terminal",
-    "ip route 11.1.1.0/24 12.1.1.1",
-    "end",
-  ]);
+  testHelper.ReadyCheckDutA("show ip route", `10.10.10.0\/24`, 1000 * 30);
 
-  testHelper.ReadyCheckDutA(
-    `show interface ${Port.A}.1`,
-    `Interface current state: UP`,
-    1000 * 10
-  );
+  testHelper.startCapture(RenixPort.B);
 
-  testHelper.ExecRetMatchDutA(
-    "show ip pim dense-mode interface",
-    `11.1.1.1 *?${Port.D}.1`
-  );
+  testHelper.addPktSender({
+    port: RenixPort.A,
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: DeviceARouteMac,
+        src: "00:00:00:11:22:33",
+        type: 0x8100,
+      })
+      .setVLAN({ vlan: 100, type: 0x0800 })
+      .setIPv4({ dst: "10.10.10.100", src: "1.2.3.4" }),
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
 
-  testHelper.ExecRetMatchDutA(
-    "show ip pim dense-mode interface",
-    `12.1.1.1 *?${Port.A}.1`
-  );
-
-  testHelper.sleep(1000 * 30);
-
-  testHelper.ReadyCheckDutA(
-    "show ip pim dense-mode neighbor",
-    `12.1.1.2.*?${Port.A}.1`,
-    1000 * 10
-  );
-
-  testHelper.ReadyCheckDutB(
-    "show ip pim dense-mode neighbor",
-    `12.1.1.1.*?${Port.A}.1`,
-    1000 * 10
-  );
+  testHelper.addPktChecker({
+    port: RenixPort.B,
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: "3.3.3",
+        src: DeviceBRouteMac,
+        type: 0x8100,
+      })
+      .setVLAN({ vlan: 300, type: 0x0800 })
+      .setIPv4({ dst: "10.10.10.100", src: "1.2.3.4" }),
+    expected_count: 10,
+  });
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    `no interface ${Port.D}.1`,
     `no interface ${Port.A}.1`,
-    `interface ${Port.D}`,
-    "switchport",
-    "exit",
+    `no interface ${Port.D}.1`,
     `interface ${Port.A}`,
     "switchport",
     "exit",
-    "no ip route 22.1.1.0/24",
-    "no ip pim rp-address 11.1.1.1",
+    `interface ${Port.D}`,
+    "switchport",
+    "exit",
+    "no router isis",
     "end",
   ]);
 
   testHelper.CleanConfigDutB([
     "configure terminal",
-    `no interface ${Port.D}.1`,
     `no interface ${Port.A}.1`,
-    `interface ${Port.D}`,
-    "switchport",
-    "exit",
+    `no interface ${Port.D}.1`,
     `interface ${Port.A}`,
     "switchport",
     "exit",
-    "no ip route 11.1.1.0/24",
-    "no ip pim rp-address 11.1.1.1",
+    `interface ${Port.D}`,
+    "switchport",
+    "exit",
+    "no router isis",
+    "no ip route 10.10.10.0/24",
+    "no arp 3.3.3.3",
     "end",
   ]);
 

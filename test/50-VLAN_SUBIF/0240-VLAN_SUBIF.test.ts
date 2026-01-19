@@ -1,12 +1,19 @@
 import { Port } from "../../utils";
-import { TestHelper } from "../../utils/TestHelper";
+import { TransmitMode } from "../../utils/comm/Components";
+import { RenixPort } from "../../utils/stream/StreamBackendApi";
+import { PacketBuilder } from "../../utils/stream/thrift_packet";
+import {
+  DeviceARouteMac,
+  DeviceBRouteMac,
+  TestHelper,
+} from "../../utils/TestHelper";
 import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.one_device_topo_links_type_1
+    LinkConstraint.two_devices_topo_links_type_1
   ).init();
 });
 
@@ -16,71 +23,132 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                    +--------+                   +--------+
+ *                    |        |--PortA <=> PortA--|        |
+ *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
+ *                    |        |--PortC <=> PortC--|        |
+ *                    +--------+                   +--------+
  *
  */
-test("支持在VLAN子接口上配置MLD", async () => {
+test("支持通过VLAN子接口建立RIPng邻居连接", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "ipv6 enable",
-    "ipv6 mld limit 2000",
     `interface ${Port.A}`,
     "no switchport",
     "exit",
     `interface ${Port.A}.1`,
     "dot1q termination vid 100",
-    "ipv6 address 2001:1::1/64",
-    "ipv6 pim sparse-mode",
+    "ipv6 address 2001::1/64",
+    "ipv6 router rip",
     "exit",
-    `interface ${Port.B}`,
+    `interface ${Port.D}`,
     "no switchport",
     "exit",
-    `interface ${Port.B}.1`,
+    `interface ${Port.D}.1`,
     "dot1q termination vid 200",
-    "ipv6 address 3001:1::1/64",
-    "ipv6 pim sparse-mode",
+    "ipv6 address 1001::1/64",
     "exit",
+    "router ipv6 rip",
     "end",
   ]);
 
-  testHelper.ExecConfigDutA([
+  testHelper.ExecConfigDutB([
     "configure terminal",
-    `interface ${Port.A}.1`,
-    "ipv6 mld last-member-query-count 3",
-    "ipv6 mld last-member-query-interval 2000",
-    "ipv6 mld limit 1000",
-    "ipv6 mld proxy-service",
-    "ipv6 mld query-max-response-time 12",
-    "ipv6 mld query-interval 120",
-    "ipv6 mld robustness-variable 3",
-    "ipv6 mld version 2",
-    "ipv6 mld static-group ff0e::1234",
+    "ipv6 enable",
+    `interface ${Port.A}`,
+    "no switchport",
     "exit",
-    `interface ${Port.B}.1`,
-    `ipv6 mld mroute-proxy ${Port.A}.1`,
+    `interface ${Port.A}.1`,
+    "dot1q termination vid 100",
+    " ipv6 address 2001::2/64",
+    "ipv6 router rip",
+    "exit",
+    `interface ${Port.D}`,
+    "no switchport",
+    "exit",
+    `interface ${Port.D}.1`,
+    "dot1q termination vid 300",
+    "ipv6 address 3001::1/64",
+    "exit",
+    "router ipv6 rip",
+    "redistribute static",
+    "exit",
+    "ipv6 neighbor 3001::2 0000.3001.0002",
+    "ipv6 route 4000::/64 3001::2",
     "end",
   ]);
+
+  testHelper.sleep(1000 * 15);
 
   testHelper.ReadyCheckDutA(
-    `show interface ${Port.A}.1`,
-    `Interface current state: UP`,
-    1000 * 10
+    "show ipv6 route",
+    `R       4000::\/64`,
+    1000 * 30
   );
+
+  testHelper.startCapture(RenixPort.B);
+
+  testHelper.addPktSender({
+    port: RenixPort.A,
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: DeviceARouteMac,
+        src: "00:00:00:11:22:33",
+        type: 0x8100,
+      })
+      .setVLAN({ vlan: 200, type: 0x86dd })
+      .setIPv6({ dst: "4000::123", src: "1001::100" }),
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
+
+  testHelper.addPktChecker({
+    port: RenixPort.B,
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: "0000.3001.0002",
+        src: DeviceBRouteMac,
+        type: 0x8100,
+      })
+      .setVLAN({ vlan: 300, type: 0x86dd })
+      .setIPv6({ dst: "4000::123", src: "1001::100" }),
+    expected_count: 10,
+  });
 
   testHelper.CleanConfigDutA([
     "configure terminal",
     "no ipv6 enable",
-    "no ipv6 mld limit",
     `no interface ${Port.A}.1`,
-    `no interface ${Port.B}.1`,
+    `no interface ${Port.D}.1`,
     `interface ${Port.A}`,
     "switchport",
     "exit",
-    `interface ${Port.B}`,
+    `interface ${Port.D}`,
     "switchport",
     "exit",
+    "no router ipv6 rip",
+    "end",
+  ]);
+
+  testHelper.CleanConfigDutB([
+    "configure terminal",
+    "no ipv6 enable",
+    `no interface ${Port.A}.1`,
+    `no interface ${Port.D}.1`,
+    `interface ${Port.A}`,
+    "switchport",
+    "exit",
+    `interface ${Port.D}`,
+    "switchport",
+    "exit",
+    "no router ipv6 rip",
+    "no ipv6 route 4000::/64",
+    "no ipv6 neighbor 3001::2",
     "end",
   ]);
 

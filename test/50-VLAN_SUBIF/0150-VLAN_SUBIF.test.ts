@@ -24,42 +24,48 @@ afterAll(async () => {
  *                    +--------+
  *
  */
-test("设备支持查看和清除子接口统计信息", async () => {
+test("支持在VLAN子接口上配置PBR", async () => {
   testHelper.ExecConfigDutA([
-    "clear counters",
     "configure terminal",
-    `interface ${Port.A}`,
-    "no switchport",
+    "ip access-list test",
+    "10 permit any host 1.2.3.4 any",
     "exit",
-    `interface ${Port.B}`,
+    "route-map rm permit 10",
+    "match ip address test",
+    "set ip next-hop 2.2.2.2",
+    "exit",
+    `interface ${Port.A}`,
     "no switchport",
     "exit",
     `interface ${Port.A}.1`,
     "dot1q termination vid 100",
     "ip address 1.1.1.1/24",
-    "statistic enable both",
+    "ip policy route-map rm",
+    "exit",
+    `interface ${Port.B}`,
+    "no switchport",
     "exit",
     `interface ${Port.B}.1`,
     "dot1q termination vid 200",
     "ip address 2.2.2.1/24",
-    "statistic enable both",
     "exit",
     "arp 2.2.2.2 2.2.2",
     "end",
   ]);
 
-  /** For wait interface up */
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
     `Interface current state: UP`,
     1000 * 10
   );
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.B}.1`,
+    `Interface current state: UP`,
+    1000 * 10
+  );
 
-  /** For wait route install */
-  testHelper.sleep(2000);
-
+  /** 1. 测试源mac为1.2.3.4的报文可以被路由转发 */
   testHelper.startCapture(RenixPort.B);
-
   testHelper.addPktSender({
     port: RenixPort.A,
     packet: new PacketBuilder()
@@ -69,7 +75,7 @@ test("设备支持查看和清除子接口统计信息", async () => {
         type: 0x8100,
       })
       .setVLAN({ vlan: 100, type: 0x0800 })
-      .setIPv4({ dst: "2.2.2.2", src: "1.2.3.4" }),
+      .setIPv4({ dst: "10.10.10.100", src: "1.2.3.4" }),
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -87,19 +93,47 @@ test("设备支持查看和清除子接口统计信息", async () => {
         type: 0x8100,
       })
       .setVLAN({ vlan: 200, type: 0x0800 })
-      .setIPv4({ dst: "2.2.2.2", src: "1.2.3.4" }),
+      .setIPv4({ dst: "10.10.10.100", src: "1.2.3.4" }),
     expected_count: 10,
   });
 
-  testHelper.ExecRetMatchDutA(`show interface ${Port.A}.1`, `10 packets input`);
+  /** 2. 测试其他报文不能被路由转发 */
+  testHelper.startCapture(RenixPort.B);
+  testHelper.addPktSender({
+    port: RenixPort.A,
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: DeviceARouteMac,
+        src: "00:00:00:11:22:33",
+        type: 0x8100,
+      })
+      .setVLAN({ vlan: 100, type: 0x0800 })
+      .setIPv4({ dst: "10.10.10.100", src: "1.2.3.5" }),
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
 
-  testHelper.ExecRetMatchDutA(
-    `show interface ${Port.B}.1`,
-    `10 packets output`
-  );
+  testHelper.addPktChecker({
+    port: RenixPort.B,
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: "2.2.2",
+        src: DeviceARouteMac,
+        type: 0x8100,
+      })
+      .setVLAN({ vlan: 200, type: 0x0800 })
+      .setIPv4({ dst: "10.10.10.100", src: "1.2.3.5" }),
+    expected_count: 0,
+  });
 
   testHelper.CleanConfigDutA([
     "configure terminal",
+    "no ip access-list test",
+    "no route-map rm",
     `no interface ${Port.A}.1`,
     `no interface ${Port.B}.1`,
     `interface ${Port.A}`,

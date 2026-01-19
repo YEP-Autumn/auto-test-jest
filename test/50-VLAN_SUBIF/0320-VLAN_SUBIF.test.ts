@@ -1,7 +1,4 @@
 import { Port } from "../../utils";
-import { TransmitMode } from "../../utils/comm/Components";
-import { RenixPort } from "../../utils/stream/StreamBackendApi";
-import { PacketBuilder } from "../../utils/stream/thrift_packet";
 import { TestHelper } from "../../utils/TestHelper";
 import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
@@ -9,7 +6,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.three_devices_topo_links_type_1
+    LinkConstraint.four_devices_topo_links_type_1
   ).init();
 });
 
@@ -18,17 +15,17 @@ afterAll(async () => {
 });
 
 /**
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortB
- *                    |        |--PortC <=> PortC--|        |    |
- *                    +--------+                   +--------+    |
- *                                                               |
- *                                                 +--------+    |
- *                               RenixB <=> PortD--|  DUTC  |--PortB
- *                                                 +--------+
+ *
+ *    +--------+                   +--------+
+ *    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *    +--------+                   +--------+    |
+ *                                               |
+ *    +--------+                   +--------+    |
+ *    |  DUTD  |--PortA <=> PortA--|  DUTC  |--PortB
+ *    +--------+                   +--------+
+ *
  */
-test("设备支持通过VLAN子接口配置MPLS VPLS", async () => {
+test("设备支持通过VLAN子接口配置MPLS L3VPN", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -36,141 +33,166 @@ test("设备支持通过VLAN子接口配置MPLS VPLS", async () => {
     "exit",
     `interface ${Port.A}.1`,
     "dot1q termination vid 100",
-    "ip address 11.11.9.1/24",
-    "label-switching",
-    "enable-ldp",
-    "exit",
-    `interface ${Port.D}`,
-    "switchport mode trunk",
-    "mpls-vpls v1 vlan 2",
+    "ip address 2.2.2.1/24",
     "exit",
     "interface loopback0",
-    "ip address 11.11.1.1/32",
+    "ip address 4.4.4.4/32",
     "exit",
-    "mpls vpls v1 100",
-    "vpls-peer 11.11.4.4 raw",
-    "exit",
-    "router ospf",
-    "network 11.11.9.0/24 area 0",
+    "router rip",
+    "network 2.2.2.0/24",
     "redistribute connected",
-    "exit",
-    "router ldp",
-    "router-id 11.11.1.1",
-    "targeted-peer 11.11.4.4",
-    "transport-address 11.11.1.1",
     "end",
   ]);
 
   testHelper.ExecConfigDutB([
     "configure terminal",
+    "ip vrf vpn1",
+    "rd 1:1",
+    "route-target both 1:1",
+    "exit",
     `interface ${Port.A}`,
     "no switchport",
     "exit",
     `interface ${Port.A}.1`,
     "dot1q termination vid 100",
-    "ip address 11.11.9.2/24",
-    "label-switching",
-    "enable-ldp",
+    "ip vrf forwarding vpn1",
+    "ip address 2.2.2.2/24",
+    "exit",
+    "interface loopback0",
+    "ip address 5.5.5.5/32",
     "exit",
     `interface ${Port.B}`,
     "no switchport",
     "exit",
     `interface ${Port.B}.1`,
     "dot1q termination vid 200",
-    "ip address 11.11.13.2/24",
+    "ip address 1.1.1.1/24",
     "label-switching",
     "enable-ldp",
     "exit",
-    "interface loopback0",
-    "ip address 11.11.2.2/32",
-    "exit",
     "router ospf",
-    "network 11.11.9.0/24 area 0",
-    "network 11.11.13.0/24 area 0",
+    "router-id 5.5.5.5",
     "redistribute connected",
+    "network 1.1.1.0/24 area 0",
+    "exit",
+    "router rip",
+    "address-family ipv4 vrf vpn1",
+    "network 2.2.2.0/24",
+    "redistribute bgp",
+    "exit-address-family",
+    "exit",
+    "router bgp 1",
+    "neighbor 6.6.6.6 remote-as 1",
+    "neighbor 6.6.6.6 update-source loopback0",
+    "address-family vpnv4 unicast",
+    "neighbor 6.6.6.6 activate",
+    "neighbor 6.6.6.6 send-community both",
+    "exit-address-family",
+    "address-family ipv4 vrf vpn1",
+    "redistribute connected",
+    "redistribute rip",
+    "exit-address-family",
     "exit",
     "router ldp",
-    "router-id 11.11.2.2",
+    "router-id 5.5.5.5",
     "end",
   ]);
 
   testHelper.ExecConfigDutC([
     "configure terminal",
+    "ip vrf vpn1",
+    "rd 1:1",
+    "route-target both 1:1",
+    "exit",
     `interface ${Port.B}`,
     "no switchport",
     "exit",
     `interface ${Port.B}.1`,
     "dot1q termination vid 200",
-    "ip address 11.11.13.4/24",
+    "ip address 1.1.1.2/24",
     "label-switching",
     "enable-ldp",
     "exit",
-    `interface ${Port.D}`,
-    "switchport mode trunk",
-    "mpls-vpls v4 vlan 2",
+    `interface ${Port.A}`,
+    "no switchport",
+    "exit",
+    `interface ${Port.A}.1`,
+    "dot1q termination vid 300",
+    "ip vrf forwarding vpn1",
+    "ip address 3.3.3.3/24",
     "exit",
     "interface loopback0",
-    "ip address 11.11.4.4/32",
-    "exit",
-    "mpls vpls v4 100",
-    "vpls-peer 11.11.1.1 raw",
+    "ip address 6.6.6.6/32",
     "exit",
     "router ospf",
-    "network 11.11.13.0/24 area 0",
+    "router-id 6.6.6.6",
     "redistribute connected",
+    "network 1.1.1.0/24 area 0",
+    "exit",
+    "router rip",
+    "address-family ipv4 vrf vpn1",
+    "network 3.3.3.0/24",
+    "redistribute bgp",
+    "exit-address-family",
+    "exit",
+    "router bgp 1",
+    "neighbor 5.5.5.5 remote-as 1",
+    "neighbor 5.5.5.5 update-source loopback0",
+    "address-family vpnv4 unicast",
+    "neighbor 5.5.5.5 activate",
+    "neighbor 5.5.5.5 send-community both",
+    "exit-address-family",
+    "address-family ipv4 vrf vpn1",
+    "redistribute connected",
+    "redistribute rip",
+    "exit-address-family",
     "exit",
     "router ldp",
-    "router-id 11.11.4.4",
-    "targeted-peer 11.11.1.1",
-    "transport-address 11.11.4.4",
+    "router-id 6.6.6.6",
     "end",
   ]);
 
-  testHelper.sleep(1000 * 30);
+  testHelper.ExecConfigDutD([
+    "configure terminal",
+    `interface ${Port.A}`,
+    "no switchport",
+    "exit",
+    `interface ${Port.A}.1`,
+    "dot1q termination vid 300",
+    "ip address 3.3.3.4/24",
+    "exit",
+    "interface loopback0",
+    "ip address 7.7.7.7/32",
+    "exit",
+    "router rip",
+    "network 3.3.3.0/24",
+    "redistribute connected",
+    "end",
+  ]);
 
-  testHelper.ReadyCheckDutA("show ldp vpls", `Up     ethernet`, 1000 * 60);
-  testHelper.ReadyCheckDutC("show ldp vpls", `Up     ethernet`, 1000 * 60);
+  testHelper.sleep(1000 * 40);
 
-  testHelper.sleep(1000 * 30);
-
-  testHelper.ReadyCheckDutA(
-    "show ldp session",
-    "11.11.2.2.*?OPERATIONAL",
-    1000 * 45
+  testHelper.ReadyCheckDutB(
+    "show ip ospf neighbor",
+    "6.6.6.6.*?Full",
+    1000 * 30
   );
 
-  testHelper.ReadyCheckDutA(
-    "show ldp session",
-    "11.11.4.4.*?OPERATIONAL",
-    1000 * 45
+  testHelper.ReadyCheckDutC(
+    "show ip ospf neighbor",
+    "5.5.5.5.*?Full",
+    1000 * 30
   );
 
-  testHelper.sleep(1000 * 5);
+  testHelper.sleep(1000 * 45);
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.ReadyCheckDutA("show ip route", "R.*?7.7.7.7/32", 1000 * 60);
+  testHelper.ReadyCheckDutD("show ip route", "R.*?4.4.4.4/32", 1000 * 60);
 
-  testHelper.addPktSender({
-    port: RenixPort.A,
-    packet: new PacketBuilder()
-      .setEthernet({ src: "1.1.1", dst: "2.2.2", type: 0x8100 })
-      .setVLAN({ vlan: 2, type: 0x0800 })
-      .setIPv4({ src: "1.2.3.4", dst: "2.3.4.5" }),
-    transmit_param: {
-      mode: TransmitMode.STEP,
-      param: {
-        step_count: 10,
-      },
-    },
-  });
+  testHelper.sleep(1000 * 8);
 
-  testHelper.addPktChecker({
-    port: RenixPort.B,
-    packet: new PacketBuilder()
-      .setEthernet({ src: "1.1.1", dst: "2.2.2", type: 0x8100 })
-      .setVLAN({ vlan: 2, type: 0x0800 })
-      .setIPv4({ src: "1.2.3.4", dst: "2.3.4.5" }),
-    expected_count: 10,
-  });
+  testHelper.ExecRetMatchDutA("ping 7.7.7.7", " 0% packet loss");
+  testHelper.ExecRetMatchDutD("ping 4.4.4.4", " 0% packet loss");
 
   testHelper.CleanConfigDutA([
     "configure terminal",
@@ -178,14 +200,8 @@ test("设备支持通过VLAN子接口配置MPLS VPLS", async () => {
     `interface ${Port.A}`,
     "switchport",
     "exit",
-    `interface ${Port.D}`,
-    "no mpls-vpls v1 vlan 2",
-    "switchport mode access",
-    "exit",
-    "no interface loopback 0",
-    "no mpls vpls v1",
-    "no router ospf",
-    "no router ldp",
+    "no interface loopback0",
+    "no router rip",
     "end",
   ]);
 
@@ -193,32 +209,48 @@ test("设备支持通过VLAN子接口配置MPLS VPLS", async () => {
     "configure terminal",
     `no interface ${Port.A}.1`,
     `no interface ${Port.B}.1`,
-    `interface ${Port.B}`,
+    "no ip vrf vpn1",
+    `interface ${Port.A}`,
     "switchport",
     "exit",
-    `interface ${Port.A}`,
+    `interface ${Port.B}`,
     "switchport",
     "exit",
     "no interface loopback 0",
     "no router ospf",
+    "no router rip",
+    "no router bgp 1",
     "no router ldp",
     "end",
   ]);
 
   testHelper.CleanConfigDutC([
     "configure terminal",
+    `no interface ${Port.A}.1`,
     `no interface ${Port.B}.1`,
+    "no ip vrf vpn1",
+    `interface ${Port.A}`,
+    "switchport",
+    "exit",
     `interface ${Port.B}`,
     "switchport",
     "exit",
-    `interface ${Port.D}`,
-    "no mpls-vpls v4 vlan 2",
-    "switchport mode access",
-    "exit",
     "no interface loopback 0",
-    "no mpls vpls v4",
     "no router ospf",
+    "no router rip",
+    "no router bgp 1",
     "no router ldp",
+    "end",
+  ]);
+
+  testHelper.CleanConfigDutD([
+    "configure terminal",
+    `no interface ${Port.A}.1`,
+    `interface ${Port.A}`,
+    "switchport",
+    "exit",
+    "no interface loopback0",
+    "no router rip",
     "end",
   ]);
 

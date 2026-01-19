@@ -23,19 +23,22 @@ afterAll(async () => {
  *   +--------+                   +--------+
  *
  */
-test("支持在VLAN子接口上配置VRF", async () => {
+test("支持配置VRRP指定VLAN子接口", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
-    "ip vrf test",
-    "exit",
     `interface ${Port.A}`,
     "no switchport",
     "exit",
     `interface ${Port.A}.1`,
-    "ip vrf forwarding test",
     "dot1q termination vid 100",
     "ip address 1.1.1.1/24",
     "exit",
+    "router vrrp 1",
+    `interface ${Port.A}.1`,
+    "priority 200",
+    "virtual-ip 1.1.1.100",
+    "advertisement-interval 5",
+    "enable",
     "end",
   ]);
 
@@ -47,31 +50,33 @@ test("支持在VLAN子接口上配置VRF", async () => {
     `interface ${Port.A}.1`,
     "dot1q termination vid 100",
     "ip address 1.1.1.2/24",
+    "exit",
+    "router vrrp 1",
+    `interface ${Port.A}.1`,
+    "priority 120",
+    "virtual-ip 1.1.1.100",
+    "advertisement-interval 5",
+    "enable",
     "end",
   ]);
 
-  /** For wait interface up */
   testHelper.ReadyCheckDutA(
-    `show interface ${Port.A}.1`,
-    `Interface current state: UP`,
-    1000 * 10
+    "show vrrp",
+    `State               : Master`,
+    1000 * 20
   );
-
   testHelper.ReadyCheckDutB(
-    `show interface ${Port.A}.1`,
-    `Interface current state: UP`,
+    "show vrrp",
+    `State               : Backup`,
     1000 * 10
   );
-
-  /** For wait route install */
-  testHelper.sleep(2000);
-
-  testHelper.ExecRetMatchDutA("ping vrf test 1.1.1.2", ` 0% packet loss`);
-  testHelper.ExecRetMatchDutB("ping 1.1.1.1", ` 0% packet loss`);
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    "no ip vrf test",
+    "router vrrp 1",
+    "disable",
+    "exit",
+    "no router vrrp 1",
     `no interface ${Port.A}.1`,
     `interface ${Port.A}`,
     "switchport",
@@ -80,6 +85,10 @@ test("支持在VLAN子接口上配置VRF", async () => {
 
   testHelper.CleanConfigDutB([
     "configure terminal",
+    "router vrrp 1",
+    "disable",
+    "exit",
+    "no router vrrp 1",
     `no interface ${Port.A}.1`,
     `interface ${Port.A}`,
     "switchport",

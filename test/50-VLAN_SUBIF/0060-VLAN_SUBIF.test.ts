@@ -24,7 +24,7 @@ afterAll(async () => {
  *                    +--------+
  *
  */
-test("支持配置静态路由指定下一跳为VLAN子接口邻居", async () => {
+test("测试设备支持配置VLAN子接口MTU", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -40,6 +40,7 @@ test("支持配置静态路由指定下一跳为VLAN子接口邻居", async () =
     `interface ${Port.B}.1`,
     "dot1q termination vid 200",
     "ip address 2.2.2.1/24",
+    "mtu 500",
     "exit",
     "arp 2.2.2.2 a.b.c",
     "ip route 10.10.10.10/24 2.2.2.2",
@@ -88,6 +89,7 @@ test("支持配置静态路由指定下一跳为VLAN子接口邻居", async () =
     transmit_param: {
       mode: TransmitMode.STEP,
       param: { step_count: 10 },
+      fixed_len: 1000,
     },
   });
 
@@ -104,7 +106,7 @@ test("支持配置静态路由指定下一跳为VLAN子接口邻居", async () =
         src: "100.100.100.1",
         dst: "10.10.10.100",
       }),
-    expected_count: 10,
+    expected_count: 20,
   });
 
   testHelper.CleanConfigDutA([

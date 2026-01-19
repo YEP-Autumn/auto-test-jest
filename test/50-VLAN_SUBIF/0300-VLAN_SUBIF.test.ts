@@ -23,7 +23,7 @@ afterAll(async () => {
  *   +--------+                   +--------+
  *
  */
-test("支持配置VRRP指定VLAN子接口", async () => {
+test("支持配置BFD指定VLAN子接口", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -33,12 +33,7 @@ test("支持配置VRRP指定VLAN子接口", async () => {
     "dot1q termination vid 100",
     "ip address 1.1.1.1/24",
     "exit",
-    "router vrrp 1",
-    `interface ${Port.A}.1`,
-    "priority 200",
-    "virtual-ip 1.1.1.100",
-    "advertisement-interval 5",
-    "enable",
+    "bfd test peer-ip 1.1.1.2 interface eth-0-1.1 auto",
     "end",
   ]);
 
@@ -51,32 +46,25 @@ test("支持配置VRRP指定VLAN子接口", async () => {
     "dot1q termination vid 100",
     "ip address 1.1.1.2/24",
     "exit",
-    "router vrrp 1",
-    `interface ${Port.A}.1`,
-    "priority 120",
-    "virtual-ip 1.1.1.100",
-    "advertisement-interval 5",
-    "enable",
+    "bfd test peer-ip 1.1.1.1 interface eth-0-1.1 auto",
     "end",
   ]);
 
   testHelper.ReadyCheckDutA(
-    "show vrrp",
-    `State               : Master`,
+    "show bfd session detail",
+    `Session State : Up`,
     1000 * 20
   );
+
   testHelper.ReadyCheckDutB(
-    "show vrrp",
-    `State               : Backup`,
+    "show bfd session detail",
+    `Session State : Up`,
     1000 * 10
   );
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    "router vrrp 1",
-    "disable",
-    "exit",
-    "no router vrrp 1",
+    "no bfd test",
     `no interface ${Port.A}.1`,
     `interface ${Port.A}`,
     "switchport",
@@ -85,10 +73,7 @@ test("支持配置VRRP指定VLAN子接口", async () => {
 
   testHelper.CleanConfigDutB([
     "configure terminal",
-    "router vrrp 1",
-    "disable",
-    "exit",
-    "no router vrrp 1",
+    "no bfd test",
     `no interface ${Port.A}.1`,
     `interface ${Port.A}`,
     "switchport",

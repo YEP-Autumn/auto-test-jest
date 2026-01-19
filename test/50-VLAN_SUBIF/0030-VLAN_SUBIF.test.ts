@@ -23,13 +23,18 @@ afterAll(async () => {
  *                    +--------+                   +--------+
  *
  */
-test("测试设备能够通过VLAN子接口telnet", async () => {
+test("测试设备支持创建AGG VLAN子接口", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
+    "static-channel-group 1",
     "exit",
-    `interface ${Port.A}.1`,
+    `interface ${Port.C}`,
+    "no switchport",
+    "static-channel-group 1",
+    "exit",
+    `interface agg 1.1`,
     "dot1q termination vid 100",
     "ip address 1.1.1.1/24",
     "end",
@@ -39,8 +44,13 @@ test("测试设备能够通过VLAN子接口telnet", async () => {
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
+    "static-channel-group 1",
     "exit",
-    `interface ${Port.A}.1`,
+    `interface ${Port.C}`,
+    "no switchport",
+    "static-channel-group 1",
+    "exit",
+    `interface agg 1.1`,
     "dot1q termination vid 100",
     "ip address 1.1.1.2/24",
     "end",
@@ -48,13 +58,13 @@ test("测试设备能够通过VLAN子接口telnet", async () => {
 
   /** For wait interface up */
   testHelper.ReadyCheckDutA(
-    `show interface ${Port.A}.1`,
+    `show interface agg 1.1`,
     `Interface current state: UP`,
     1000 * 10
   );
 
   testHelper.ReadyCheckDutB(
-    `show interface ${Port.A}.1`,
+    `show interface agg 1.1`,
     `Interface current state: UP`,
     1000 * 10
   );
@@ -62,21 +72,31 @@ test("测试设备能够通过VLAN子接口telnet", async () => {
   /** For wait route install */
   testHelper.sleep(2000);
 
-  testHelper.ExecConfigDutA(["telnet 1.1.1.2", "exit"]);
-  testHelper.ExecConfigDutB(["telnet 1.1.1.1", "exit"]);
+  testHelper.ExecRetMatchDutA("ping 1.1.1.2", ` 0% packet loss`);
+  testHelper.ExecRetMatchDutB("ping 1.1.1.1", ` 0% packet loss`);
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    `no interface ${Port.A}.1`,
+    "no interface agg 1.1",
     `interface ${Port.A}`,
+    "no static-channel-group",
+    "switchport",
+    "exit",
+    `interface ${Port.C}`,
+    "no static-channel-group",
     "switchport",
     "end",
   ]);
 
   testHelper.CleanConfigDutB([
     "configure terminal",
-    `no interface ${Port.A}.1`,
+    "no interface agg 1.1",
     `interface ${Port.A}`,
+    "no static-channel-group",
+    "switchport",
+    "exit",
+    `interface ${Port.C}`,
+    "no static-channel-group",
     "switchport",
     "end",
   ]);

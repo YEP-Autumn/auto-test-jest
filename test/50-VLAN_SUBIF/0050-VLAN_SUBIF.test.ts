@@ -1,15 +1,12 @@
 import { Port } from "../../utils";
-import { TransmitMode } from "../../utils/comm/Components";
-import { RenixPort } from "../../utils/stream/StreamBackendApi";
-import { PacketBuilder } from "../../utils/stream/thrift_packet";
-import { DeviceARouteMac, TestHelper } from "../../utils/TestHelper";
+import { TestHelper } from "../../utils/TestHelper";
 import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.one_device_topo_links_type_1
+    LinkConstraint.two_devices_topo_links_type_1
   ).init();
 });
 
@@ -19,108 +16,72 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                    +--------+                   +--------+
+ *                    |        |--PortA <=> PortA--|        |
+ *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
+ *                    |        |--PortC <=> PortC--|        |
+ *                    +--------+                   +--------+
  *
  */
-test("测试设备支持配置VLAN子接口MTU", async () => {
+test("测试设备能够通过VLAN子接口ssh", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
+    "username test privilege 4 password test",
     `interface ${Port.A}`,
-    "no switchport",
-    "exit",
-    `interface ${Port.B}`,
     "no switchport",
     "exit",
     `interface ${Port.A}.1`,
     "dot1q termination vid 100",
     "ip address 1.1.1.1/24",
+    "end",
+  ]);
+
+  testHelper.ExecConfigDutB([
+    "configure terminal",
+    "username test privilege 4 password test",
+    `interface ${Port.A}`,
+    "no switchport",
     "exit",
-    `interface ${Port.B}.1`,
-    "dot1q termination vid 200",
-    "ip address 2.2.2.1/24",
-    "mtu 500",
-    "exit",
-    "arp 2.2.2.2 a.b.c",
-    "ip route 10.10.10.10/24 2.2.2.2",
+    `interface ${Port.A}.1`,
+    "dot1q termination vid 100",
+    "ip address 1.1.1.2/24",
     "end",
   ]);
 
   /** For wait interface up */
   testHelper.ReadyCheckDutA(
-    `show interface ${Port.A}`,
-    `Interface current state: UP`,
-    1000 * 10
-  );
-  testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
     `Interface current state: UP`,
     1000 * 10
   );
-  testHelper.ReadyCheckDutA(
-    `show interface ${Port.B}`,
-    `Interface current state: UP`,
-    1000 * 10
-  );
-  testHelper.ReadyCheckDutA(
-    `show interface ${Port.B}.1`,
+
+  testHelper.ReadyCheckDutB(
+    `show interface ${Port.A}.1`,
     `Interface current state: UP`,
     1000 * 10
   );
 
-  testHelper.sleep(3000);
+  /** For wait route install */
+  testHelper.sleep(2000);
 
-  testHelper.startCapture(RenixPort.B);
-
-  testHelper.addPktSender({
-    packet: new PacketBuilder()
-      .setEthernet({
-        dst: DeviceARouteMac,
-        src: "00:00:00:44:55:66",
-        type: 0x8100,
-      })
-      .setVLAN({ vlan: 100, type: 0x0800 })
-      .setIPv4({
-        src: "100.100.100.1",
-        dst: "10.10.10.100",
-      }),
-    port: RenixPort.A,
-    transmit_param: {
-      mode: TransmitMode.STEP,
-      param: { step_count: 10 },
-      fixed_len: 1000,
-    },
-  });
-
-  testHelper.addPktChecker({
-    port: RenixPort.B,
-    packet: new PacketBuilder()
-      .setEthernet({
-        dst: "a.b.c",
-        src: DeviceARouteMac,
-        type: 0x8100,
-      })
-      .setVLAN({ vlan: 200, type: 0x0800 })
-      .setIPv4({
-        src: "100.100.100.1",
-        dst: "10.10.10.100",
-      }),
-    expected_count: 20,
-  });
+  testHelper.ExecConfigDutA(["ssh -l test 1.1.1.2", "test", "exit"]);
+  testHelper.ExecConfigDutB(["ssh -l test 1.1.1.1", "test", "exit"]);
 
   testHelper.CleanConfigDutA([
     "configure terminal",
+    "no username test",
     `no interface ${Port.A}.1`,
-    `no interface ${Port.B}.1`,
     `interface ${Port.A}`,
     "switchport",
-    "exit",
-    `interface ${Port.B}`,
+    "end",
+  ]);
+
+  testHelper.CleanConfigDutB([
+    "configure terminal",
+    "no username test",
+    `no interface ${Port.A}.1`,
+    `interface ${Port.A}`,
     "switchport",
-    "exit",
-    "no arp 2.2.2.2",
-    "no ip route 10.10.10.0/24",
     "end",
   ]);
 

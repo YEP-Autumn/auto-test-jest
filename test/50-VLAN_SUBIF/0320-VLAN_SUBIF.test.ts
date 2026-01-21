@@ -6,7 +6,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.four_devices_topo_links_type_1
+    LinkConstraint.four_devices_topo_links_type_1,
   ).init();
 });
 
@@ -175,13 +175,13 @@ test("设备支持通过VLAN子接口配置MPLS L3VPN", async () => {
   testHelper.ReadyCheckDutB(
     "show ip ospf neighbor",
     "6.6.6.6.*?Full",
-    1000 * 30
+    1000 * 30,
   );
 
   testHelper.ReadyCheckDutC(
     "show ip ospf neighbor",
     "5.5.5.5.*?Full",
-    1000 * 30
+    1000 * 30,
   );
 
   testHelper.sleep(1000 * 45);
@@ -189,7 +189,17 @@ test("设备支持通过VLAN子接口配置MPLS L3VPN", async () => {
   testHelper.ReadyCheckDutA("show ip route", "R.*?7.7.7.7/32", 1000 * 60);
   testHelper.ReadyCheckDutD("show ip route", "R.*?4.4.4.4/32", 1000 * 60);
 
-  testHelper.sleep(1000 * 8);
+  testHelper.ReadyCheckDutB(
+    "show ldp session",
+    "6.6.6.6.*?OPERATIONAL",
+    1000 * 45,
+  );
+
+  testHelper.ReadyCheckDutC(
+    "show ldp session",
+    "5.5.5.5.*?OPERATIONAL",
+    1000 * 45,
+  );
 
   testHelper.ExecRetMatchDutA("ping 7.7.7.7", " 0% packet loss");
   testHelper.ExecRetMatchDutD("ping 4.4.4.4", " 0% packet loss");

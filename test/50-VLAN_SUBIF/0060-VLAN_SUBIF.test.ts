@@ -9,7 +9,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.one_device_topo_links_type_1
+    LinkConstraint.one_device_topo_links_type_1,
   ).init();
 });
 
@@ -51,22 +51,22 @@ test("测试设备支持配置VLAN子接口MTU", async () => {
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.B}`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.B}.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.sleep(3000);
@@ -106,6 +106,7 @@ test("测试设备支持配置VLAN子接口MTU", async () => {
         src: "100.100.100.1",
         dst: "10.10.10.100",
       }),
+    /** 超过mtu的报文会上cpu后被分片 */
     expected_count: 20,
   });
 

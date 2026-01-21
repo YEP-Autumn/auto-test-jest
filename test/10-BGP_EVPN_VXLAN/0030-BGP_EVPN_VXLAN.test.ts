@@ -1,9 +1,16 @@
+import { Port } from "../../utils";
+import { TransmitMode } from "../../utils/comm/Components";
+import { RenixPort } from "../../utils/stream/StreamBackendApi";
+import { PacketBuilder } from "../../utils/stream/thrift_packet";
 import { TestHelper } from "../../utils/TestHelper";
+import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.three_devices_topo_links_type_2,
+  ).init();
 });
 
 afterAll(async () => {
@@ -13,6 +20,18 @@ afterAll(async () => {
 /**
  * 此测试用例存在问题: 集中式的情况下, 中心设备ping子网设备延时很高, 且ping报文最后一帧有几率丢失
  */
+
+/*
+ *                    +--------+                   +--------+
+ *  RenixA <=> PortD--|        |                   |        |
+ *                    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *             PortC--|        |                   |        |    |
+ *                    +--------+                   +--------+    |
+ *                                                               |
+ *                                                 +--------+    |
+ *                               RenixB <=> PortD--|  DUTC  |--PortB
+ *                                                 +--------+
+ */
 test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通过vxlan隧道互通", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
@@ -20,12 +39,12 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
     "vlan 10",
     "vlan 10 overlay enable",
     "exit",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.1.1/24",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport mode trunk",
     "switchport trunk allowed vlan add 10",
     "exit",
@@ -70,12 +89,12 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
     "exit",
     "ip vrf evpn",
     "exit",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.1.2/24",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.2.1/24",
@@ -138,12 +157,12 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
     "vlan 10 overlay enable",
     "vlan 20 overlay enable",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.2.2/24",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport mode trunk",
     "switchport trunk allowed vlan add 10,20",
     "exit",
@@ -189,6 +208,42 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
 
   testHelper.sleep(25000);
 
+  testHelper.startCapture(RenixPort.B);
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: "00:00:00:44:55:77",
+        src: "00:00:00:44:55:66",
+        type: 0x8100,
+      })
+      .setVLAN({ vlan: 10, type: 0x0800 })
+      .setIPv4({
+        src: "100.100.100.1",
+        dst: "10.10.10.100",
+      }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: { step_count: 10 },
+    },
+  });
+
+  testHelper.addPktChecker({
+    port: RenixPort.B,
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: "00:00:00:44:55:77",
+        src: "00:00:00:44:55:66",
+        type: 0x0800,
+      })
+      .setIPv4({
+        src: "100.100.100.1",
+        dst: "10.10.10.100",
+      }),
+    expected_count: 10,
+  });
+
   testHelper.CleanConfigDutA([
     "configure terminal",
     "no evpn",
@@ -201,11 +256,11 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
     "vlan database",
     "no vlan 10",
     "exit",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport mode access",
     "exit",
     "no ip route 10.2.2.2/32",
@@ -227,11 +282,11 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
     "vlan database",
     "no vlan 10,20",
     "exit",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
@@ -253,11 +308,11 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
     "vlan database",
     "no vlan 10,20",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport mode access",
     "exit",
     "no ip route 10.1.1.1/32",

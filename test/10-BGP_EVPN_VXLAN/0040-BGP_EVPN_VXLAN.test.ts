@@ -1,15 +1,30 @@
+import { Port } from "../../utils";
 import { TestHelper } from "../../utils/TestHelper";
+import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.three_devices_topo_links_type_2,
+  ).init();
 });
 
 afterAll(async () => {
   await testHelper.destroy();
 });
 
+/*
+ *                    +--------+                   +--------+
+ *  RenixA <=> PortD--|        |                   |        |
+ *                    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *             PortC--|        |                   |        |    |
+ *                    +--------+                   +--------+    |
+ *                                                               |
+ *                                                 +--------+    |
+ *                               RenixB <=> PortD--|  DUTC  |--PortB
+ *                                                 +--------+
+ */
 test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
@@ -22,12 +37,12 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项", async () =>
     "route-target import 1000:1000 evpn",
     "vxlan vni 1000",
     "exit",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.1.1/24",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport mode trunk",
     "switchport trunk allowed vlan add 10",
     "exit",
@@ -74,12 +89,12 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项", async () =>
 
   testHelper.ExecConfigDutB([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.1.2/24",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.2.1/24",
@@ -126,12 +141,12 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项", async () =>
     "route-target import 1000:1000 evpn",
     "vxlan vni 1000",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.2.2/24",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport mode trunk",
     "switchport trunk allowed vlan add 10,20",
     "exit",
@@ -207,11 +222,11 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项", async () =>
     "vlan database",
     "no vlan 10",
     "exit",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport mode access",
     "exit",
     "end",
@@ -222,11 +237,11 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项", async () =>
     "no router bgp 100",
     "no evpn",
     "no interface loopback0",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
@@ -250,11 +265,11 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项", async () =>
     "vlan database",
     "no vlan 10,20",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport mode access",
     "end",
   ]);

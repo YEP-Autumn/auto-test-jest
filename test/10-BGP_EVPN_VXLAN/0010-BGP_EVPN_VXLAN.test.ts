@@ -1,14 +1,36 @@
+import { Port } from "../../utils";
 import { TestHelper } from "../../utils/TestHelper";
+import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.three_devices_topo_links_type_3,
+  ).init();
 });
 
 afterAll(async () => {
   await testHelper.destroy();
 });
+
+/**
+ *
+ *                       +--------+
+ *     RenixA <-> PortD-|  DUTA  |--PortA---+
+ *                      +--------+          |
+ *                       |      |         PortA
+ *                     PortB  PortC         |
+ *                       |      |       +--------+
+ *                       |      |       |  DUTB  |
+ *                       |      |       +--------+
+ *                     PortB  PortC         |
+ *                       |      |         PortB
+ *                      +--------+          |
+ *     RenixB <-> PortD-|  DUTC  |--PortA---+
+ *                      +--------+
+ *
+ */
 
 test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普通路由和vxlan隧道测试连通性", async () => {
   testHelper.ExecConfigDutA([
@@ -22,24 +44,22 @@ test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普�
     "exit",
     "ip vrf pc2",
     "exit",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 100.100.100.1/24",
     "exit",
-    "interface eth-0-19",
+    `interface ${Port.B}`,
     "no switchport",
     "ip vrf forwarding pc1",
     "ip address 3.3.3.100/24",
-    // "no shutdown",
     "exit",
-    "interface eth-0-20",
+    `interface ${Port.C}`,
     "no switchport",
     "ip vrf forwarding pc2",
     "ip address 3.3.3.100/24",
-    // "no shutdown",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "no switchport",
     "ip vrf forwarding v1",
     "ip address 1.1.1.1/24",
@@ -52,7 +72,7 @@ test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普�
     "ip address 11.1.1.1/32",
     "exit",
     "interface nve0",
-    "source eth-0-1",
+    `source ${Port.A}`,
     "member vni 1000 associate-vrf",
     "exit",
     "evpn",
@@ -80,11 +100,11 @@ test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普�
 
   testHelper.ExecConfigDutB([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no switchport",
     "ip address 100.100.100.2/24",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "no switchport",
     "ip address 100.100.101.2/24",
     "exit",
@@ -101,23 +121,21 @@ test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普�
     "route-target both 100:1000 evpn",
     "vxlan vni 1000",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.A}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 100.100.101.1/24",
     "exit",
-    "interface eth-0-19",
+    `interface ${Port.B}`,
     "no switchport",
     "ip vrf forwarding v2",
     "ip address 3.3.3.1/24",
-    // "no shutdown",
     "exit",
-    "interface eth-0-20",
+    `interface ${Port.C}`,
     "no switchport",
     "ip address 3.3.3.1/24",
-    // "no shutdown",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "no switchport",
     "ip vrf forwarding v2",
     "ip address 2.2.2.1/24",
@@ -127,7 +145,7 @@ test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普�
     "ip address 10.1.1.2/32",
     "exit",
     "interface nve0",
-    "source eth-0-2",
+    `source ${Port.A}`,
     "member vni 1000 associate-vrf",
     "exit",
     "evpn",
@@ -155,8 +173,8 @@ test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普�
 
   testHelper.sleep(20000);
 
-  testHelper.ExecRetMatchDutA("ping vrf pc2 11.1.1.1", / 0% packet loss/g);
-  testHelper.ExecRetMatchDutA("ping vrf pc1 10.1.1.1", / 0% packet loss/g);
+  testHelper.ExecRetMatchDutA("ping vrf pc2 11.1.1.1", " 0% packet loss");
+  testHelper.ExecRetMatchDutA("ping vrf pc1 10.1.1.1", " 0% packet loss");
 
   testHelper.CleanConfigDutA([
     "configure terminal",
@@ -169,29 +187,27 @@ test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普�
     "no interface nve0",
     "no interface loopback0",
     "no interface loopback1",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
-    "interface eth-0-19",
-    // "shutdown",
+    `interface ${Port.B}`,
     "switchport",
     "exit",
-    "interface eth-0-20",
-    // "shutdown",
+    `interface ${Port.C}`,
     "switchport",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport",
     "end",
   ]);
 
   testHelper.CleanConfigDutB([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "switchport",
     "exit",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "switchport",
     "exit",
     "no ip route 3.3.3.0/24",
@@ -208,19 +224,17 @@ test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普�
     "no ip route 100.100.100.0/24",
     "no interface nve0",
     "no interface loopback0",
-    "interface eth-0-2",
+    `interface ${Port.A}`,
     "vxlan uplink disable",
     "switchport",
     "exit",
-    "interface eth-0-19",
-    // "shutdown",
+    `interface ${Port.B}`,
     "switchport",
     "exit",
-    "interface eth-0-20",
-    // "shutdown",
+    `interface ${Port.C}`,
     "switchport",
     "exit",
-    "interface eth-0-39",
+    `interface ${Port.D}`,
     "switchport",
     "end",
   ]);

@@ -1,7 +1,10 @@
 {
   "type": "commonjs",
   "scripts": {
-    "test": "jest -i"
+    "test": "jest -i",
+    "default": "jest -i --config=config/jest.config.ts --verbose",
+    "failed": "jest -i --config=config/jest-failed.config.ts --verbose",
+    "gen-failed": "node script/generate-jest-failed-config.js"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",

@@ -285,4 +285,70 @@ export class LinkConstraint {
       },
     ],
   };
+
+  /**
+   *
+   *                                      +--------+
+   *             +-----------------PortC--|  DUTD  |--PortA-----------------+
+   *             |                        +--------+                        |
+   *             |                             |                            |
+   *             |                           PortB                          |
+   *             |                             |                            |
+   *           PortC                         PortC                        PortA
+   *             |                             |                            |
+   *        +--------+                   +--------+                   +--------+
+   *        |        |--PortA <=> PortA--|        |                   |        |
+   *        |  DUTA  |                   |  DUTB  |                   |  DUTC  |
+   *        |        |--PortB <=> PortB--|        |                   |        |
+   *        +--------+                   +--------+                   +--------+
+   *            |                             |                            |
+   *          PortD                         PortD                        PortD
+   *            |                             |                            |
+   *         RenixA                        RenixB                      *RenixC
+   */
+
+  static four_devices_topo_links_type_2: Topolinks = {
+    links: [
+      {
+        stream_id: 1,
+        in_port: DutA.portA,
+        out_port: DutB.portA,
+      },
+      {
+        stream_id: 2,
+        in_port: DutA.portB,
+        out_port: DutB.portB,
+      },
+      {
+        stream_id: 3,
+        in_port: DutA.portC,
+        out_port: DutD.portC,
+      },
+      {
+        stream_id: 4,
+        in_port: DutA.portD,
+        out_port: Renix.portA,
+      },
+      {
+        stream_id: 5,
+        in_port: DutB.portD,
+        out_port: Renix.portB,
+      },
+      {
+        stream_id: 6,
+        in_port: DutB.portC,
+        out_port: DutD.portB,
+      },
+      {
+        stream_id: 7,
+        in_port: DutC.portA,
+        out_port: DutD.portA,
+      },
+      // {
+      //   stream_id: 8,
+      //   in_port: DutC.portD,
+      //   out_port: Renix.portC,
+      // },
+    ],
+  };
 }

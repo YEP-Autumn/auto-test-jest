@@ -119,10 +119,10 @@ test("支持在开启了flex模式的dot1q-tunne接口上配置vlan类型的 mpl
 
   testHelper.sleep(45000);
 
-  testHelper.ExecRetMatchDutB("show mpls l2-circuit", /t1.*?200 /g);
+  testHelper.ExecRetMatchDutB("show mpls l2-circuit", "t1.*?200 ");
   testHelper.ExecRetMatchDutB(
     "show mpls vc-table",
-    /200.*?192.168.10.10.*?Active/g
+    "200.*?192.168.10.10.*?Active",
   );
 
   /**

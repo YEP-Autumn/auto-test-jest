@@ -74,7 +74,7 @@ export class ExecRetMatch implements Actuator {
 
     if (!success) {
       console.error(
-        `ExecRetMatch failed:\n  Command: ${this.config}\n  Expected: ${this.expect}\n  Output: ${result}\n  IsNotMatch: ${this.notMatch}`
+        `ExecRetMatch failed:\n  Command: ${this.config}\n  Expected: ${this.expect}\n  Output: ${result}\n  IsNotMatch: ${this.notMatch}`,
       );
     }
 
@@ -105,7 +105,7 @@ export class ReadyCheck implements Actuator {
           return true;
         }
         console.log(
-          `Waiting for condition: ${this.expect} retry cnt: ${++retry_cnt}...`
+          `Waiting for condition: ${this.expect} retry cnt: ${++retry_cnt}...`,
         );
 
         await sleep(2000);
@@ -146,13 +146,13 @@ export class PacketSender implements Actuator {
     try {
       await sleep(1000 * 2, false);
       let packet_buffer = packet_thrift_buffer_build(
-        this.param.packet.getFields()
+        this.param.packet.getFields(),
       );
       await streamBackendApi?.streamPacketUserdefineSend(
         packet_buffer,
         this.param.port,
         this.param.modifier_param,
-        this.param.transmit_param
+        this.param.transmit_param,
       );
     } catch (error) {
       console.error("PacketSender Error:", error);
@@ -180,7 +180,7 @@ export class PacketChecker implements Actuator {
    */
   private checkCount(
     actual: number,
-    expected: NumberCompare | number
+    expected: NumberCompare | number,
   ): boolean {
     if (typeof expected === "number") {
       return actual === expected;
@@ -217,18 +217,19 @@ export class PacketChecker implements Actuator {
     // 根据字段类型比较具体内容
     switch (expected.type) {
       case 1: // EthernetII
+        actualField.ether.type = i16_to_u16(actualField.ether.type);
         console.log("Comparing EthernetII fields:", field, actualField);
         if (field.ether == null || actualField.ether == null) {
           console.log("EthernetII field is null.");
           return false;
         }
 
-        if (field.ether.type !== i16_to_u16(actualField.ether.type)) {
+        if (field.ether.type !== actualField.ether.type) {
           console.log(
             "EthernetII type field does not match. expected:",
             field.ether.type,
             "actual:",
-            i16_to_u16(actualField.ether.type)
+            actualField.ether.type,
           );
           return false;
         }
@@ -238,7 +239,7 @@ export class PacketChecker implements Actuator {
             "EthernetII dst field does not match. expected:",
             field.ether.dst,
             "actual:",
-            actualField.ether.dst
+            actualField.ether.dst,
           );
           return false;
         }
@@ -247,7 +248,7 @@ export class PacketChecker implements Actuator {
             "EthernetII src field does not match. expected:",
             field.ether.src,
             "actual:",
-            actualField.ether.src
+            actualField.ether.src,
           );
           return false;
         }
@@ -255,29 +256,95 @@ export class PacketChecker implements Actuator {
         return true;
 
       case 2: // VLAN
+        actualField.vlan.vlan = i16_to_u16(actualField.vlan.vlan);
+        actualField.vlan.type = i16_to_u16(actualField.vlan.type);
+
         console.log("Comparing VLAN fields:", field, actualField);
-        return (
-          field.vlan &&
-          actualField.vlan &&
-          field.vlan.vlan === i16_to_u16(actualField.vlan.vlan) &&
-          field.vlan.type === i16_to_u16(actualField.vlan.type)
-        );
+        if (field.vlan == null || actualField.vlan == null) {
+          console.log("VLAN field is null.");
+          return false;
+        }
+
+        if (field.vlan.vlan !== actualField.vlan.vlan) {
+          console.log(
+            "VLAN vlan field does not match. expected:",
+            field.vlan.vlan,
+            "actual:",
+            actualField.vlan.vlan,
+          );
+          return false;
+        }
+
+        if (field.vlan.type !== actualField.vlan.type) {
+          console.log(
+            "VLAN type field does not match. expected:",
+            field.vlan.type,
+            "actual:",
+            actualField.vlan.type,
+          );
+          return false;
+        }
+
+        return true;
+
       case 3: // IPv4
         console.log("Comparing IPv4 fields:", field, actualField);
-        return (
-          field.ipv4 &&
-          actualField.ipv4 &&
-          field.ipv4.src === actualField.ipv4.src &&
-          field.ipv4.dst === actualField.ipv4.dst
-        );
-      case 4:
+        if (field.ipv4 == null || actualField.ipv4 == null) {
+          console.log("IPv4 field is null.");
+          return false;
+        }
+
+        if (field.ipv4.src !== actualField.ipv4.src) {
+          console.log(
+            "IPv4 src field does not match. expected:",
+            field.ipv4.src,
+            "actual:",
+            actualField.ipv4.src,
+          );
+          return false;
+        }
+
+        if (field.ipv4.dst !== actualField.ipv4.dst) {
+          console.log(
+            "IPv4 dst field does not match. expected:",
+            field.ipv4.dst,
+            "actual:",
+            actualField.ipv4.dst,
+          );
+          return false;
+        }
+
+        return true;
+
+      case 4: // IPv6
         console.log("Comparing IPv6 fields:", field, actualField);
-        return (
-          field.ipv6 &&
-          actualField.ipv6 &&
-          field.ipv6.src === actualField.ipv6.src &&
-          field.ipv6.dst === actualField.ipv6.dst
-        );
+        if (field.ipv6 == null || actualField.ipv6 == null) {
+          console.log("IPv6 field is null.");
+          return false;
+        }
+
+        if (field.ipv6.src !== actualField.ipv6.src) {
+          console.log(
+            "IPv6 src field does not match. expected:",
+            field.ipv6.src,
+            "actual:",
+            actualField.ipv6.src,
+          );
+          return false;
+        }
+
+        if (field.ipv6.dst !== actualField.ipv6.dst) {
+          console.log(
+            "IPv6 dst field does not match. expected:",
+            field.ipv6.dst,
+            "actual:",
+            actualField.ipv6.dst,
+          );
+          return false;
+        }
+
+        return true;
+
       default:
         return false;
     }
@@ -291,7 +358,7 @@ export class PacketChecker implements Actuator {
    */
   private fieldListMatches(
     expectedFields: any[],
-    actualFields: any[]
+    actualFields: any[],
   ): boolean {
     if (!expectedFields || expectedFields.length === 0) return true;
     if (!actualFields || actualFields.length === 0) return false;
@@ -307,7 +374,7 @@ export class PacketChecker implements Actuator {
       if (
         this.fieldsMatch(
           expectedFields[expectedIndex],
-          actualFields[actualIndex]
+          actualFields[actualIndex],
         )
       ) {
         expectedIndex++; // 找到匹配，移动到下一个期望字段
@@ -316,13 +383,19 @@ export class PacketChecker implements Actuator {
     }
 
     // 如果所有期望字段都找到了，返回 true
-    return expectedIndex === expectedFields.length;
+    if (expectedIndex === expectedFields.length) {
+      console.log("one packet check pass.");
+      return true;
+    }
+
+    console.log("报文字段不匹配.");
+    return false;
   }
 
   async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
     await streamBackendApi?.streamPacketCaptureStop(this.param.port);
     let result = await streamBackendApi?.streamPacketCaptureGet(
-      this.param.port
+      this.param.port,
     );
 
     if (!result || !Array.isArray(result.pkt_list)) {
@@ -347,7 +420,7 @@ export class PacketChecker implements Actuator {
         matchCount++;
         console.log(
           STR_DEBUG_INFO,
-          `✅ Packet ${i + 1} matches expected pattern`
+          `✅ Packet ${i + 1} matches expected pattern`,
         );
       }
     }
@@ -363,13 +436,13 @@ export class PacketChecker implements Actuator {
     if (this.checkCount(matchCount, this.param.expected_count)) {
       console.log(
         STR_SUCCESS,
-        `✅ Found ${matchCount} matching packet(s) (expected: ${expectedCountStr})`
+        `✅ Found ${matchCount} matching packet(s) (expected: ${expectedCountStr})`,
       );
       return true;
     } else {
       console.error(
         STR_FAILED,
-        `❌ Only found ${matchCount} matching packet(s), expected ${expectedCountStr}`
+        `❌ Only found ${matchCount} matching packet(s), expected ${expectedCountStr}`,
       );
       return false;
     }
@@ -426,7 +499,7 @@ export class DutHandle {
   /** Execute and return RegExp match result (with named groups if provided) */
   async match(
     command: string,
-    expect: RegExp
+    expect: RegExp,
   ): Promise<RegExpExecArray | null> {
     const result = await this.safeExec(command);
     return expect.exec(result);
@@ -445,7 +518,7 @@ export class ExecCustom implements Actuator {
   constructor(
     conn: Dut,
     portList: string[],
-    cb: (h: DutHandle) => Promise<boolean> | boolean
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
   ) {
     this.conn = conn;
     this.portList = portList;

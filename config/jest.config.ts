@@ -66,16 +66,16 @@ const config: Config = {
     "test/30-MPLS/03-mpls_load_balance/2170-MPLS.test.ts",  // not work
     "test/30-MPLS/03-mpls_load_balance/2180-MPLS.test.ts",  // not work
 
-    "test/41-VLAN-DOT1Q-TUNNEL/01-vlan_dot1q_type_flex/0010-VLAN-TUNNEL.test.ts",
-    "test/41-VLAN-DOT1Q-TUNNEL/01-vlan_dot1q_type_flex/0020-VLAN-TUNNEL.test.ts",
-    "test/41-VLAN-DOT1Q-TUNNEL/01-vlan_dot1q_type_flex/0030-VLAN-TUNNEL.test.ts",
-    "test/41-VLAN-DOT1Q-TUNNEL/01-vlan_dot1q_type_flex/0040-VLAN-TUNNEL.test.ts",
-    "test/41-VLAN-DOT1Q-TUNNEL/01-vlan_dot1q_type_flex/0050-VLAN-TUNNEL.test.ts",
-    "test/41-VLAN-DOT1Q-TUNNEL/01-vlan_dot1q_type_flex/0060-VLAN-TUNNEL.test.ts",
-    "test/41-VLAN-DOT1Q-TUNNEL/01-vlan_dot1q_type_flex/0070-VLAN-TUNNEL.test.ts",
-    "test/41-VLAN-DOT1Q-TUNNEL/01-vlan_dot1q_type_flex/0080-VLAN-TUNNEL.test.ts",
-    "test/41-VLAN-DOT1Q-TUNNEL/01-vlan_dot1q_type_flex/0090-VLAN-TUNNEL.test.ts",
-    "test/41-VLAN-DOT1Q-TUNNEL/01-vlan_dot1q_type_flex/0100-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0010-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0020-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0030-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0040-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0050-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0060-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0070-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0080-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0090-VLAN-TUNNEL.test.ts",
+    "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0100-VLAN-TUNNEL.test.ts",
 
     "test/50-VLAN_SUBIF/0010-VLAN_SUBIF.test.ts",
     "test/50-VLAN_SUBIF/0020-VLAN_SUBIF.test.ts",

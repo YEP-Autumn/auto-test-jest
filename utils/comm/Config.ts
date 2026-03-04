@@ -65,10 +65,11 @@ export class Config {
   };
 
   public static dut_list = [
-    this.dut_e670,
-    this.dut_e680,
     this.dut_e530_1,
     this.dut_e530_2,
+    this.dut_e670,
+    this.dut_e780,
+    this.dut_e680,
   ];
   // public static dut_list = [this.dut_e530_1, this.dut_e530_2];
 }

@@ -13,7 +13,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.two_devices_topo_links_type_1
+    LinkConstraint.two_devices_topo_links_type_1,
   ).init();
 });
 
@@ -81,11 +81,7 @@ test("支持通过VLAN子接口建立RIPng邻居连接", async () => {
 
   testHelper.sleep(1000 * 15);
 
-  testHelper.ReadyCheckDutA(
-    "show ipv6 route",
-    `R       4000::\/64`,
-    1000 * 30
-  );
+  testHelper.ReadyCheckDutA("show ipv6 route", `R       4000::\/64`, 1000 * 30);
 
   testHelper.startCapture(RenixPort.B);
 

@@ -40,7 +40,7 @@ export function ipStringToNumber(ipString: string): number {
  */
 export function packet_thrift_buffer_build(
   fieldList: IFieldMeta[],
-  protocolType: ThriftFullProtocolType = ThriftPresets.DEFAULT
+  protocolType: ThriftFullProtocolType = ThriftPresets.DEFAULT,
 ): Buffer {
   let capturedFlushBuffer: Buffer | null = null;
   const factory = new ThriftProtocolFactory(thrift);
@@ -48,7 +48,7 @@ export function packet_thrift_buffer_build(
     protocolType,
     (msg: Buffer) => {
       capturedFlushBuffer = msg;
-    }
+    },
   );
 
   const packet = new Packet({

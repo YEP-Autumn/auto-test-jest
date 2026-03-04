@@ -1,16 +1,19 @@
-
 import { Port } from "../../utils";
 import { TransmitMode } from "../../utils/comm/Components";
 import { RenixPort } from "../../utils/stream/StreamBackendApi";
 import { PacketBuilder } from "../../utils/stream/thrift_packet";
-import { DeviceARouteMac, DeviceBRouteMac, TestHelper } from "../../utils/TestHelper";
+import {
+  DeviceARouteMac,
+  DeviceBRouteMac,
+  TestHelper,
+} from "../../utils/TestHelper";
 import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.two_devices_topo_links_type_1
+    LinkConstraint.two_devices_topo_links_type_1,
   ).init();
 });
 
@@ -28,7 +31,6 @@ afterAll(async () => {
  *
  */
 test("支持通过VLAN子接口建立RIP邻居连接", async () => {
-
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,

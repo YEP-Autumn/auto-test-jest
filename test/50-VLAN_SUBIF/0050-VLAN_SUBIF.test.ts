@@ -6,7 +6,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.two_devices_topo_links_type_1
+    LinkConstraint.two_devices_topo_links_type_1,
   ).init();
 });
 
@@ -52,13 +52,13 @@ test("测试设备能够通过VLAN子接口ssh", async () => {
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.ReadyCheckDutB(
     `show interface ${Port.A}.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
 
   /** For wait route install */

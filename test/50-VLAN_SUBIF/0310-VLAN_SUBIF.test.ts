@@ -9,7 +9,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.three_devices_topo_links_type_1
+    LinkConstraint.three_devices_topo_links_type_1,
   ).init();
 });
 
@@ -136,13 +136,13 @@ test("设备支持通过VLAN子接口配置MPLS VPLS", async () => {
   testHelper.ReadyCheckDutA(
     "show ldp session",
     "11.11.2.2.*?OPERATIONAL",
-    1000 * 45
+    1000 * 45,
   );
 
   testHelper.ReadyCheckDutA(
     "show ldp session",
     "11.11.4.4.*?OPERATIONAL",
-    1000 * 45
+    1000 * 45,
   );
 
   testHelper.sleep(1000 * 5);

@@ -9,7 +9,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.one_device_topo_links_type_1
+    LinkConstraint.one_device_topo_links_type_1,
   ).init();
 });
 
@@ -50,22 +50,22 @@ test("支持配置静态路由指定下一跳为VLAN子接口邻居", async () =
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.B}`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
   testHelper.ReadyCheckDutA(
     `show interface ${Port.B}.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.sleep(3000);

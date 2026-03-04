@@ -74,7 +74,7 @@ export class TestHelper {
     if (this.streamBackendApi) {
       for (let i = 0; i < Config.Renix.portList.length; i++) {
         promise.push(
-          this.streamBackendApi.port_release(Config.Renix.portList[i])
+          this.streamBackendApi.port_release(Config.Renix.portList[i]),
         );
       }
     }
@@ -88,7 +88,10 @@ export class TestHelper {
 
   async startTest() {
     for (let i = 0; i < this.actuator.length; i++) {
-      if (this.testResult == false && this._inner_debug_preserve_scene_when_failed == true) {
+      if (
+        this.testResult == false &&
+        this._inner_debug_preserve_scene_when_failed == true
+      ) {
         break;
       }
       if (this.actuator[i] instanceof CleanConfig) {
@@ -105,7 +108,7 @@ export class TestHelper {
             /** 预约Renix端口 */
             for (let i = 0; i < Config.Renix.portList.length; i++) {
               await this.streamBackendApi.port_reserve(
-                Config.Renix.portList[i]
+                Config.Renix.portList[i],
               );
             }
           } catch (err) {
@@ -205,7 +208,7 @@ export class TestHelper {
     const cmd = replaceCmdTemplate(config, this.dut_list[0]);
     expect = replaceCmdTemplate(expect, this.dut_list[0]);
     this.actuator.push(
-      new ExecRetMatch(this.dut_list[0], cmd, new RegExp(expect), notMatch)
+      new ExecRetMatch(this.dut_list[0], cmd, new RegExp(expect), notMatch),
     );
     return this;
   }
@@ -214,7 +217,7 @@ export class TestHelper {
     const cmd = replaceCmdTemplate(config, this.dut_list[1]);
     expect = replaceCmdTemplate(expect, this.dut_list[1]);
     this.actuator.push(
-      new ExecRetMatch(this.dut_list[1], cmd, new RegExp(expect), notMatch)
+      new ExecRetMatch(this.dut_list[1], cmd, new RegExp(expect), notMatch),
     );
     return this;
   }
@@ -223,7 +226,7 @@ export class TestHelper {
     const cmd = replaceCmdTemplate(config, this.dut_list[2]);
     expect = replaceCmdTemplate(expect, this.dut_list[2]);
     this.actuator.push(
-      new ExecRetMatch(this.dut_list[2], cmd, new RegExp(expect), notMatch)
+      new ExecRetMatch(this.dut_list[2], cmd, new RegExp(expect), notMatch),
     );
     return this;
   }
@@ -232,7 +235,7 @@ export class TestHelper {
     const cmd = replaceCmdTemplate(config, this.dut_list[3]);
     expect = replaceCmdTemplate(expect, this.dut_list[3]);
     this.actuator.push(
-      new ExecRetMatch(this.dut_list[3], cmd, new RegExp(expect), notMatch)
+      new ExecRetMatch(this.dut_list[3], cmd, new RegExp(expect), notMatch),
     );
     return this;
   }
@@ -241,7 +244,7 @@ export class TestHelper {
     const cmd = replaceCmdTemplate(config, this.dut_list[0]);
     expect = replaceCmdTemplate(expect, this.dut_list[0]);
     this.actuator.push(
-      new ReadyCheck(this.dut_list[0], cmd, new RegExp(expect), timeout)
+      new ReadyCheck(this.dut_list[0], cmd, new RegExp(expect), timeout),
     );
     return this;
   }
@@ -250,7 +253,7 @@ export class TestHelper {
     const cmd = replaceCmdTemplate(config, this.dut_list[1]);
     expect = replaceCmdTemplate(expect, this.dut_list[1]);
     this.actuator.push(
-      new ReadyCheck(this.dut_list[1], cmd, new RegExp(expect), timeout)
+      new ReadyCheck(this.dut_list[1], cmd, new RegExp(expect), timeout),
     );
     return this;
   }
@@ -259,7 +262,7 @@ export class TestHelper {
     const cmd = replaceCmdTemplate(config, this.dut_list[2]);
     expect = replaceCmdTemplate(expect, this.dut_list[2]);
     this.actuator.push(
-      new ReadyCheck(this.dut_list[2], cmd, new RegExp(expect), timeout)
+      new ReadyCheck(this.dut_list[2], cmd, new RegExp(expect), timeout),
     );
     return this;
   }
@@ -268,7 +271,7 @@ export class TestHelper {
     const cmd = replaceCmdTemplate(config, this.dut_list[3]);
     expect = replaceCmdTemplate(expect, this.dut_list[3]);
     this.actuator.push(
-      new ReadyCheck(this.dut_list[3], cmd, new RegExp(expect), timeout)
+      new ReadyCheck(this.dut_list[3], cmd, new RegExp(expect), timeout),
     );
     return this;
   }
@@ -284,28 +287,28 @@ export class TestHelper {
    */
   ExecCustomDutA(cb: (h: DutHandle) => Promise<boolean> | boolean) {
     this.actuator.push(
-      new ExecCustom(this.dut_list[0], Config.dut_list[0].portList, cb)
+      new ExecCustom(this.dut_list[0], Config.dut_list[0].portList, cb),
     );
     return this;
   }
 
   ExecCustomDutB(cb: (h: DutHandle) => Promise<boolean> | boolean) {
     this.actuator.push(
-      new ExecCustom(this.dut_list[1], Config.dut_list[1].portList, cb)
+      new ExecCustom(this.dut_list[1], Config.dut_list[1].portList, cb),
     );
     return this;
   }
 
   ExecCustomDutC(cb: (h: DutHandle) => Promise<boolean> | boolean) {
     this.actuator.push(
-      new ExecCustom(this.dut_list[2], Config.dut_list[2].portList, cb)
+      new ExecCustom(this.dut_list[2], Config.dut_list[2].portList, cb),
     );
     return this;
   }
 
   ExecCustomDutD(cb: (h: DutHandle) => Promise<boolean> | boolean) {
     this.actuator.push(
-      new ExecCustom(this.dut_list[3], Config.dut_list[3].portList, cb)
+      new ExecCustom(this.dut_list[3], Config.dut_list[3].portList, cb),
     );
     return this;
   }

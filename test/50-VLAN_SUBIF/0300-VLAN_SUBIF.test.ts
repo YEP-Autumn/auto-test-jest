@@ -6,7 +6,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.two_devices_topo_links_type_2
+    LinkConstraint.two_devices_topo_links_type_2,
   ).init();
 });
 
@@ -53,13 +53,13 @@ test("支持配置BFD指定VLAN子接口", async () => {
   testHelper.ReadyCheckDutA(
     "show bfd session detail",
     `Session State : Up`,
-    1000 * 20
+    1000 * 20,
   );
 
   testHelper.ReadyCheckDutB(
     "show bfd session detail",
     `Session State : Up`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.CleanConfigDutA([

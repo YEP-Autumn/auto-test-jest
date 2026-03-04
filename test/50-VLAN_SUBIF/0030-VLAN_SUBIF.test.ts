@@ -6,7 +6,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.two_devices_topo_links_type_1
+    LinkConstraint.two_devices_topo_links_type_1,
   ).init();
 });
 
@@ -60,13 +60,13 @@ test("测试设备支持创建AGG VLAN子接口", async () => {
   testHelper.ReadyCheckDutA(
     `show interface agg 1.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.ReadyCheckDutB(
     `show interface agg 1.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
 
   /** For wait route install */

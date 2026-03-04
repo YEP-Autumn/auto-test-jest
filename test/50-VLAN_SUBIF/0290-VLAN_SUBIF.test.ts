@@ -6,7 +6,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.two_devices_topo_links_type_2
+    LinkConstraint.two_devices_topo_links_type_2,
   ).init();
 });
 
@@ -63,12 +63,12 @@ test("支持配置VRRP指定VLAN子接口", async () => {
   testHelper.ReadyCheckDutA(
     "show vrrp",
     `State               : Master`,
-    1000 * 20
+    1000 * 20,
   );
   testHelper.ReadyCheckDutB(
     "show vrrp",
     `State               : Backup`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.CleanConfigDutA([

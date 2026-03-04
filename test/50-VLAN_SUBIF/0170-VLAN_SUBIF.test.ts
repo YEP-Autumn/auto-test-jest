@@ -6,7 +6,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.two_devices_topo_links_type_1
+    LinkConstraint.two_devices_topo_links_type_1,
   ).init();
 });
 
@@ -81,17 +81,17 @@ test("支持在VLAN子接口上配置PIM-SM", async () => {
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.ExecRetMatchDutA(
     "show ip pim sparse-mode rp mapping",
-    `RP: 11.1.1.1`
+    `RP: 11.1.1.1`,
   );
 
   testHelper.ExecRetMatchDutB(
     "show ip pim sparse-mode rp mapping",
-    `RP: 11.1.1.1`
+    `RP: 11.1.1.1`,
   );
 
   testHelper.CleanConfigDutA([

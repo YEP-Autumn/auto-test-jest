@@ -73,7 +73,7 @@ export class ThriftProtocolFactory {
    * 将完整协议类型转换为配置
    */
   private parseFullProtocolType(
-    fullType: ThriftFullProtocolType
+    fullType: ThriftFullProtocolType,
   ): IThriftProtocolConfig {
     const mapping: Record<ThriftFullProtocolType, IThriftProtocolConfig> = {
       [ThriftFullProtocolType.BUFFERED_COMPACT]: {
@@ -102,7 +102,7 @@ export class ThriftProtocolFactory {
    */
   private createTransport(
     transportType: ThriftTransportType,
-    callback: (msg: Buffer) => void
+    callback: (msg: Buffer) => void,
   ): any {
     switch (transportType) {
       case ThriftTransportType.BUFFERED:
@@ -119,7 +119,7 @@ export class ThriftProtocolFactory {
    */
   private createProtocol(
     protocolType: ThriftProtocolType,
-    transport: any
+    transport: any,
   ): any {
     switch (protocolType) {
       case ThriftProtocolType.COMPACT:
@@ -138,7 +138,7 @@ export class ThriftProtocolFactory {
    */
   createByFullType(
     fullType: ThriftFullProtocolType,
-    callback: (msg: Buffer) => void
+    callback: (msg: Buffer) => void,
   ): IThriftProtocolInstance {
     const config = this.parseFullProtocolType(fullType);
     return this.createByConfig(config, callback);
@@ -151,7 +151,7 @@ export class ThriftProtocolFactory {
    */
   createByConfig(
     config: IThriftProtocolConfig,
-    callback: (msg: Buffer) => void
+    callback: (msg: Buffer) => void,
   ): IThriftProtocolInstance {
     const transport = this.createTransport(config.transportType, callback);
     const protocol = this.createProtocol(config.protocolType, transport);
@@ -171,7 +171,7 @@ export class ThriftProtocolFactory {
   createByTypes(
     transportType: ThriftTransportType,
     protocolType: ThriftProtocolType,
-    callback: (msg: Buffer) => void
+    callback: (msg: Buffer) => void,
   ): IThriftProtocolInstance {
     return this.createByConfig({ transportType, protocolType }, callback);
   }
@@ -181,7 +181,7 @@ export class ThriftProtocolFactory {
    */
   private createReaderTransport(
     transportType: ThriftTransportType,
-    buffer: Buffer
+    buffer: Buffer,
   ): any {
     switch (transportType) {
       case ThriftTransportType.BUFFERED: {
@@ -211,7 +211,7 @@ export class ThriftProtocolFactory {
    */
   createReaderByFullType(
     fullType: ThriftFullProtocolType,
-    buffer: Buffer
+    buffer: Buffer,
   ): IThriftProtocolInstance {
     const config = this.parseFullProtocolType(fullType);
     return this.createReaderByConfig(config, buffer);
@@ -224,7 +224,7 @@ export class ThriftProtocolFactory {
    */
   createReaderByConfig(
     config: IThriftProtocolConfig,
-    buffer: Buffer
+    buffer: Buffer,
   ): IThriftProtocolInstance {
     const transport = this.createReaderTransport(config.transportType, buffer);
     const protocol = this.createProtocol(config.protocolType, transport);
@@ -244,7 +244,7 @@ export class ThriftProtocolFactory {
   createReaderByTypes(
     transportType: ThriftTransportType,
     protocolType: ThriftProtocolType,
-    buffer: Buffer
+    buffer: Buffer,
   ): IThriftProtocolInstance {
     return this.createReaderByConfig({ transportType, protocolType }, buffer);
   }

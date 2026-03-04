@@ -300,11 +300,11 @@ export class PacketListParser {
    */
   private tryDeserializeWithProtocol(
     data: Buffer,
-    protocolType: ThriftFullProtocolType
+    protocolType: ThriftFullProtocolType,
   ): IPacketList {
     const { protocol } = this.factory.createReaderByFullType(
       protocolType,
-      data
+      data,
     );
     const packetList = new PacketList();
     packetList.read(protocol);
@@ -323,7 +323,7 @@ export class PacketListParser {
     data: Buffer,
     framePrefixLen: number,
     byteOrder: "big" | "little",
-    protocolType: ThriftFullProtocolType
+    protocolType: ThriftFullProtocolType,
   ): IPacketList | null {
     if (data.length <= framePrefixLen) {
       return null;
@@ -369,12 +369,12 @@ export class PacketListParser {
             buffer,
             strategy.framePrefixLen!,
             strategy.byteOrder!,
-            strategy.protocolType
+            strategy.protocolType,
           );
         } else {
           packetList = this.tryDeserializeWithProtocol(
             buffer,
-            strategy.protocolType
+            strategy.protocolType,
           );
         }
 

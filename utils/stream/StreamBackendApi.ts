@@ -37,7 +37,7 @@ export class StreamBackendApi {
   async streamPacketSend(
     binary: Buffer,
     fields?: Record<string, any>,
-    filename = "packet.buffer"
+    filename = "packet.buffer",
   ): Promise<any> {
     const form = new FormData();
     form.append("file", binary, {
@@ -65,7 +65,7 @@ export class StreamBackendApi {
   async streamPacketListSend(
     binary: Buffer,
     fields?: Record<string, any>,
-    filename = "packet.buffer"
+    filename = "packet.buffer",
   ): Promise<any> {
     const form = new FormData();
     form.append("file", binary, {
@@ -95,7 +95,7 @@ export class StreamBackendApi {
     port: RenixPort,
     modifier_param: any,
     transmit_param: any,
-    filename = "packet.buffer"
+    filename = "packet.buffer",
   ): Promise<any> {
     const form = new FormData();
     form.append("file", binary, {
@@ -154,7 +154,7 @@ export class StreamBackendApi {
         responseType: "arraybuffer",
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
-      }
+      },
     );
     const binaryData = response.data;
 
@@ -174,7 +174,7 @@ const appendFields = (f: FormData, obj?: Record<string, any>) => {
     if (value === undefined || value === null) continue;
     f.append(
       key,
-      typeof value === "object" ? JSON.stringify(value) : String(value)
+      typeof value === "object" ? JSON.stringify(value) : String(value),
     );
   }
 };

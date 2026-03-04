@@ -6,7 +6,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.one_device_topo_links_type_1
+    LinkConstraint.one_device_topo_links_type_1,
   ).init();
 });
 
@@ -66,7 +66,7 @@ test("支持在VLAN子接口上配置MLD", async () => {
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.CleanConfigDutA([

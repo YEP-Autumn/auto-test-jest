@@ -6,7 +6,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.two_devices_topo_links_type_1
+    LinkConstraint.two_devices_topo_links_type_1,
   ).init();
 });
 
@@ -79,17 +79,17 @@ test("支持在VLAN子接口上配置PIM-DM", async () => {
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}.1`,
     `Interface current state: UP`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.ExecRetMatchDutA(
     "show ip pim dense-mode interface",
-    `11.1.1.1 *?${Port.D}.1`
+    `11.1.1.1 *?${Port.D}.1`,
   );
 
   testHelper.ExecRetMatchDutA(
     "show ip pim dense-mode interface",
-    `12.1.1.1 *?${Port.A}.1`
+    `12.1.1.1 *?${Port.A}.1`,
   );
 
   testHelper.sleep(1000 * 30);
@@ -97,13 +97,13 @@ test("支持在VLAN子接口上配置PIM-DM", async () => {
   testHelper.ReadyCheckDutA(
     "show ip pim dense-mode neighbor",
     `12.1.1.2.*?${Port.A}.1`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.ReadyCheckDutB(
     "show ip pim dense-mode neighbor",
     `12.1.1.1.*?${Port.A}.1`,
-    1000 * 10
+    1000 * 10,
   );
 
   testHelper.CleanConfigDutA([

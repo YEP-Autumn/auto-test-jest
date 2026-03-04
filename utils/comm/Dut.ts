@@ -14,7 +14,7 @@ export class Dut {
 
   public async connect() {
     await this.connection.connect(
-      Object.assign(Config.default_cfg, this.conn_param)
+      Object.assign(Config.default_cfg, this.conn_param),
     );
 
     return this;
@@ -29,7 +29,7 @@ export class Dut {
     let error = new RegExp(`(\r|\n)% `).exec(result);
     if (error || result.startsWith("% ")) {
       throw new Error(
-        `Command Exec Failed!\n${this.lastCmdMode + command}\n${result}`
+        `Command Exec Failed!\n${this.lastCmdMode + command}\n${result}`,
       );
     }
     let split = new RegExp("Switch.*?# ").exec(result);

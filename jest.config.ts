@@ -7,9 +7,7 @@ import type { Config } from "jest";
 
 const config: Config = {
   // The regexp pattern or array of patterns that Jest uses to detect test files
-  testRegex: [
-    "test/demo.test.ts",
-  ],
+  testRegex: ["test/demo.test.ts"],
 
   // All imported modules in your tests should be mocked automatically
   // automock: false,
@@ -116,7 +114,7 @@ const config: Config = {
 
   // Use this configuration option to add custom reporters to Jest
   // reporters: undefined,
-  
+
   // Automatically reset mock state before every test
   // resetMocks: false,
 

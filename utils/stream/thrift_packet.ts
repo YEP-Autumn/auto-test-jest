@@ -1,7 +1,8 @@
 export const thrift = require("thrift");
 const ttypes = require("../rpc/gen-nodejs/packet_types");
 
-import { ipStringToNumber, PARSE_STRATEGIES } from "./packet_utils";
+import { interceptors } from "axios";
+import { PARSE_STRATEGIES } from "./packet_utils";
 import {
   ThriftFullProtocolType,
   ThriftProtocolFactory,
@@ -11,8 +12,12 @@ export const {
   Packet,
   EthernetII,
   VLAN,
+  ARP,
   IPv4,
   IPv6,
+  TCP,
+  UDP,
+  ICMP,
   FieldMeta,
   Field,
   FieldType,
@@ -20,13 +25,8 @@ export const {
 } = ttypes;
 
 // 类型定义
-// export type IPacket = any;
 export type IPacketList = any;
-// export type IEthernetII = any;
-// export type IVLAN = any;
-// export type IIPv4 = any;
 export type IFieldMeta = any;
-// export type IField = any;
 
 // PacketBuilder 参数接口定义
 interface EthernetOptions {
@@ -35,19 +35,78 @@ interface EthernetOptions {
   type?: number;
 }
 
+interface ARPOptions {
+  hwtype?: number;
+  ptype?: number;
+  hwlen?: number;
+  plen?: number;
+  op?: number;
+  hwsrc?: string;
+  psrc?: string;
+  hwdst?: string;
+  pdst?: string;
+}
+
 interface VLANOptions {
+  prio?: number;
+  dei?: number;
   vlan?: number;
   type?: number;
 }
 
 interface IPv4Options {
+  version?: number;
+  inl?: number;
+  tos?: number;
+  len?: number;
+  id?: number;
+  flags?: number;
+  ttl?: number;
+  proto?: number;
+  chksum?: number;
+  src?: string;
+  dst?: string;
+  option?: number;
+}
+
+interface IPv6Options {
+  version?: number;
+  tc?: number;
+  fl?: number;
+  plen?: number;
+  nh?: number;
+  hlim?: number;
   src?: string;
   dst?: string;
 }
 
-interface IPv6Options {
-  src?: string;
-  dst?: string;
+interface TCPOptions {
+  sport?: number;
+  dport?: number;
+  seq?: number;
+  ack?: number;
+  dataofs?: number;
+  rsv?: number;
+  flags?: number;
+  window?: number;
+  chksum?: number;
+  urgptr?: number;
+  option?: Buffer;
+}
+
+interface UDPOptions {
+  sport?: number;
+  dport?: number;
+  len?: number;
+  chksum?: number;
+}
+
+interface ICMPOptions {
+  type?: number;
+  code?: number;
+  chksum?: number;
+  id?: number;
+  seq?: number;
 }
 
 /**
@@ -93,18 +152,11 @@ export class PacketBuilder {
   /**
    * 设置以太网II帧
    */
-  setEthernet({
-    dst = "00:00:00:12:30:10",
-    src = "00:00:00:12:30:20",
-    type = 0x0800,
-  }: EthernetOptions = {}): PacketBuilder {
-    const normalizedDst = normalizeMacAddress(dst);
-    const normalizedSrc = normalizeMacAddress(src);
-
+  setEthernet(options: EthernetOptions = {}): PacketBuilder {
     const ethernet = new EthernetII({
-      dst: normalizedDst,
-      src: normalizedSrc,
-      type,
+      dst: options.dst ? normalizeMacAddress(options.dst) : null,
+      src: options.src ? normalizeMacAddress(options.src) : null,
+      type: options.type,
     });
 
     const fieldMeta = new FieldMeta({
@@ -119,61 +171,78 @@ export class PacketBuilder {
   /**
    * 设置VLAN标签
    */
-  setVLAN({ vlan = 1, type = 0x0800 }: VLANOptions = {}): PacketBuilder {
-    const vlanField = new VLAN({
-      vlan,
-      type,
-    });
-
+  setVLAN(options: VLANOptions = {}): PacketBuilder {
     const fieldMeta = new FieldMeta({
       type: FieldType.VLAN,
-      field: new Field({ vlan: vlanField }),
+      field: new Field({ vlan: new VLAN(options) }),
     });
 
     this.fieldList.push(fieldMeta);
+    return this;
+  }
+
+  setARP(options: ARPOptions = {}): PacketBuilder {
+    const fieldMeta = new FieldMeta({
+      type: FieldType.ARP,
+      field: new Field({ arp: new ARP(options) }),
+    });
+
+    this.fieldList.push(fieldMeta);
+
     return this;
   }
 
   /**
    * 设置IPv4协议头
    */
-  setIPv4({
-    src: srcIp = "1.1.1.1",
-    dst: dstIp = "2.2.2.2",
-  }: IPv4Options = {}): PacketBuilder {
-    const srcIpNum = ipStringToNumber(srcIp);
-    const dstIpNum = ipStringToNumber(dstIp);
-
-    const ipv4 = new IPv4({
-      src: srcIpNum,
-      dst: dstIpNum,
-    });
-
+  setIPv4(options: IPv4Options = {}): PacketBuilder {
     const fieldMeta = new FieldMeta({
       type: FieldType.IPv4,
-      field: new Field({ ipv4 }),
+      field: new Field({ ipv4: new IPv4(options) }),
     });
 
     this.fieldList.push(fieldMeta);
     return this;
   }
 
-  setIPv6({
-    dst = "2001::1",
-    src = "3001::1",
-  }: IPv6Options = {}): PacketBuilder {
-    const ipv6 = new IPv6({
-      dst: dst,
-      src: src,
-    });
-
+  setIPv6(options: IPv6Options = {}): PacketBuilder {
     const fieldMeta = new FieldMeta({
       type: FieldType.IPv6,
-      field: new Field({ ipv6: ipv6 }),
+      field: new Field({ ipv6: new IPv6(options) }),
+    });
+
+    this.fieldList.push(fieldMeta);
+    return this;
+  }
+
+  setTCP(options: TCPOptions = {}): PacketBuilder {
+    const fieldMeta = new FieldMeta({
+      type: FieldType.TCP,
+      field: new Field({ tcp: new TCP(options) }),
+    });
+
+    this.fieldList.push(fieldMeta);
+    return this;
+  }
+
+  setUDP(options: UDPOptions = {}): PacketBuilder {
+    const fieldMeta = new FieldMeta({
+      type: FieldType.UDP,
+      field: new Field({ udp: new UDP(options) }),
     });
 
     this.fieldList.push(fieldMeta);
 
+    return this;
+  }
+
+  setICMP(options: ICMPOptions = {}): PacketBuilder {
+    const fieldMeta = new FieldMeta({
+      type: FieldType.ICMP,
+      field: new Field({ icmp: new ICMP(options) }),
+    });
+
+    this.fieldList.push(fieldMeta);
     return this;
   }
 

@@ -5,13 +5,6 @@ import {
 } from "./thrift-protocol.factory";
 import { IFieldMeta, Packet, thrift } from "./thrift_packet";
 
-export function i16_to_u16(value: any): any {
-  return typeof value === "number" ? (value >>> 0) & 0xffff : value;
-}
-
-export function i32_to_u32(value: any): any {
-  return typeof value === "number" ? (value >>> 0) & 0xffffffff : value;
-}
 
 /**
  * 将IP地址字符串转换为32位整数

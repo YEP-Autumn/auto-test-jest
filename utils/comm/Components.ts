@@ -310,7 +310,10 @@ export class PacketChecker implements Actuator {
           return false;
         }
 
-        if (field.ipv4.version && field.ipv4.version !== actualField.ipv4.version) {
+        if (
+          field.ipv4.version &&
+          field.ipv4.version !== actualField.ipv4.version
+        ) {
           console.log(
             "IPv4 version field does not match. expected:",
             field.ipv4.version,
@@ -320,12 +323,12 @@ export class PacketChecker implements Actuator {
           return false;
         }
 
-        if (field.ipv4.inl && field.ipv4.inl !== actualField.ipv4.inl) {
+        if (field.ipv4.ihl && field.ipv4.ihl !== actualField.ipv4.ihl) {
           console.log(
-            "IPv4 inl field does not match. expected:",
-            field.ipv4.inl,
+            "IPv4 ihl field does not match. expected:",
+            field.ipv4.ihl,
             "actual:",
-            actualField.ipv4.inl,
+            actualField.ipv4.ihl,
           );
           return false;
         }
@@ -360,6 +363,16 @@ export class PacketChecker implements Actuator {
           return false;
         }
 
+        if (field.ipv4.frag && field.ipv4.frag !== actualField.ipv4.frag) {
+          console.log(
+            "IPv4 frag field does not match. expected:",
+            field.ipv4.frag,
+            "actual:",
+            actualField.ipv4.frag,
+          );
+          return false;
+        }
+
         if (field.ipv4.flags && field.ipv4.flags !== actualField.ipv4.flags) {
           console.log(
             "IPv4 flags field does not match. expected:",
@@ -390,7 +403,10 @@ export class PacketChecker implements Actuator {
           return false;
         }
 
-        if (field.ipv4.chksum && field.ipv4.chksum !== actualField.ipv4.chksum) {
+        if (
+          field.ipv4.chksum &&
+          field.ipv4.chksum !== actualField.ipv4.chksum
+        ) {
           console.log(
             "IPv4 chksum field does not match. expected:",
             field.ipv4.chksum,
@@ -420,7 +436,10 @@ export class PacketChecker implements Actuator {
           return false;
         }
 
-        if (field.ipv4.option && field.ipv4.option !== actualField.ipv4.option) {
+        if (
+          field.ipv4.option &&
+          field.ipv4.option !== actualField.ipv4.option
+        ) {
           console.log(
             "IPv4 option field does not match. expected:",
             field.ipv4.option,
@@ -439,7 +458,10 @@ export class PacketChecker implements Actuator {
           return false;
         }
 
-        if (field.ipv6.version && field.ipv6.version !== actualField.ipv6.version) {
+        if (
+          field.ipv6.version &&
+          field.ipv6.version !== actualField.ipv6.version
+        ) {
           console.log(
             "IPv6 version field does not match. expected:",
             field.ipv6.version,
@@ -568,7 +590,10 @@ export class PacketChecker implements Actuator {
           return false;
         }
 
-        if (field.tcp.dataofs && field.tcp.dataofs !== actualField.tcp.dataofs) {
+        if (
+          field.tcp.dataofs &&
+          field.tcp.dataofs !== actualField.tcp.dataofs
+        ) {
           console.log(
             "TCP dataofs field does not match. expected:",
             field.tcp.dataofs,
@@ -716,7 +741,10 @@ export class PacketChecker implements Actuator {
           return false;
         }
 
-        if (field.icmp.chksum && field.icmp.chksum !== actualField.icmp.chksum) {
+        if (
+          field.icmp.chksum &&
+          field.icmp.chksum !== actualField.icmp.chksum
+        ) {
           console.log(
             "ICMP chksum field does not match. expected:",
             field.icmp.chksum,
@@ -895,10 +923,15 @@ export class PacketChecker implements Actuator {
   }
 
   async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
-    await streamBackendApi?.streamPacketCaptureStop(this.param.port);
-    let result = await streamBackendApi?.streamPacketCaptureGet(
-      this.param.port,
-    );
+    let result;
+
+    try {
+      await streamBackendApi?.streamPacketCaptureStop(this.param.port);
+      result = await streamBackendApi?.streamPacketCaptureGet(this.param.port);
+    } catch (error) {
+      console.error("PacketChecker Error:", error);
+      return false;
+    }
 
     if (!result || !Array.isArray(result.pkt_list)) {
       console.error("❌ No packets captured, result: ", result);

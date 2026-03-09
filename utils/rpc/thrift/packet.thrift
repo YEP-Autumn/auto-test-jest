@@ -34,17 +34,18 @@ struct VLAN {
 
 struct IPv4 {
     1: optional i16 version,
-    2: optional i16 inl,
+    2: optional i16 ihl,
     3: optional i16 tos,
     4: optional i32 len,
     5: optional i32 id,
-    6: optional i16 flags,
-    7: optional i16 ttl,
-    8: optional i16 proto,
-    9: optional i32 chksum,
-    10: optional string src,
-    11: optional string dst,
-    12: optional string option
+    6: optional i8 flags,
+    7: optional i16 frag,
+    8: optional i16 ttl,
+    9: optional i16 proto,
+    10:optional i32 chksum, 
+    11: optional string src,
+    12: optional string dst,
+    13: optional string options
 }
 
 struct IPv6 {
@@ -93,7 +94,7 @@ struct TCP {
     8: optional i32 window,
     9: optional i32 chksum,
     10: optional i32 urgptr,
-    11: optional string option
+    11: optional string options
 }
 
 struct UDP {

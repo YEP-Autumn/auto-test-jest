@@ -5,7 +5,6 @@ import {
 } from "./thrift-protocol.factory";
 import { IFieldMeta, Packet, thrift } from "./thrift_packet";
 
-
 /**
  * 将IP地址字符串转换为32位整数
  * 例如: "192.168.1.1" -> 3232235777

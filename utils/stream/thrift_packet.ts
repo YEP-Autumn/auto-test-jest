@@ -1,7 +1,6 @@
 export const thrift = require("thrift");
 const ttypes = require("../rpc/gen-nodejs/packet_types");
 
-import { interceptors } from "axios";
 import { PARSE_STRATEGIES } from "./packet_utils";
 import {
   ThriftFullProtocolType,
@@ -56,17 +55,18 @@ interface VLANOptions {
 
 interface IPv4Options {
   version?: number;
-  inl?: number;
+  ihl?: number;
   tos?: number;
   len?: number;
   id?: number;
+  frag?: number;
   flags?: number;
   ttl?: number;
   proto?: number;
   chksum?: number;
   src?: string;
   dst?: string;
-  option?: number;
+  options?: number;
 }
 
 interface IPv6Options {
@@ -91,7 +91,7 @@ interface TCPOptions {
   window?: number;
   chksum?: number;
   urgptr?: number;
-  option?: Buffer;
+  options?: Buffer;
 }
 
 interface UDPOptions {

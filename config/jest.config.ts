@@ -63,8 +63,8 @@ const config: Config = {
     "test/30-MPLS/03-mpls_load_balance/2140-MPLS.test.ts",
     "test/30-MPLS/03-mpls_load_balance/2150-MPLS.test.ts",
     "test/30-MPLS/03-mpls_load_balance/2160-MPLS.test.ts",
-    "test/30-MPLS/03-mpls_load_balance/2170-MPLS.test.ts",  // not work
-    "test/30-MPLS/03-mpls_load_balance/2180-MPLS.test.ts",  // not work
+    "test/30-MPLS/03-mpls_load_balance/2170-MPLS.test.ts", // not work
+    "test/30-MPLS/03-mpls_load_balance/2180-MPLS.test.ts", // not work
 
     "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0010-VLAN-TUNNEL.test.ts",
     "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0020-VLAN-TUNNEL.test.ts",
@@ -76,6 +76,13 @@ const config: Config = {
     "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0080-VLAN-TUNNEL.test.ts",
     "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0090-VLAN-TUNNEL.test.ts",
     "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0100-VLAN-TUNNEL.test.ts",
+
+    "test/30-MPLS/04-mpls_ac_vlan_range/0010-MPLS.test.ts",
+    "test/30-MPLS/04-mpls_ac_vlan_range/0020-MPLS.test.ts",
+    "test/30-MPLS/04-mpls_ac_vlan_range/0030-MPLS.test.ts",
+    "test/30-MPLS/04-mpls_ac_vlan_range/0040-MPLS.test.ts",
+    "test/30-MPLS/04-mpls_ac_vlan_range/0050-MPLS.test.ts",
+    "test/30-MPLS/04-mpls_ac_vlan_range/0060-MPLS.test.ts",
 
     "test/50-VLAN_SUBIF/0010-VLAN_SUBIF.test.ts",
     "test/50-VLAN_SUBIF/0020-VLAN_SUBIF.test.ts",

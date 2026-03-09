@@ -111,7 +111,7 @@ test("支持在开启了flex模式的dot1q-tunne接口上配置vlan类型的 mpl
     "vlan database",
     "vlan 2-500",
     "exit",
-    "raw vlan group 1 qinq-flex vlan 100-150",
+    "raw vlan group 1 flex-vlan 100-150",
     "ethernet evc 1",
     "dot1q mapped-vlan 400",
     "exit",

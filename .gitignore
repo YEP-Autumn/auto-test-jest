@@ -140,4 +140,3 @@ vite.config.ts.timestamp-*
 
 test-report
 config/jest-failed.config.ts
-.jest.config.ts

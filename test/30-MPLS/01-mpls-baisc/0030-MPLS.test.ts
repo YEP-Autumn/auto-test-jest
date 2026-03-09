@@ -1,10 +1,13 @@
 import { Port } from "../../../utils";
 import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.two_devices_topo_links_type_1,
+  ).init();
 });
 
 afterAll(async () => {
@@ -14,11 +17,12 @@ afterAll(async () => {
 /**
  *
  *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortD <=> RenixB
+ *                    |        |--PortA <=> PortA--|        |
+ *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
+ *                    |        |--PortC <=> PortC--|        |
  *                    +--------+                   +--------+
  *
  */
-
 test("使用LDP配置VPWS", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",

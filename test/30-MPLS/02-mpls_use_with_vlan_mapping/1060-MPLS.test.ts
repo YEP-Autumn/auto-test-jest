@@ -111,7 +111,7 @@ test("支持在开启了flex模式的dot1q-tunne接口上配置vlan + cvlan类�
     "vlan database",
     "vlan 2-500",
     "exit",
-    "raw vlan group 1 qinq-flex vlan 100-150",
+    "raw vlan group 1 flex-vlan 100-150",
     "ethernet evc 1",
     "dot1q mapped-vlan 400",
     "exit",
@@ -161,8 +161,8 @@ test("支持在开启了flex模式的dot1q-tunne接口上配置vlan + cvlan类�
    * RenixA 发送 vlan 100-150的报文时, RenixC能够收到携带内层100-150, 外层404的报文
    * RenixA 发送 vlan 其他vlan的报文时, RenixC能够收到 报文原vlan + 外层 vlan 500的报文 (需要portB和portD都配置允许该vlan通行)
    *
-   * (携带vlan 100 200的报文从PortB接口出时, 会剥离两层tag)
-   * (携带vlan 200 300的报文从PortB接口出时, 会替换为vlan 123)
+   * (携带vlan 100 200的报文从PortD接口出时, 会剥离两层tag)
+   * (携带vlan 200 300的报文从PortD接口出时, 会替换为vlan 123)
    *
    */
 

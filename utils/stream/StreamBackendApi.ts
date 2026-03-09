@@ -3,8 +3,9 @@ import FormData from "form-data";
 import { IPacketList, PacketListParser } from "./thrift_packet";
 
 export enum RenixPort {
-  A = "//192.168.2.11/5/13",
-  B = "//192.168.2.11/5/14",
+  A = "//192.168.2.11/5/12",
+  B = "//192.168.2.11/5/13",
+  C = "//192.168.2.11/5/14",
 }
 
 export class StreamBackendApi {

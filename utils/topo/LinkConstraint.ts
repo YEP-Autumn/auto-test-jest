@@ -43,6 +43,7 @@ const DutD = {
 const Renix = {
   portA: Config.Renix.portMapping[0],
   portB: Config.Renix.portMapping[1],
+  portC: Config.Renix.portMapping[2],
 };
 
 export class LinkConstraint {
@@ -171,7 +172,7 @@ export class LinkConstraint {
    *                    +--------+                   +--------+
    *  RenixA <=> PortD--|        |                   |        |
    *                    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
-   *             PortC--|        |                   |        |    |
+   *  RenixC <=> PortB--|        |                   |        |    |
    *                    +--------+                   +--------+    |
    *                                                               |
    *                                                 +--------+    |
@@ -199,6 +200,11 @@ export class LinkConstraint {
         stream_id: 4,
         in_port: DutC.portD,
         out_port: Renix.portB,
+      },
+      {
+        stream_id: 5,
+        in_port: Renix.portC,
+        out_port: DutA.portB,
       },
     ],
   };

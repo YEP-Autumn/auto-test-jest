@@ -60,8 +60,8 @@ export class Config {
   };
 
   public static Renix = {
-    portList: [RenixPort.A, RenixPort.B],
-    portMapping: ["eth-0-23", "eth-0-24"],
+    portList: [RenixPort.A, RenixPort.B, RenixPort.C],
+    portMapping: ["eth-0-22", "eth-0-23", "eth-0-24"],
   };
 
   public static dut_list = [

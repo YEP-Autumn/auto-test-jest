@@ -102,7 +102,7 @@ export class TestHelper {
         this.actuator[i] instanceof StartCapture ||
         this.actuator[i] instanceof PacketChecker
       ) {
-        if (this.streamBackendApi == undefined) {
+        if (this.streamBackendApi == undefined && this.testResult) {
           try {
             this.streamBackendApi = new StreamBackendApi();
             /** 预约Renix端口 */

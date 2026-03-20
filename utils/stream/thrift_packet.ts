@@ -182,9 +182,14 @@ export class PacketBuilder {
   }
 
   setARP(options: ARPOptions = {}): PacketBuilder {
+    const arp = new ARP({
+      ...options,
+      hwsrc: options.hwsrc ? normalizeMacAddress(options.hwsrc) : null,
+      hwdst: options.hwdst ? normalizeMacAddress(options.hwdst) : null,
+    });
     const fieldMeta = new FieldMeta({
       type: FieldType.ARP,
-      field: new Field({ arp: new ARP(options) }),
+      field: new Field({ arp: arp }),
     });
 
     this.fieldList.push(fieldMeta);

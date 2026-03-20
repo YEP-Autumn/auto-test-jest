@@ -26,7 +26,7 @@ const config: Config = {
   coverageReporters: ["json", "lcov", "text", "html"],
 
   testRegex: [
-    // "test/example/example-0001.test.ts",
+    "test/example/example-0001.test.ts",
     "test/example/example-0002.test.ts",
   ],
 };

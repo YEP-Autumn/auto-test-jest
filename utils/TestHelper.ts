@@ -240,38 +240,82 @@ export class TestHelper {
     return this;
   }
 
-  ReadyCheckDutA(config: string, expect: string, timeout: number) {
+  ReadyCheckDutA(
+    config: string,
+    expect: string,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
     const cmd = replaceCmdTemplate(config, this.dut_list[0]);
     expect = replaceCmdTemplate(expect, this.dut_list[0]);
     this.actuator.push(
-      new ReadyCheck(this.dut_list[0], cmd, new RegExp(expect), timeout),
+      new ReadyCheck(
+        this.dut_list[0],
+        cmd,
+        new RegExp(expect),
+        timeout,
+        notMatch,
+      ),
     );
     return this;
   }
 
-  ReadyCheckDutB(config: string, expect: string, timeout: number) {
+  ReadyCheckDutB(
+    config: string,
+    expect: string,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
     const cmd = replaceCmdTemplate(config, this.dut_list[1]);
     expect = replaceCmdTemplate(expect, this.dut_list[1]);
     this.actuator.push(
-      new ReadyCheck(this.dut_list[1], cmd, new RegExp(expect), timeout),
+      new ReadyCheck(
+        this.dut_list[1],
+        cmd,
+        new RegExp(expect),
+        timeout,
+        notMatch,
+      ),
     );
     return this;
   }
 
-  ReadyCheckDutC(config: string, expect: string, timeout: number) {
+  ReadyCheckDutC(
+    config: string,
+    expect: string,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
     const cmd = replaceCmdTemplate(config, this.dut_list[2]);
     expect = replaceCmdTemplate(expect, this.dut_list[2]);
     this.actuator.push(
-      new ReadyCheck(this.dut_list[2], cmd, new RegExp(expect), timeout),
+      new ReadyCheck(
+        this.dut_list[2],
+        cmd,
+        new RegExp(expect),
+        timeout,
+        notMatch,
+      ),
     );
     return this;
   }
 
-  ReadyCheckDutD(config: string, expect: string, timeout: number) {
+  ReadyCheckDutD(
+    config: string,
+    expect: string,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
     const cmd = replaceCmdTemplate(config, this.dut_list[3]);
     expect = replaceCmdTemplate(expect, this.dut_list[3]);
     this.actuator.push(
-      new ReadyCheck(this.dut_list[3], cmd, new RegExp(expect), timeout),
+      new ReadyCheck(
+        this.dut_list[3],
+        cmd,
+        new RegExp(expect),
+        timeout,
+        notMatch,
+      ),
     );
     return this;
   }

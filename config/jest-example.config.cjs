@@ -1,7 +1,6 @@
-import type { Config } from "jest";
-
-const config: Config = {
+module.exports = {
   clearMocks: true,
+  setupFiles: ["<rootDir>/script/setup/jest.setup.ts"],
   testSequencer: "<rootDir>/script/jest.sequencer.js",
   maxWorkers: "1",
   rootDir: "../",
@@ -30,5 +29,3 @@ const config: Config = {
     "test/example/example-0002.test.ts",
   ],
 };
-
-export default config;

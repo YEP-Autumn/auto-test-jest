@@ -48,6 +48,8 @@ function buildConfigContent(testPaths) {
 
 const config: Config = {
   clearMocks: true,
+  setupFiles: ["<rootDir>/script/setup/jest.setup.ts"],
+  testSequencer: "<rootDir>/script/jest.sequencer.js",
   maxWorkers: "1",
   rootDir: "../",
   roots: ["<rootDir>"],
@@ -55,6 +57,17 @@ const config: Config = {
   transformIgnorePatterns: ["/node_modules/", "\\.pnp\\.[^\\/]+$"],
   testTimeout: 1000 * 60 * 50,
   verbose: true,
+  reporters: [
+    "default",
+    [
+      "jest-html-reporter",
+      {
+        pageTitle: "Test Report",
+        outputPath: \`test-report/test-report-\${Date.now()}.html\`,
+        includeFailureMsg: true,
+      },
+    ],
+  ],
   collectCoverage: false,
   coverageDirectory: "coverage",
   coverageReporters: ["json", "lcov", "text", "html"],

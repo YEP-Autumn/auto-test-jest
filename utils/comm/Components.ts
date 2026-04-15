@@ -87,12 +87,20 @@ export class ReadyCheck implements Actuator {
   private config: string;
   private expect: RegExp;
   private timeout: number;
+  private notMatch: boolean;
 
-  constructor(conn: Dut, config: string, expect: RegExp, timeout: number) {
+  constructor(
+    conn: Dut,
+    config: string,
+    expect: RegExp,
+    timeout: number,
+    notMatch: boolean,
+  ) {
     this.conn = conn;
     this.config = config;
     this.expect = expect;
     this.timeout = timeout;
+    this.notMatch = notMatch;
   }
 
   async start(): Promise<boolean> {
@@ -101,11 +109,18 @@ export class ReadyCheck implements Actuator {
       let startTime = Date.now();
       while (Date.now() - startTime < this.timeout) {
         let result = await this.conn.safeExec(this.config);
-        if (this.expect.exec(result)) {
-          return true;
+        if (this.notMatch) {
+          if (!this.expect.exec(result)) {
+            return true;
+          }
+        } else {
+          if (!!this.expect.exec(result)) {
+            return true;
+          }
         }
+
         console.log(
-          `Waiting for condition: ${this.expect} retry cnt: ${++retry_cnt}...`,
+          `\nWaiting for condition: ${this.expect} retry cnt: ${++retry_cnt}...`,
         );
 
         await sleep(2000);
@@ -144,7 +159,10 @@ export class PacketSender implements Actuator {
 
   async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
     try {
-      await sleep(1000 * 2, false);
+      if (this.param.wait_time == null) {
+        this.param.wait_time = 1000 * 2;
+      }
+      await sleep(this.param.wait_time);
       let packet_buffer = packet_thrift_buffer_build(
         this.param.packet.getFields(),
       );
@@ -1153,6 +1171,7 @@ export interface PacketSendParam {
   packet: PacketBuilder;
   modifier_param?: PacketModifierParam[];
   transmit_param: PacketTransmitModeParam;
+  wait_time?: number;
 }
 
 enum CompareType {

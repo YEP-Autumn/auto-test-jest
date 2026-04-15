@@ -1,10 +1,13 @@
 import { Port } from "../../../utils";
 import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.four_devices_topo_links_type_1,
+  ).init();
 });
 
 afterAll(async () => {
@@ -148,7 +151,13 @@ test("配置MPLS L3VPN", async () => {
     "end",
   ]);
 
-  testHelper.sleep(25000);
+  testHelper.sleep(1000 * 90);
+
+  testHelper.ReadyCheckDutA("show ip route", `R.*?7.7.7.7\/32`, 1000 * 60);
+  testHelper.ReadyCheckDutD("show ip route", `R.*?4.4.4.4\/32`, 1000 * 60);
+
+  testHelper.ExecRetMatchDutA("ping 7.7.7.7", " 0% packet loss");
+  testHelper.ExecRetMatchDutD("ping 4.4.4.4", " 0% packet loss");
 
   testHelper.CleanConfigDutA([
     "configure terminal",

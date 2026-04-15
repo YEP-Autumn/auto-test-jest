@@ -1,5 +1,8 @@
 import { Port } from "../../utils";
-import { TestHelper } from "../../utils/TestHelper";
+import { TransmitMode } from "../../utils/comm/Components";
+import { RenixPort } from "../../utils/stream/StreamBackendApi";
+import { PacketBuilder } from "../../utils/stream/thrift_packet";
+import { DeviceARouteMac, TestHelper } from "../../utils/TestHelper";
 import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
@@ -206,6 +209,62 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项", async () =>
   testHelper.ExecConfigDutB(["clear bgp *"]);
 
   testHelper.sleep(25000);
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: "ffff.ffff.ffff",
+        src: "1.2.3",
+      })
+      .setVLAN({ vlan: 10 })
+      .setARP({
+        op: 1,
+        hwsrc: "1.2.3",
+        psrc: "192.168.10.100",
+        hwdst: "0.0.0",
+        pdst: "192.168.10.100",
+      }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: { step_count: 10 },
+    },
+  });
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: DeviceARouteMac,
+        src: "1.2.3",
+      })
+      .setVLAN({ vlan: 10 })
+      .setARP({
+        op: 2,
+        hwsrc: "1.2.3",
+        psrc: "192.168.10.100",
+        hwdst: DeviceARouteMac,
+        pdst: "192.168.10.1",
+      }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: { step_count: 10 },
+    },
+    wait_time: 0,
+  });
+
+  testHelper.sleep(1000 * 5);
+
+  testHelper.ExecRetMatchDutA(
+    "show ip arp vrf evpn",
+    "192.168.10.100.*?0001.0002.0003",
+  );
+
+  testHelper.ReadyCheckDutC(
+    "show ip route vrf evpn",
+    "B.*?192.168.10.100/32",
+    1000 * 60,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

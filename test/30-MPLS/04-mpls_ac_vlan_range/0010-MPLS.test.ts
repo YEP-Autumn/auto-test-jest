@@ -142,7 +142,7 @@ test("mpls ac支持配置vlan range", async () => {
     1000 * 45,
   );
 
-  /** RenixA发送vlan 30~40,50~60的报文, RenixB可以收到vlan 2的报文 */
+  /** RenixA发送vlan 30~40,50~60的报文, RenixB可以收到携带vlan的报文 */
   testHelper.startCapture(RenixPort.B);
   testHelper.addPktSender({
     port: RenixPort.A,

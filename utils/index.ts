@@ -2,7 +2,7 @@ import chalk from "chalk";
 
 export async function sleep(timeout: number, debug: boolean = true) {
   if (debug) {
-    console.log(`Sleeping for ${timeout} milliseconds...`);
+    console.log(`\nSleeping for ${timeout} milliseconds...`);
   }
   return new Promise((resolve) => setTimeout(resolve, timeout));
 }

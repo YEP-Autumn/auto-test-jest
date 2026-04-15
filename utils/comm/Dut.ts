@@ -23,7 +23,9 @@ export class Dut {
   public async exec(command: string, silence: boolean = false) {
     let result = await this.connection.exec(command);
     if (!silence) {
-      console.log(`[${this.conn_param.host}] ` + this.lastCmdMode + command);
+      console.log(
+        `\n[${this.conn_param.host}]: \n` + this.lastCmdMode + command,
+      );
       console.log(result);
     }
     let error = new RegExp(`(\r|\n)% `).exec(result);
@@ -40,7 +42,9 @@ export class Dut {
   public async safeExec(command: string, silence: boolean = false) {
     let result = await this.connection.exec(command);
     if (!silence) {
-      console.log(`[${this.conn_param.host}][s] ` + this.lastCmdMode + command);
+      console.log(
+        `\n[${this.conn_param.host}][s]: \n` + this.lastCmdMode + command,
+      );
       console.log(result);
     }
     let split = new RegExp("Switch.*?# ").exec(result);

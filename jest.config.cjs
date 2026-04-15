@@ -3,9 +3,7 @@
  * https://jestjs.io/docs/configuration
  */
 
-import type { Config } from "jest";
-
-const config: Config = {
+module.exports = {
   // The regexp pattern or array of patterns that Jest uses to detect test files
   testRegex: ["test/demo.test.ts"],
 
@@ -190,5 +188,3 @@ const config: Config = {
   // Whether to use watchman for file crawling
   // watchman: true,
 };
-
-export default config;

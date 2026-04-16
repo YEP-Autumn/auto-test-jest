@@ -44,9 +44,7 @@ function extractFailedTestPathsFromHtml(content) {
 
 function buildConfigContent(testPaths) {
   const entries = testPaths.map((p) => `    "${p}",`).join("\n");
-  return `import type { Config } from "jest";
-
-const config: Config = {
+  return `module.exports = {
   clearMocks: true,
   setupFiles: ["<rootDir>/script/setup/jest.setup.ts"],
   testSequencer: "<rootDir>/script/jest.sequencer.js",
@@ -76,8 +74,6 @@ const config: Config = {
 ${entries}
   ],
 };
-
-export default config;
 `;
 }
 
@@ -87,7 +83,7 @@ function main() {
   const outArg = process.argv[2];
   const outPath = outArg
     ? path.resolve(outArg)
-    : path.join(cwd, "config", "jest-failed.config.ts");
+    : path.join(cwd, "config", "jest-failed.config.cjs");
 
   const latestReport = findLatestHtmlReport(reportDir);
 

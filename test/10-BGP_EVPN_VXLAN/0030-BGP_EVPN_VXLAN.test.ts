@@ -235,7 +235,6 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
       .setEthernet({
         dst: "00:00:00:44:55:77",
         src: "00:00:00:44:55:66",
-        type: 0x0800,
       })
       .setIPv4({
         src: "100.100.100.1",

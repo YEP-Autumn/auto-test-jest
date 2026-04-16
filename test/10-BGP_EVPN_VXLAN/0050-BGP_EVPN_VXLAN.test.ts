@@ -1,12 +1,12 @@
 import { Port } from "../../utils";
-import { TestHelper } from "../../utils/TestHelper";
+import { DeviceARouteMac, TestHelper } from "../../utils/TestHelper";
 import { LinkConstraint } from "../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.three_devices_topo_links_type_2,
+    LinkConstraint.four_devices_topo_links_type_1,
   ).init();
 });
 
@@ -14,19 +14,32 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-/*
- *                    +--------+                   +--------+
- *  RenixA <=> PortD--|        |                   |        |
- *                    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *             PortC--|        |                   |        |    |
- *                    +--------+                   +--------+    |
- *                                                               |
- *                                                 +--------+    |
- *                               RenixB <=> PortD--|  DUTC  |--PortB
- *                                                 +--------+
+/**
+ *
+ *    +--------+                   +--------+
+ *    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *    +--------+                   +--------+    |
+ *                                               |
+ *    +--------+                   +--------+    |
+ *    |  DUTD  |--PortA <=> PortA--|  DUTC  |--PortB
+ *    +--------+                   +--------+
+ *
  */
 test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项到VRF中", async () => {
   testHelper.ExecConfigDutA([
+    "configure terminal",
+    "vlan database",
+    "vlan 10",
+    "exit",
+    "interface vlan 10",
+    "ip address 192.168.10.100/24",
+    `interface ${Port.A}`,
+    "switchport mode trunk",
+    "switchport trunk allowed vlan add 10",
+    "end",
+  ]);
+
+  testHelper.ExecConfigDutB([
     "configure terminal",
     "vlan database",
     "vlan 10",
@@ -37,12 +50,12 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项到VRF中", as
     "route-target import 1000:1000 evpn",
     "vxlan vni 1000",
     "exit",
-    `interface ${Port.A}`,
+    `interface ${Port.B}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.1.1/24",
     "exit",
-    `interface ${Port.D}`,
+    `interface ${Port.A}`,
     "switchport mode trunk",
     "switchport trunk allowed vlan add 10",
     "exit",
@@ -87,14 +100,14 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项到VRF中", as
     "end",
   ]);
 
-  testHelper.ExecConfigDutB([
+  testHelper.ExecConfigDutC([
     "configure terminal",
-    `interface ${Port.A}`,
+    `interface ${Port.B}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.1.2/24",
     "exit",
-    `interface ${Port.B}`,
+    `interface ${Port.A}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.2.1/24",
@@ -129,7 +142,7 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项到VRF中", as
     "end",
   ]);
 
-  testHelper.ExecConfigDutC([
+  testHelper.ExecConfigDutD([
     "configure terminal",
     "vlan database",
     "vlan 10,20",
@@ -141,7 +154,7 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项到VRF中", as
     "route-target import 1000:1000 evpn",
     "vxlan vni 1000",
     "exit",
-    `interface ${Port.B}`,
+    `interface ${Port.A}`,
     "no switchport",
     "vxlan uplink enable",
     "ip address 192.168.2.2/24",
@@ -206,7 +219,37 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项到VRF中", as
 
   testHelper.sleep(25000);
 
+  testHelper.ExecRetMatchDutA("ping 192.168.10.1", " 0% packet loss");
+
+  testHelper.sleep(1000 * 5);
+
+  testHelper.ExecRetMatchDutB(
+    "show ip arp vrf evpn",
+    `192.168.10.100.*?${DeviceARouteMac}`,
+  );
+
+  testHelper.ReadyCheckDutD(
+    "show ip route vrf evpn",
+    "B.*?192.168.10.100/32",
+    1000 * 60,
+  );
+
+  testHelper.ReadyCheckDutD(
+    "show mac address-table",
+    `${DeviceARouteMac}.*?VxLAN: 10.3.3.3->10.1.1.1\(EI\)`,
+  );
+
   testHelper.CleanConfigDutA([
+    "configure terminal",
+    "vlan database",
+    "no vlan 10",
+    "exit",
+    `interface ${Port.A}`,
+    "switchport mode access",
+    "end",
+  ]);
+
+  testHelper.CleanConfigDutB([
     "configure terminal",
     "no router bgp 100",
     "no evpn",
@@ -222,26 +265,26 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项到VRF中", as
     "vlan database",
     "no vlan 10",
     "exit",
-    `interface ${Port.A}`,
+    `interface ${Port.B}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
-    `interface ${Port.D}`,
+    `interface ${Port.A}`,
     "switchport mode access",
     "exit",
     "end",
   ]);
 
-  testHelper.CleanConfigDutB([
+  testHelper.CleanConfigDutC([
     "configure terminal",
     "no router bgp 100",
     "no evpn",
     "no interface loopback0",
-    `interface ${Port.A}`,
+    `interface ${Port.B}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
-    `interface ${Port.B}`,
+    `interface ${Port.A}`,
     "switchport",
     "vxlan uplink disable",
     "exit",
@@ -250,7 +293,7 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项到VRF中", as
     "end",
   ]);
 
-  testHelper.CleanConfigDutC([
+  testHelper.CleanConfigDutD([
     "configure terminal",
     "no router bgp 100",
     "no evpn",
@@ -266,7 +309,7 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项到VRF中", as
     "vlan database",
     "no vlan 10,20",
     "exit",
-    `interface ${Port.B}`,
+    `interface ${Port.A}`,
     "switchport",
     "vxlan uplink disable",
     "exit",

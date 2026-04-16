@@ -216,7 +216,7 @@ test("测试bgp多实例 ebgp underlay 叠加 ibgp evpn路由", async () => {
     "vxlan uplink disable",
     "exit",
     "no evpn",
-    "no interface nve 0",
+    "no interface nve 0", 
     "no interface loopback 0",
     "no interface loopback 1",
     "no router bgp 65002",

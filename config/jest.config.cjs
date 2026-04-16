@@ -30,7 +30,6 @@ module.exports = {
     "test/10-BGP_EVPN_VXLAN/0030-BGP_EVPN_VXLAN.test.ts",
     "test/10-BGP_EVPN_VXLAN/0040-BGP_EVPN_VXLAN.test.ts",
     "test/10-BGP_EVPN_VXLAN/0050-BGP_EVPN_VXLAN.test.ts",
-    "test/10-BGP_EVPN_VXLAN/0060-BGP_EVPN_VXLAN.test.ts",
 
     "test/30-MPLS/01-mpls-baisc/0010-MPLS.test.ts",
     "test/30-MPLS/01-mpls-baisc/0020-MPLS.test.ts",

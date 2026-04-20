@@ -236,7 +236,7 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项到VRF中", as
 
   testHelper.ReadyCheckDutD(
     "show mac address-table",
-    `${DeviceARouteMac}.*?VxLAN: 10.3.3.3->10.1.1.1\(EI\)`,
+    `${DeviceARouteMac}.*?VxLAN: 10.3.3.3->10.1.1.1\\(EI\\)`,
   );
 
   testHelper.CleanConfigDutA([

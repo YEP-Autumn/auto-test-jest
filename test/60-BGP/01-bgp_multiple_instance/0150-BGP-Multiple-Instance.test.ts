@@ -29,7 +29,7 @@ afterAll(async () => {
  *                               RenixB <=> PortD--|  DUTC  |--PortB
  *                                                 +--------+
  */
-test("测试BGP多实例Next-hop功能", async () => {
+test("测试BGP多实例配置邻居default-originate功能", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,

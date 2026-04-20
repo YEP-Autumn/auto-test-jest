@@ -91,11 +91,14 @@ test("测试BGP多实例IPv6 Unicast地址族", async () => {
   testHelper.ExecConfigDutA(["clear bgp ipv6 view test2 *"]);
 
   testHelper.ReadyCheckDutA(
-    "show bgp ipv6 neighbors",
+    "show bgp ipv6 neighbors 1000::2",
     "Established",
     60 * 1000,
   );
-  testHelper.ReadyCheckDutB("show bgp ipv6 neighbors", "Established");
+  testHelper.ReadyCheckDutA("show bgp ipv6 neighbors 2000::2", "Established");
+
+  testHelper.ReadyCheckDutB("show bgp ipv6 neighbors 1000::1", "Established");
+  testHelper.ReadyCheckDutB("show bgp ipv6 neighbors 2000::1", "Established");
 
   testHelper.ExecConfigDutA([
     "configure terminal",
@@ -106,10 +109,14 @@ test("测试BGP多实例IPv6 Unicast地址族", async () => {
 
   testHelper.sleep(10 * 1000);
 
-  testHelper.ReadyCheckDutB("show bgp ipv6 neighbors", "Active", 30 * 1000);
+  testHelper.ReadyCheckDutB(
+    "show bgp ipv6 neighbors 1000::1",
+    "Active",
+    30 * 1000,
+  );
 
   testHelper.ReadyCheckDutB(
-    "show bgp ipv6 neighbors",
+    "show bgp ipv6 neighbors 2000::1",
     "Established",
     30 * 1000,
   );

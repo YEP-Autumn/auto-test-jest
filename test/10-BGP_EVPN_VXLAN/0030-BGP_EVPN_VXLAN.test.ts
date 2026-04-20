@@ -17,10 +17,6 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-/**
- * 此测试用例存在问题: 集中式的情况下, 中心设备ping子网设备延时很高, 且ping报文最后一帧有几率丢失
- */
-
 /*
  *                    +--------+                   +--------+
  *  RenixA <=> PortD--|        |                   |        |
@@ -206,7 +202,10 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
 
   testHelper.ExecConfigDutB(["clear bgp *"]);
 
-  testHelper.sleep(25000);
+  testHelper.sleep(10 * 1000);
+
+  testHelper.ReadyCheckDutA("show overlay", "10.*?10.2.2.2");
+  testHelper.ReadyCheckDutA("show overlay", "10.*?10.3.3.3");
 
   testHelper.startCapture(RenixPort.B);
 

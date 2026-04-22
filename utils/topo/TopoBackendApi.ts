@@ -34,9 +34,27 @@ export interface AddLinkParams {
   is_two_way?: boolean;
 }
 
+export interface BulkAddLinkItem {
+  src_device: string;
+  src_port_index: number;
+  dst_device: string;
+  dst_port_index: number;
+  is_two_way?: boolean;
+}
+
+export interface BulkAddLinksParams {
+  topology_id: number;
+  links: BulkAddLinkItem[];
+}
+
+export interface BulkAddLinksResponse {
+  topology_id: number;
+  links: (TopoLink & { topology_id: number })[];
+}
+
 export class TopoBackendApi {
   private api = axios.create({
-    baseURL: "http://172.16.9.108:8888/topology",
+    baseURL: "http://10.10.10.100:8000/topology",
     timeout: 5000,
   });
 
@@ -66,6 +84,12 @@ export class TopoBackendApi {
   /** 新增链路 */
   async linkAdd(params: AddLinkParams): Promise<TopoLink & { topology_id: number }> {
     const response = await this.api.post("/link/add", params);
+    return response.data;
+  }
+
+  /** 批量新增链路（All-or-nothing） */
+  async linkBulkAdd(params: BulkAddLinksParams): Promise<BulkAddLinksResponse> {
+    const response = await this.api.post("/link/bulk-add", params);
     return response.data;
   }
 

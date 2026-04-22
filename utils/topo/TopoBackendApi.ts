@@ -34,7 +34,7 @@ export interface AddLinkParams {
   is_two_way?: boolean;
 }
 
-export class TopoApi {
+export class TopoBackendApi {
   private api = axios.create({
     baseURL: "http://172.16.9.108:8888/topology",
     timeout: 5000,

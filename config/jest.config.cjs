@@ -71,6 +71,7 @@ module.exports = {
     "test/30-MPLS/04-mpls_ac_vlan_range/0040-MPLS.test.ts",
     "test/30-MPLS/04-mpls_ac_vlan_range/0050-MPLS.test.ts",
     "test/30-MPLS/04-mpls_ac_vlan_range/0060-MPLS.test.ts",
+    "test/30-MPLS/04-mpls_ac_vlan_range/0070-MPLS.test.ts",
 
     "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0010-VLAN-TUNNEL.test.ts",
     "test/41-VLAN-DOT1Q-TUNNEL/03-vlan_dot1q_type_flex/0020-VLAN-TUNNEL.test.ts",

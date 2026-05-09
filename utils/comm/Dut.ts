@@ -73,5 +73,5 @@ interface ICONN_PARAM {
   execTimeout?: number /** e.g. 1000 * 5 */;
   disableLogon?: boolean /** e.g. true */;
   portList?: string[];
-  portMapping?: string[];
+  portMapping?: { device: string; if_index: number }[];
 }

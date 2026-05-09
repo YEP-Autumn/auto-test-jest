@@ -108,6 +108,13 @@ test("配置MPLS VPLS", async () => {
 
   testHelper.sleep(25000);
 
+  testHelper.ReadyCheckDutB(
+    "show ldp session",
+    "11.11.1.1.*?OPERATIONAL",
+    60 * 1000,
+  );
+  testHelper.ReadyCheckDutB("show ldp session", "11.11.4.4.*?OPERATIONAL");
+
   testHelper.CleanConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,

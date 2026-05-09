@@ -26,7 +26,6 @@ export interface TopologyWithStream {
 }
 
 export interface AddLinkParams {
-  topology_id: number;
   src_device: string;
   src_port_index: number;
   dst_device: string;
@@ -34,79 +33,75 @@ export interface AddLinkParams {
   is_two_way?: boolean;
 }
 
-export interface BulkAddLinkItem {
-  src_device: string;
-  src_port_index: number;
-  dst_device: string;
-  dst_port_index: number;
-  is_two_way?: boolean;
-}
-
-export interface BulkAddLinksParams {
-  topology_id: number;
-  links: BulkAddLinkItem[];
-}
-
-export interface BulkAddLinksResponse {
-  topology_id: number;
-  links: (TopoLink & { topology_id: number })[];
-}
-
-export class TopoBackendApi {
+export class TopoApi {
   private api = axios.create({
-    baseURL: "http://10.10.10.100:8000/topology",
+    baseURL: "http://172.16.9.1:8000",
     timeout: 5000,
   });
 
-  /** 获取全部拓扑（包含 links） */
-  async list(): Promise<{ topologies: Topology[] }> {
-    const response = await this.api.get("/list");
+  /** 列出全部拓扑（含 links）；传 source="controller" 时每条 link 附加 stream_id */
+  async list(source?: "controller"): Promise<Topology[] | TopologyWithStream[]> {
+    const params = source === "controller" ? { source: "controller" } : {};
+    const response = await this.api.get("/topology/topologies/", { params });
     return response.data;
   }
 
-  /** 获取单个拓扑详情 */
-  async get(topologyId: number): Promise<Topology> {
-    const response = await this.api.get(`/${topologyId}`);
+  /** 获取单个拓扑详情；传 source="controller" 时附加 stream_id */
+  async get(
+    id: number,
+    source?: "controller",
+  ): Promise<Topology | TopologyWithStream> {
+    const params = source === "controller" ? { source: "controller" } : {};
+    const response = await this.api.get(`/topology/topologies/${id}/`, {
+      params,
+    });
     return response.data;
   }
 
   /** 创建拓扑 */
-  async add(name: string): Promise<{ id: number; name: string }> {
-    const response = await this.api.post("/add", { name });
+  async create(name: string): Promise<Topology> {
+    const response = await this.api.post("/topology/topologies/", { name });
     return response.data;
   }
 
-  /** 删除拓扑 */
-  async del(id: number): Promise<void> {
-    await this.api.post("/del", { id });
+  /** 删除拓扑（级联删除所有链路） */
+  async delete(id: number): Promise<void> {
+    await this.api.delete(`/topology/topologies/${id}/`);
   }
 
-  /** 新增链路 */
-  async linkAdd(params: AddLinkParams): Promise<TopoLink & { topology_id: number }> {
-    const response = await this.api.post("/link/add", params);
+  /** 列出拓扑下的所有链路 */
+  async listLinks(topologyId: number): Promise<TopoLink[]> {
+    const response = await this.api.get(
+      `/topology/topologies/${topologyId}/links/`,
+    );
     return response.data;
   }
 
-  /** 批量新增链路（All-or-nothing） */
-  async linkBulkAdd(params: BulkAddLinksParams): Promise<BulkAddLinksResponse> {
-    const response = await this.api.post("/link/bulk-add", params);
+  /** 新增单条链路 */
+  async addLink(topologyId: number, params: AddLinkParams): Promise<TopoLink> {
+    const response = await this.api.post(
+      `/topology/topologies/${topologyId}/links/`,
+      params,
+    );
+    return response.data;
+  }
+
+  /** 批量新增链路（all-or-nothing） */
+  async bulkAddLinks(
+    topologyId: number,
+    links: AddLinkParams[],
+  ): Promise<{ topology_id: number; links: TopoLink[] }> {
+    const response = await this.api.post(
+      `/topology/topologies/${topologyId}/links/bulk/`,
+      { links },
+    );
     return response.data;
   }
 
   /** 删除链路 */
-  async linkDel(id: number): Promise<void> {
-    await this.api.post("/link/del", { id });
-  }
-
-  /** 获取全部拓扑（links 来自 SDNController，含 stream_id） */
-  async controllerList(): Promise<{ topologies: TopologyWithStream[] }> {
-    const response = await this.api.get("/controller/list");
-    return response.data;
-  }
-
-  /** 获取单个拓扑（links 来自 SDNController，含 stream_id） */
-  async controllerGet(topologyId: number): Promise<TopologyWithStream> {
-    const response = await this.api.get(`/controller/${topologyId}`);
-    return response.data;
+  async deleteLink(topologyId: number, linkId: number): Promise<void> {
+    await this.api.delete(
+      `/topology/topologies/${topologyId}/links/${linkId}/`,
+    );
   }
 }

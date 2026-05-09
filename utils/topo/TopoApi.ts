@@ -2,6 +2,7 @@ import axios from "axios";
 import { Topolinks } from "./LinkConstraint";
 
 export class TopoApi {
+
   private api = axios.create({
     baseURL: "http://172.16.9.108:8888",
     timeout: 5000,

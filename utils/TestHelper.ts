@@ -19,7 +19,7 @@ import { Config } from "./comm/Config";
 import { Dut } from "./comm/Dut";
 import { RenixPort, StreamBackendApi } from "./stream/StreamBackendApi";
 import { Topolinks } from "./topo/LinkConstraint";
-import { TopoApi } from "./topo/TopoApi";
+import { TopoApi } from "./topo/TopoBackendApi";
 
 export let DeviceARouteMac: string;
 export let DeviceBRouteMac: string;
@@ -33,6 +33,7 @@ export class TestHelper {
   private topo: Topolinks | undefined;
   private streamBackendApi: StreamBackendApi | undefined;
   private topoApi: TopoApi;
+  private topoId?: number;
   private _inner_debug_preserve_scene_when_failed: boolean = false;
 
   constructor(topo?: Topolinks) {
@@ -58,14 +59,28 @@ export class TestHelper {
     }
 
     if (this.topo) {
-      await this.topoApi.topoLinksAdd(this.topo);
+      const topologies = (await this.topoApi.list()) as { id: number; name: string; links: unknown[] }[];
+      const existing = topologies.find((t) => t.name === "auto-test-topo");
+      if (existing) {
+        await this.topoApi.delete(existing.id);
+      }
+      const res = await this.topoApi.create("auto-test-topo");
+      this.topoId = res.id;
+      const links = this.topo.links.map((link) => ({
+        src_device: link.in_port.device,
+        src_port_index: link.in_port.if_index,
+        dst_device: link.out_port.device,
+        dst_port_index: link.out_port.if_index,
+        is_two_way: true,
+      }));
+      await this.topoApi.bulkAddLinks(this.topoId, links);
     }
 
     return this;
   }
 
   async destroy() {
-    let promise = new Array<Promise<Dut>>();
+    let promise = new Array<Promise<unknown>>();
 
     this.dut_list.forEach((dut) => {
       promise.push(dut.disconnect());
@@ -79,8 +94,8 @@ export class TestHelper {
       }
     }
 
-    if (this.topo && this._inner_debug_preserve_scene_when_failed != true) {
-      promise.push(this.topoApi.topoLinksDelete(this.topo));
+    if (this.topo && this.topoId && this._inner_debug_preserve_scene_when_failed != true) {
+      promise.push(this.topoApi.delete(this.topoId));
     }
 
     return await Promise.all(promise);

@@ -3,9 +3,8 @@ import { Config } from "../comm/Config";
 interface link {
   stream_id: number;
   vlan?: number;
-  in_port: string;
-  out_port: string;
-  forward_type?: number;
+  in_port: { device: string; if_index: number };
+  out_port: { device: string; if_index: number };
 }
 
 export interface Topolinks {

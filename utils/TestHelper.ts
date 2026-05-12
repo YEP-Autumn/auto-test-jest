@@ -74,6 +74,7 @@ export class TestHelper {
         is_two_way: true,
       }));
       await this.topoApi.bulkAddLinks(this.topoId, links);
+      await this.topoApi.enable(this.topoId);
     }
 
     return this;

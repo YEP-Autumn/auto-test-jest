@@ -16,12 +16,14 @@ export interface TopoLinkWithStream extends TopoLink {
 export interface Topology {
   id: number;
   name: string;
+  is_enabled: boolean;
   links: TopoLink[];
 }
 
 export interface TopologyWithStream {
   id: number;
   name: string;
+  is_enabled: boolean;
   links: TopoLinkWithStream[];
 }
 
@@ -103,5 +105,17 @@ export class TopoApi {
     await this.api.delete(
       `/topology/topologies/${topologyId}/links/${linkId}/`,
     );
+  }
+
+  /** 启用拓扑：校验端口冲突并将链路推到 SDNController */
+  async enable(id: number): Promise<Topology> {
+    const response = await this.api.post(`/topology/topologies/${id}/enable/`);
+    return response.data;
+  }
+
+  /** 停用拓扑：从 SDNController 移除链路 */
+  async disable(id: number): Promise<Topology> {
+    const response = await this.api.post(`/topology/topologies/${id}/disable/`);
+    return response.data;
   }
 }

@@ -1,14 +1,7 @@
 import axios from "axios";
 import FormData from "form-data";
 import { IPacketList, PacketListParser } from "./thrift_packet";
-
-export enum RenixPort {
-  A = "//192.168.2.11/5/5",
-  B = "//192.168.2.11/5/6",
-  C = "WIN_NIC1",
-  D = "WIN_NIC2",
-  E = "WIN_NIC3",
-}
+import { RenixPort } from "../comm/Config";
 
 export class StreamBackendApi {
   api = axios.create({

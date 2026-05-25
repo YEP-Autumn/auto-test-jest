@@ -1,6 +1,7 @@
 import { Port, sleep, STR_DEBUG_INFO, STR_FAILED, STR_SUCCESS } from "..";
 import { packet_thrift_buffer_build } from "../stream/packet_utils";
-import { RenixPort, StreamBackendApi } from "../stream/StreamBackendApi";
+import { StreamBackendApi } from "../stream/StreamBackendApi";
+import { RenixPort } from "./Config";
 import { PacketBuilder } from "../stream/thrift_packet";
 import { Dut } from "./Dut";
 

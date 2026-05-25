@@ -17,7 +17,8 @@ import {
 } from "./comm/Components";
 import { Config } from "./comm/Config";
 import { Dut } from "./comm/Dut";
-import { RenixPort, StreamBackendApi } from "./stream/StreamBackendApi";
+import { StreamBackendApi } from "./stream/StreamBackendApi";
+import { RenixPort } from "./comm/Config";
 import { Topolinks } from "./topo/LinkConstraint";
 import { TopoApi } from "./topo/TopoBackendApi";
 

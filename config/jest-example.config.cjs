@@ -25,7 +25,7 @@ module.exports = {
   coverageReporters: ["json", "lcov", "text", "html"],
 
   testRegex: [
-    "test/example/example-0001.test.ts",
-    "test/example/example-0002.test.ts",
+    "test/test_script_tutorials/example-0001.test.ts",
+    "test/test_script_tutorials/example-0002.test.ts",
   ],
 };

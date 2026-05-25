@@ -4,7 +4,7 @@ import {
   ModifierMode,
   TransmitMode,
 } from "../../../utils/comm/Components";
-import { RenixPort } from "../../../utils/stream/StreamBackendApi";
+import { RenixPort } from "../../../utils/comm/Config";
 import { PacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
 import { LinkConstraint } from "../../../utils/topo/LinkConstraint";

@@ -1,8 +1,6 @@
 import { TransmitMode } from "../../utils/comm/Components";
-import {
-  StreamBackendApi,
-  RenixPort,
-} from "../../utils/stream/StreamBackendApi";
+import { StreamBackendApi } from "../../utils/stream/StreamBackendApi";
+import { RenixPort } from "../../utils/comm/Config";
 import { PacketBuilder } from "../../utils/stream/thrift_packet";
 import { TestHelper } from "../../utils/TestHelper";
 

@@ -42,6 +42,7 @@ export class TestHelper {
   }
 
   async init() {
+    await this.topoApi.login();
     for (let i = 0; i < Config.dut_list.length; i++) {
       this.dut_list[i] = await new Dut(Config.dut_list[i]).connect();
 
@@ -59,7 +60,11 @@ export class TestHelper {
     }
 
     if (this.topo) {
-      const topologies = (await this.topoApi.list()) as { id: number; name: string; links: unknown[] }[];
+      const topologies = (await this.topoApi.list()) as {
+        id: number;
+        name: string;
+        links: unknown[];
+      }[];
       const existing = topologies.find((t) => t.name === "auto-test-topo");
       if (existing) {
         await this.topoApi.delete(existing.id);
@@ -95,7 +100,11 @@ export class TestHelper {
       }
     }
 
-    if (this.topo && this.topoId && this._inner_debug_preserve_scene_when_failed != true) {
+    if (
+      this.topo &&
+      this.topoId &&
+      this._inner_debug_preserve_scene_when_failed != true
+    ) {
       promise.push(this.topoApi.delete(this.topoId));
     }
 

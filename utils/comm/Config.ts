@@ -29,48 +29,58 @@ export class Config {
     disableLogon: true,
   };
 
-  public static dut_e361_1 = {
-    host: "172.16.131.198",
-    portList: [],
-    portMapping: [],
-  };
-
   public static dut_e530_1 = {
-    host: "172.16.9.106",
+    host: "172.16.9.107",
     portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
     portMapping: [
-      { device: "172.16.9.108", if_index: 1 },
-      { device: "172.16.9.108", if_index: 2 },
-      { device: "172.16.9.108", if_index: 3 },
-      { device: "172.16.9.108", if_index: 4 },
+      { device: "172.16.9.106", if_index: 1 },
+      { device: "172.16.9.106", if_index: 2 },
+      { device: "172.16.9.106", if_index: 3 },
+      { device: "172.16.9.106", if_index: 4 },
     ],
   };
 
   public static dut_e530_2 = {
-    host: "172.16.9.107",
+    host: "172.16.9.108",
     portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
     portMapping: [
-      { device: "172.16.9.108", if_index: 5 },
-      { device: "172.16.9.108", if_index: 6 },
-      { device: "172.16.9.108", if_index: 7 },
-      { device: "172.16.9.108", if_index: 8 },
+      { device: "172.16.9.106", if_index: 5 },
+      { device: "172.16.9.106", if_index: 6 },
+      { device: "172.16.9.106", if_index: 7 },
+      { device: "172.16.9.106", if_index: 8 },
     ],
   };
 
   public static dut_e670 = {
-    host: "172.16.9.110",
+    host: "172.16.9.112",
     portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
-    portMapping: [],
+    portMapping: [
+      { device: "172.16.9.110", if_index: 13 },
+      { device: "172.16.9.110", if_index: 14 },
+      { device: "172.16.9.110", if_index: 15 },
+      { device: "172.16.9.110", if_index: 16 },
+    ],
   };
 
   public static dut_e680 = {
     host: "172.16.9.120",
     portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
     portMapping: [
-      { device: "172.16.9.108", if_index: 9 },
-      { device: "172.16.9.108", if_index: 10 },
-      { device: "172.16.9.108", if_index: 11 },
-      { device: "172.16.9.108", if_index: 12 },
+      { device: "172.16.9.106", if_index: 9 },
+      { device: "172.16.9.106", if_index: 10 },
+      { device: "172.16.9.106", if_index: 11 },
+      { device: "172.16.9.106", if_index: 12 },
+    ],
+  };
+
+  public static dut_e361 = {
+    host: "172.16.9.130",
+    portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
+    portMapping: [
+      { device: "172.16.9.106", if_index: 13 },
+      { device: "172.16.9.106", if_index: 14 },
+      { device: "172.16.9.106", if_index: 15 },
+      { device: "172.16.9.106", if_index: 16 },
     ],
   };
 
@@ -86,19 +96,22 @@ export class Config {
   };
 
   public static Renix = {
-    portList: [RenixPort.A, RenixPort.B, RenixPort.C],
+    portList: [RenixPort.A, RenixPort.B, RenixPort.C, RenixPort.D, RenixPort.E],
     portMapping: [
+      { device: "172.16.9.110", if_index: 11 },
+      { device: "172.16.9.110", if_index: 12 },
       { device: "172.16.9.110", if_index: 23 },
       { device: "172.16.9.110", if_index: 24 },
+      { device: "172.16.9.106", if_index: 32 },
     ],
   };
 
   public static dut_list = [
     this.dut_e530_1,
+    this.dut_e670,
+    this.dut_e361,
+    this.dut_e680,
     this.dut_e530_2,
     this.dut_e730,
-    this.dut_e680,
-    // this.dut_e670,
-    // this.dut_e361_1,
   ];
 }

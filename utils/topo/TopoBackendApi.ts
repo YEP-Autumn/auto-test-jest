@@ -35,14 +35,39 @@ export interface AddLinkParams {
   is_two_way?: boolean;
 }
 
+export interface LoginResponse {
+  token: string;
+  user_id: number;
+  username: string;
+  email: string;
+}
+
 export class TopoApi {
   private api = axios.create({
     baseURL: "http://172.16.9.1:8000",
     timeout: 5000,
   });
 
+  private token: string | null = null;
+
+  /** 登录并保存 token，后续所有请求自动携带 Authorization 头 */
+  async login(
+    username: string = "test",
+    password: string = "autotest",
+  ): Promise<LoginResponse> {
+    const response = await this.api.post<LoginResponse>("/api/auth/login/", {
+      username,
+      password,
+    });
+    this.token = response.data.token;
+    this.api.defaults.headers.common["Authorization"] = `Token ${this.token}`;
+    return response.data;
+  }
+
   /** 列出全部拓扑（含 links）；传 source="controller" 时每条 link 附加 stream_id */
-  async list(source?: "controller"): Promise<Topology[] | TopologyWithStream[]> {
+  async list(
+    source?: "controller",
+  ): Promise<Topology[] | TopologyWithStream[]> {
     const params = source === "controller" ? { source: "controller" } : {};
     const response = await this.api.get("/topology/topologies/", { params });
     return response.data;

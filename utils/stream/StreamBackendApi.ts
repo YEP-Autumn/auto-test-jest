@@ -1,11 +1,11 @@
 import axios from "axios";
 import FormData from "form-data";
-import { IPacketList, PacketListParser } from "./thrift_packet";
 import { RenixPort } from "../comm/Config";
+import { IPacketList, PacketListParser } from "./thrift_packet";
 
 export class StreamBackendApi {
   api = axios.create({
-    baseURL: "http://172.16.9.1:8000/stream_backend",
+    baseURL: "http://172.16.9.1:8000/api/stream_backend",
     timeout: 5000,
   });
 

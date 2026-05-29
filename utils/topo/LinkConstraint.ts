@@ -295,21 +295,21 @@ export class LinkConstraint {
    *
    *                                      +--------+
    *             +-----------------PortC--|  DUTD  |--PortA-----------------+
-   *             |                        +--------+                        |
-   *             |                             |                            |
-   *             |                           PortB                          |
-   *             |                             |                            |
-   *           PortC                         PortC                        PortA
-   *             |                             |                            |
+   *             |                        +--------+                       |
+   *             |                            |                            |
+   *             |                          PortB                          |
+   *             |                            |                            |
+   *           PortC                        PortC                        PortA
+   *             |                            |                            |
    *        +--------+                   +--------+                   +--------+
    *        |        |--PortA <=> PortA--|        |                   |        |
    *        |  DUTA  |                   |  DUTB  |                   |  DUTC  |
    *        |        |--PortB <=> PortB--|        |                   |        |
    *        +--------+                   +--------+                   +--------+
-   *            |                             |                            |
-   *          PortD                         PortD                        PortD
-   *            |                             |                            |
-   *         RenixA                        RenixB                      *RenixC
+   *            |                            |                            |
+   *          PortD                        PortD                        PortD
+   *            |                            |                            |
+   *         RenixA                       RenixB                      *RenixC
    */
 
   static four_devices_topo_links_type_2: Topolinks = {

@@ -3,11 +3,47 @@ import FormData from "form-data";
 import { RenixPort } from "../comm/Config";
 import { IPacketList, PacketListParser } from "./thrift_packet";
 
+export interface LoginResponse {
+  token: string;
+  user_id: number;
+  username: string;
+  email: string;
+}
+
 export class StreamBackendApi {
   api = axios.create({
-    baseURL: "http://172.16.9.1:8000/api/stream_backend",
+    baseURL: "http://172.16.9.1:8001/api/backend_proxy",
     timeout: 5000,
   });
+
+  private token: string | null = null;
+
+  constructor() {
+    this.setupAuthInterceptor();
+  }
+
+  /** 通过请求拦截器注入 token，确保不会被 per-request headers 覆盖 */
+  private setupAuthInterceptor() {
+    this.api.interceptors.request.use((config) => {
+      if (this.token) {
+        config.headers.Authorization = `Token ${this.token}`;
+      }
+      return config;
+    });
+  }
+
+  /** 登录并保存 token，后续所有请求自动携带 Authorization 头 */
+  async login(
+    username: string = "test",
+    password: string = "autotest",
+  ): Promise<LoginResponse> {
+    const response = await axios.post<LoginResponse>(
+      "http://172.16.9.1:8001/api/auth/login/",
+      { username, password },
+    );
+    this.token = response.data.token;
+    return response.data;
+  }
 
   /**
    * 端口预约

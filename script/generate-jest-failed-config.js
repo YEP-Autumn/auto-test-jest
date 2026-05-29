@@ -3,8 +3,8 @@ const fs = require("fs");
 const path = require("path");
 
 function getTimestamp(fileName) {
-  const match = fileName.match(/test-report-(\d+)\.html/);
-  return match ? parseInt(match[1], 10) : 0;
+  const match = fileName.match(/test-report-(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})\.html/);
+  return match ? match[1] : '';
 }
 
 function findLatestHtmlReport(reportDir) {
@@ -22,7 +22,7 @@ function findLatestHtmlReport(reportDir) {
   if (files.length === 0) return null;
 
   // 按时间戳降序排序，取第一个
-  return files.sort((a, b) => b.time - a.time)[0].path;
+  return files.sort((a, b) => (b.time > a.time ? 1 : -1))[0].path;
 }
 
 function extractFailedTestPathsFromHtml(content) {
@@ -61,7 +61,7 @@ function buildConfigContent(testPaths) {
       "jest-html-reporter",
       {
         pageTitle: "Test Report",
-        outputPath: \`test-report/test-report-\${Date.now()}.html\`,
+        outputPath: \`test-report/test-report-\${new Date().toISOString().replace(/[:]/g, '-').slice(0, 19).replace('T', '_')}.html\`,
         includeFailureMsg: true,
       },
     ],

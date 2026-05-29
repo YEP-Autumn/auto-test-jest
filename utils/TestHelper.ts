@@ -131,6 +131,7 @@ export class TestHelper {
         if (this.streamBackendApi == undefined && this.testResult) {
           try {
             this.streamBackendApi = new StreamBackendApi();
+            await this.streamBackendApi.login();
             /** 预约Renix端口 */
             for (let i = 0; i < Config.Renix.portList.length; i++) {
               await this.streamBackendApi.port_reserve(

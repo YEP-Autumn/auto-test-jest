@@ -15,7 +15,7 @@ module.exports = {
       "jest-html-reporter",
       {
         pageTitle: "Test Report",
-        outputPath: `test-report/test-report-${Date.now()}.html`,
+        outputPath: `test-report/test-report-${new Date().toISOString().replace(/[:]/g, '-').slice(0, 19).replace('T', '_')}.html`,
         includeFailureMsg: true,
       },
     ],

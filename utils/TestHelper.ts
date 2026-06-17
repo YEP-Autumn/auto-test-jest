@@ -15,10 +15,9 @@ import {
   Sleep,
   StartCapture,
 } from "./comm/Components";
-import { Config } from "./comm/Config";
+import { Config, RenixPort } from "./comm/Config";
 import { Dut } from "./comm/Dut";
 import { StreamBackendApi } from "./stream/StreamBackendApi";
-import { RenixPort } from "./comm/Config";
 import { Topolinks } from "./topo/LinkConstraint";
 import { TopoApi } from "./topo/TopoBackendApi";
 
@@ -113,22 +112,30 @@ export class TestHelper {
   }
 
   async startTest() {
-    for (let i = 0; i < this.actuator.length; i++) {
+    for (const act of this.actuator) {
       if (
         this.testResult == false &&
         this._inner_debug_preserve_scene_when_failed == true
       ) {
         break;
       }
-      if (this.actuator[i] instanceof CleanConfig) {
-        let ret = await this.actuator[i].start();
+
+      if (
+        act instanceof CleanConfig ||
+        (act instanceof ExecCustom && act.is_exec_clean() == true)
+      ) {
+        let ret = await act.start();
         this.testResult = false == ret ? ret : this.testResult;
       } else if (
-        this.actuator[i] instanceof PacketSender ||
-        this.actuator[i] instanceof StartCapture ||
-        this.actuator[i] instanceof PacketChecker
+        act instanceof PacketSender ||
+        act instanceof StartCapture ||
+        act instanceof PacketChecker
       ) {
-        if (this.streamBackendApi == undefined && this.testResult) {
+        if (!this.testResult) {
+          continue;
+        }
+
+        if (this.streamBackendApi == undefined) {
           try {
             this.streamBackendApi = new StreamBackendApi();
             await this.streamBackendApi.login();
@@ -144,13 +151,9 @@ export class TestHelper {
             continue;
           }
         }
-        this.testResult = this.testResult
-          ? await this.actuator[i].start(this.streamBackendApi)
-          : this.testResult;
+        this.testResult = await act.start(this.streamBackendApi);
       } else {
-        this.testResult = this.testResult
-          ? await this.actuator[i].start()
-          : this.testResult;
+        this.testResult = this.testResult ? await act.start() : this.testResult;
       }
     }
     return this;
@@ -356,30 +359,62 @@ export class TestHelper {
    * Exec Custom Callback (Read-only or controlled operations)
    * The callback receives a safe `DutHandle` with port alias replacement.
    */
-  ExecCustomDutA(cb: (h: DutHandle) => Promise<boolean> | boolean) {
+  ExecCustomDutA(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
     this.actuator.push(
-      new ExecCustom(this.dut_list[0], Config.dut_list[0].portList, cb),
+      new ExecCustom(
+        this.dut_list[0],
+        Config.dut_list[0].portList,
+        cb,
+        exec_clean,
+      ),
     );
     return this;
   }
 
-  ExecCustomDutB(cb: (h: DutHandle) => Promise<boolean> | boolean) {
+  ExecCustomDutB(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
     this.actuator.push(
-      new ExecCustom(this.dut_list[1], Config.dut_list[1].portList, cb),
+      new ExecCustom(
+        this.dut_list[1],
+        Config.dut_list[1].portList,
+        cb,
+        exec_clean,
+      ),
     );
     return this;
   }
 
-  ExecCustomDutC(cb: (h: DutHandle) => Promise<boolean> | boolean) {
+  ExecCustomDutC(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
     this.actuator.push(
-      new ExecCustom(this.dut_list[2], Config.dut_list[2].portList, cb),
+      new ExecCustom(
+        this.dut_list[2],
+        Config.dut_list[2].portList,
+        cb,
+        exec_clean,
+      ),
     );
     return this;
   }
 
-  ExecCustomDutD(cb: (h: DutHandle) => Promise<boolean> | boolean) {
+  ExecCustomDutD(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
     this.actuator.push(
-      new ExecCustom(this.dut_list[3], Config.dut_list[3].portList, cb),
+      new ExecCustom(
+        this.dut_list[3],
+        Config.dut_list[3].portList,
+        cb,
+        exec_clean,
+      ),
     );
     return this;
   }

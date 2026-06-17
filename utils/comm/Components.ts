@@ -1,8 +1,8 @@
 import { Port, sleep, STR_DEBUG_INFO, STR_FAILED, STR_SUCCESS } from "..";
 import { packet_thrift_buffer_build } from "../stream/packet_utils";
 import { StreamBackendApi } from "../stream/StreamBackendApi";
-import { RenixPort } from "./Config";
 import { PacketBuilder } from "../stream/thrift_packet";
+import { RenixPort } from "./Config";
 import { Dut } from "./Dut";
 
 export interface Actuator {
@@ -1068,15 +1068,18 @@ export class ExecCustom implements Actuator {
   private conn: Dut;
   private portList: string[];
   private cb: (h: DutHandle) => Promise<boolean> | boolean;
+  private exec_clean: boolean;
 
   constructor(
     conn: Dut,
     portList: string[],
     cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
   ) {
     this.conn = conn;
     this.portList = portList;
     this.cb = cb;
+    this.exec_clean = exec_clean;
   }
 
   async start(): Promise<boolean> {
@@ -1088,6 +1091,10 @@ export class ExecCustom implements Actuator {
       console.error("ExecCustom Error:", e);
       return false;
     }
+  }
+
+  public is_exec_clean() {
+    return this.exec_clean;
   }
 }
 

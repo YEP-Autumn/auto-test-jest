@@ -151,7 +151,24 @@ test("配置MPLS L3VPN", async () => {
     "end",
   ]);
 
-  testHelper.sleep(1000 * 90);
+  /** 等待ospf建立连接 */
+  testHelper.sleep(20_000);
+  testHelper.ReadyCheckDutB("show ip ospf neighbor", "Full", 80_000);
+
+  /** 等待bgp建立连接 */
+  testHelper.sleep(5_000);
+  testHelper.CleanConfigDutB(["clear ip bgp *"]);
+  testHelper.sleep(10_000);
+  testHelper.ReadyCheckDutB(
+    "show ip bgp neighbors",
+    "BGP state = Established",
+    60_000,
+  );
+
+  /** 等待ldp建立连接 */
+  testHelper.ExecConfigDutB(["clear ldp session *"]);
+  testHelper.sleep(10_000);
+  testHelper.ReadyCheckDutB("show ldp session", "OPERATIONAL", 90_000);
 
   testHelper.ReadyCheckDutA("show ip route", `R.*?7.7.7.7\/32`, 1000 * 60);
   testHelper.ReadyCheckDutD("show ip route", `R.*?4.4.4.4\/32`, 1000 * 60);

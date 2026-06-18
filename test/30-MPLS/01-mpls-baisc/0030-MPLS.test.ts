@@ -1,4 +1,7 @@
 import { Port } from "../../../utils";
+import { TransmitMode } from "../../../utils/comm/Components";
+import { RenixPort } from "../../../utils/comm/Config";
+import { PacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
 import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
@@ -75,11 +78,36 @@ test("使用LDP配置VPWS", async () => {
   ]);
   testHelper.sleep(25000);
 
+  testHelper.ReadyCheckDutA("show ldp session", "OPERATIONAL", 60_000);
+  testHelper.ReadyCheckDutB("show ldp session", "OPERATIONAL", 60_000);
   testHelper.ExecRetMatchDutB("show mpls l2-circuit", "t1.*?200 ");
   testHelper.ExecRetMatchDutB(
     "show mpls vc-table",
     "200.*?192.168.10.10.*?Active",
   );
+
+  testHelper.startCapture(RenixPort.B);
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
+
+  testHelper.addPktChecker({
+    expected_count: 10,
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.B,
+  });
 
   testHelper.CleanConfigDutA([
     "configure terminal",

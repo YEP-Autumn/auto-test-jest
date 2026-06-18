@@ -1,10 +1,16 @@
 import { Port } from "../../../utils";
+import { TransmitMode } from "../../../utils/comm/Components";
+import { RenixPort } from "../../../utils/comm/Config";
+import { PacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.two_devices_topo_links_type_1,
+  ).init();
 });
 
 afterAll(async () => {
@@ -14,11 +20,12 @@ afterAll(async () => {
 /**
  *
  *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortD <=> RenixB
+ *                    |        |--PortA <=> PortA--|        |
+ *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
+ *                    |        |--PortC <=> PortC--|        |
  *                    +--------+                   +--------+
  *
  */
-
 test("配置静态VPWS", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
@@ -63,6 +70,29 @@ test("配置静态VPWS", async () => {
 
   testHelper.ExecRetMatchDutB("show mpls l2-circuit", "t2.*?201");
   testHelper.ExecRetMatchDutB("show mpls vc-table", "201.*?33\/44");
+
+  testHelper.startCapture(RenixPort.B);
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
+
+  testHelper.addPktChecker({
+    expected_count: 10,
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.B,
+  });
 
   testHelper.CleanConfigDutA([
     "configure terminal",

@@ -262,6 +262,28 @@ export class LinkConstraint {
 
   /**
    *
+   * +--------+                   +--------+                   +--------+
+   * |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB <=> PortB--|  DUTC  |
+   * +--------+                   +--------+                   +--------+
+   *
+   */
+  static three_devices_topo_links_type_4: Topolinks = {
+    links: [
+      {
+        stream_id: 1,
+        in_port: DutA.portA,
+        out_port: DutB.portA,
+      },
+      {
+        stream_id: 2,
+        in_port: DutB.portB,
+        out_port: DutC.portB,
+      },
+    ],
+  };
+
+  /**
+   *
    *    +--------+                   +--------+
    *    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
    *    +--------+                   +--------+    |

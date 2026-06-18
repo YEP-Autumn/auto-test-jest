@@ -36,7 +36,12 @@ module.exports = {
     "test/30-MPLS/01-mpls-baisc/0030-MPLS.test.ts",
     "test/30-MPLS/01-mpls-baisc/0040-MPLS.test.ts",
     "test/30-MPLS/01-mpls-baisc/0050-MPLS.test.ts",
+    "test/30-MPLS/01-mpls-baisc/0051-MPLS.test.ts",
     "test/30-MPLS/01-mpls-baisc/0060-MPLS.test.ts",
+    "test/30-MPLS/01-mpls-baisc/0061-MPLS.test.ts",
+    "test/30-MPLS/01-mpls-baisc/0062-MPLS.test.ts",
+    "test/30-MPLS/01-mpls-baisc/0063-MPLS.test.ts",
+    "test/30-MPLS/01-mpls-baisc/0064-MPLS.test.ts",
     "test/30-MPLS/01-mpls-baisc/0070-MPLS.test.ts",
 
     "test/30-MPLS/02-mpls_use_with_vlan_mapping/1010-MPLS.test.ts",

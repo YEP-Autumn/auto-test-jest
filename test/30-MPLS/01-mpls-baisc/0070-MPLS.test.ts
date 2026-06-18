@@ -1,4 +1,7 @@
 import { Port } from "../../../utils";
+import { TransmitMode } from "../../../utils/comm/Components";
+import { RenixPort } from "../../../utils/comm/Config";
+import { PacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
 import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
@@ -103,6 +106,31 @@ test("使用 VLAN Interface 配置MPLS VPLS", async () => {
     "11.11.1.1.*?OPERATIONAL",
     60 * 1000,
   );
+
+  testHelper.startCapture(RenixPort.B);
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setVLAN({ vlan: 2 })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
+
+  testHelper.addPktChecker({
+    expected_count: 10,
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setVLAN({ vlan: 2 })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.B,
+  });
 
   testHelper.CleanConfigDutA([
     "configure terminal",

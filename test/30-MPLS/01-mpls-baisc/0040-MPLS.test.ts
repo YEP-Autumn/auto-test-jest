@@ -1,10 +1,16 @@
 import { Port } from "../../../utils";
-import { TestHelper } from "../../../utils/TestHelper";
+import { TransmitMode } from "../../../utils/comm/Components";
+import { RenixPort } from "../../../utils/comm/Config";
+import { PacketBuilder } from "../../../utils/stream/thrift_packet";
+import { DeviceARouteMac, DeviceCRouteMac, TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.three_devices_topo_links_type_1,
+  ).init();
 });
 
 afterAll(async () => {
@@ -12,16 +18,17 @@ afterAll(async () => {
 });
 
 /**
- *
  *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *                    |        |--PortA <=> PortA--|        |
+ *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortB
+ *                    |        |--PortC <=> PortC--|        |    |
  *                    +--------+                   +--------+    |
  *                                                               |
  *                                                 +--------+    |
  *                               RenixB <=> PortD--|  DUTC  |--PortB
  *                                                 +--------+
  */
-test("配置MPLS LSP", async () => {
+test("配置静态MPLS LSP", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -76,8 +83,31 @@ test("配置MPLS LSP", async () => {
   /**
    * TODO:
    * Send packet dst ip: 172.22.4.200, dst mac: DutA routemac,
-   * then packet while output from DutC eth-0-25
+   * then packet while output from DutC Port4
    */
+
+  testHelper.startCapture(RenixPort.B);
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setEthernet({ dst: DeviceARouteMac, src: "2.2.2" })
+      .setIPv4({ dst: "172.22.4.200", src: "2.2.2.2" }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
+
+  testHelper.addPktChecker({
+    expected_count: 10,
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "2.2.2", src: DeviceCRouteMac })
+      .setIPv4({ dst: "172.22.4.200", src: "2.2.2.2" }),
+    port: RenixPort.B,
+  });
 
   testHelper.ExecRetMatchDutA(
     "show mpls ftn-database",

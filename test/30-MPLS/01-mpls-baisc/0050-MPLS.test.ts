@@ -1,4 +1,7 @@
 import { Port } from "../../../utils";
+import { TransmitMode } from "../../../utils/comm/Components";
+import { RenixPort } from "../../../utils/comm/Config";
+import { PacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
 import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
@@ -24,7 +27,7 @@ afterAll(async () => {
  *                               RenixB <=> PortD--|  DUTC  |--PortB
  *                                                 +--------+
  */
-test("配置MPLS VPLS", async () => {
+test("配置MPLS VPLS (三设备)", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -114,6 +117,33 @@ test("配置MPLS VPLS", async () => {
     60 * 1000,
   );
   testHelper.ReadyCheckDutB("show ldp session", "11.11.4.4.*?OPERATIONAL");
+
+  testHelper.sleep(5000);
+
+  testHelper.startCapture(RenixPort.B);
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setVLAN({ vlan: 2 })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
+
+  testHelper.addPktChecker({
+    expected_count: 10,
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setVLAN({ vlan: 2 })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.B,
+  });
 
   testHelper.CleanConfigDutA([
     "configure terminal",

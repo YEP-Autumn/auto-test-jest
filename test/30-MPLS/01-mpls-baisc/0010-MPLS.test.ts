@@ -1,10 +1,13 @@
 import { Port } from "../../../utils";
 import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.three_devices_topo_links_type_4,
+  ).init();
 });
 
 afterAll(async () => {
@@ -18,7 +21,6 @@ afterAll(async () => {
  * +--------+                   +--------+                   +--------+
  *
  */
-
 test("配置LDP功能", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
@@ -85,8 +87,12 @@ test("配置LDP功能", async () => {
 
   testHelper.sleep(25000);
 
-  testHelper.ExecRetMatchDutB("show ldp session", "1.1.1.1.*?OPERATIONAL");
-  testHelper.ExecRetMatchDutB("show ldp session", "3.3.3.3.*?OPERATIONAL");
+  testHelper.ReadyCheckDutB(
+    "show ldp session",
+    "1.1.1.1.*?OPERATIONAL",
+    60_000,
+  );
+  testHelper.ReadyCheckDutB("show ldp session", "3.3.3.3.*?OPERATIONAL");
 
   testHelper.CleanConfigDutA([
     "configure terminal",

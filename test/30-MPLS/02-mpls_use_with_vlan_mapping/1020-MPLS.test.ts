@@ -1,10 +1,13 @@
 import { Port } from "../../../utils";
 import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.two_devices_topo_links_type_3,
+  ).init();
 });
 
 afterAll(async () => {
@@ -13,12 +16,12 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortD <=> RenixB
- *  RenixC <=> PortB--|        |                   +--------+
+ *                    +--------+
+ *  RenixA <=> PortD--|        |                    +--------+
+ *                    |  DUTA  | --PortA <=> PortA--|  DUTB  |--PortD <=> RenixB
+ *  RenixC <=> PortB--|        |                    +--------+
  *                    +--------+
  */
-
 test("支持在开启了flex模式的dot1q-tunne接口上配置vlan类型的 mpls-vpws ac", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",

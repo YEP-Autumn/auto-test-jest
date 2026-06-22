@@ -1,10 +1,13 @@
 import { Port } from "../../../utils";
 import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.two_devices_topo_links_type_3,
+  ).init();
 });
 
 afterAll(async () => {
@@ -13,13 +16,11 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *  RenixC <=> PortB--|        |                   +--------+    |
- *                    +--------+                                 |
- *                                                 +--------+    |
- *                               RenixB <=> PortD--|  DUTC  |--PortB
- *                                                 +--------+
+ *                    +--------+
+ *  RenixA <=> PortD--|        |                    +--------+
+ *                    |  DUTA  | --PortA <=> PortA--|  DUTB  |--PortD <=> RenixB
+ *  RenixC <=> PortB--|        |                    +--------+
+ *                    +--------+
  */
 test("支持在开启了vlan-translate功能的接口上配置vlan 类型mpls-vpls ac", async () => {
   testHelper.ExecConfigDutA([

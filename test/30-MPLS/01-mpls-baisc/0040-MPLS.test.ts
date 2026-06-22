@@ -2,7 +2,11 @@ import { Port } from "../../../utils";
 import { TransmitMode } from "../../../utils/comm/Components";
 import { RenixPort } from "../../../utils/comm/Config";
 import { PacketBuilder } from "../../../utils/stream/thrift_packet";
-import { DeviceARouteMac, DeviceCRouteMac, TestHelper } from "../../../utils/TestHelper";
+import {
+  DeviceARouteMac,
+  DeviceCRouteMac,
+  TestHelper,
+} from "../../../utils/TestHelper";
 import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;

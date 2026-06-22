@@ -142,6 +142,13 @@ test.skip("测试MPLS VPWS 中间节点支持agg接口对MPLS内层src mac进行
 
   testHelper.sleep(1000 * 30);
 
+  testHelper.ReadyCheckDutB(
+    "show ldp session",
+    "11.11.1.1.*?OPERATIONAL",
+    60_000,
+  );
+  testHelper.ReadyCheckDutB("show ldp session", "11.11.4.4.*?OPERATIONAL");
+
   testHelper.ReadyCheckDutA(
     "show ldp mpls-l2-circuit",
     "Up     ethernet",
@@ -152,9 +159,6 @@ test.skip("测试MPLS VPWS 中间节点支持agg接口对MPLS内层src mac进行
     "Up     ethernet",
     1000 * 60,
   );
-
-  /** 当 vpls up 后, 等待 30s，将配置同步到芯片 */
-  testHelper.sleep(1000 * 30);
 
   /**
    * RneixB发送携带vlan2，源mac变化的报文, DutA的portA和portC均有ingress流量, DutB的portA和portC均有egress流量

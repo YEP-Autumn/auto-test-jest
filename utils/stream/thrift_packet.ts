@@ -17,6 +17,9 @@ export const {
   TCP,
   UDP,
   ICMP,
+  RAW,
+  Dot3,
+  LLC,
   FieldMeta,
   Field,
   FieldType,
@@ -107,6 +110,22 @@ interface ICMPOptions {
   chksum?: number;
   id?: number;
   seq?: number;
+}
+
+interface RAWOptions {
+  payload?: Buffer | string;
+}
+
+interface Dot3Options {
+  dst?: string;
+  src?: string;
+  len?: number;
+}
+
+interface LLCOptions {
+  dsap?: number;
+  ssap?: number;
+  ctrl?: number;
 }
 
 /**
@@ -245,6 +264,55 @@ export class PacketBuilder {
     const fieldMeta = new FieldMeta({
       type: FieldType.ICMP,
       field: new Field({ icmp: new ICMP(options) }),
+    });
+
+    this.fieldList.push(fieldMeta);
+    return this;
+  }
+
+  /**
+   * 设置原始数据负载
+   */
+  setRaw(options: RAWOptions = {}): PacketBuilder {
+    const rawPayload =
+      options.payload instanceof Buffer
+        ? options.payload.toString("base64")
+        : options.payload;
+    const fieldMeta = new FieldMeta({
+      type: FieldType.RAW,
+      field: new Field({ raw: new RAW({ payload: rawPayload }) }),
+    });
+
+    this.fieldList.push(fieldMeta);
+    return this;
+  }
+
+  /**
+   * 设置 802.3 原始以太网帧
+   */
+  setDot3(options: Dot3Options = {}): PacketBuilder {
+    const fieldMeta = new FieldMeta({
+      type: FieldType.Dot3,
+      field: new Field({
+        dot3: new Dot3({
+          dst: options.dst ? normalizeMacAddress(options.dst) : null,
+          src: options.src ? normalizeMacAddress(options.src) : null,
+          len: options.len,
+        }),
+      }),
+    });
+
+    this.fieldList.push(fieldMeta);
+    return this;
+  }
+
+  /**
+   * 设置 LLC（逻辑链路控制）头
+   */
+  setLLC(options: LLCOptions = {}): PacketBuilder {
+    const fieldMeta = new FieldMeta({
+      type: FieldType.LLC,
+      field: new Field({ llc: new LLC(options) }),
     });
 
     this.fieldList.push(fieldMeta);

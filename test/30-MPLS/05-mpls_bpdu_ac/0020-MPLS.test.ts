@@ -1,4 +1,7 @@
 import { Port } from "../../../utils";
+import { TransmitMode } from "../../../utils/comm/Components";
+import { RenixPort } from "../../../utils/comm/Config";
+import { PacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
 import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
@@ -87,6 +90,37 @@ test("支持raw模式vpls配置bpdu ac", async () => {
   );
   testHelper.ReadyCheckDutB("show ldp session", "11.11.1.1.*?OPERATIONAL");
 
+  testHelper.startCapture(RenixPort.B);
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setDot3({
+        dst: "01:80:c2:00:00:00",
+        src: "2.2.2",
+        len: 39,
+      })
+      .setLLC({ ctrl: 10, dsap: 10, ssap: 10 }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
+
+  testHelper.addPktChecker({
+    expected_count: 10,
+    packet: new PacketBuilder()
+      .setDot3({
+        dst: "01:80:c2:00:00:00",
+        src: "2.2.2",
+        len: 39,
+      })
+      .setLLC({ ctrl: 10, dsap: 10, ssap: 10 }),
+    port: RenixPort.B,
+  });
+
   testHelper.CleanConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -123,5 +157,3 @@ test("支持raw模式vpls配置bpdu ac", async () => {
 
   expect(testHelper.result()).toBeTruthy();
 });
-
-test.skip("未验证流量", async () => {});

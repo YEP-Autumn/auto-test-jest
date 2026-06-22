@@ -9,7 +9,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.three_devices_topo_links_type_2,
+    LinkConstraint.three_devices_topo_links_type_5,
   ).init();
 });
 
@@ -17,8 +17,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-/**
- *
+/*
  *                    +--------+                   +--------+
  *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
  *                    +--------+                   +--------+    |

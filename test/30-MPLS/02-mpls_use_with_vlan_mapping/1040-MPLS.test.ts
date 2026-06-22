@@ -1,22 +1,26 @@
 import { Port } from "../../../utils";
 import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper().init();
+  testHelper = await new TestHelper(
+    LinkConstraint.three_devices_topo_links_type_2,
+  ).init();
 });
 
 afterAll(async () => {
   await testHelper.destroy();
 });
 
-/**
- *
+/*
  *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *  RenixC <=> PortB--|        |                   +--------+    |
- *                    +--------+                                 |
+ *  RenixA <=> PortD--|        |                   |        |
+ *                    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *  RenixC <=> PortB--|        |                   |        |    |
+ *                    +--------+                   +--------+    |
+ *                                                               |
  *                                                 +--------+    |
  *                               RenixB <=> PortD--|  DUTC  |--PortB
  *                                                 +--------+

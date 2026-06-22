@@ -16,7 +16,10 @@ enum FieldType {
   TCP  = 5,
   UDP  = 6,
   ICMP = 7,
-  ARP  = 8
+  ARP  = 8,
+  RAW  = 9,
+  Dot3 = 10,
+  LLC = 11
 }
 
 struct EthernetII {
@@ -108,6 +111,18 @@ struct RAW {
     1: string payload
 }
 
+struct Dot3 {
+    1: optional string dst,
+    2: optional string src,
+    3: optional i32 len
+}
+
+struct LLC {
+    1: optional i16 dsap,
+    2: optional i16 ssap,
+    3: optional i16 ctrl
+}
+
 union Field {
     1: optional EthernetII ether,
     2: optional VLAN vlan,
@@ -116,7 +131,10 @@ union Field {
     5: optional ARP arp,
     6: optional TCP tcp,
     7: optional UDP udp,
-    8: optional ICMP icmp
+    8: optional ICMP icmp,
+    9: optional RAW raw,
+    10: optional Dot3 dot3,
+    11: optional LLC llc
 }
 
 struct FieldMeta {

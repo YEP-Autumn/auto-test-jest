@@ -894,6 +894,103 @@ export class PacketChecker implements Actuator {
 
         return true;
 
+      case 9: // RAW
+        console.log("Comparing RAW fields:", field, actualField);
+        if (field.raw == null || actualField.raw == null) {
+          console.log("RAW field is null.");
+          return false;
+        }
+
+        if (field.raw.payload !== actualField.raw.payload) {
+          console.log(
+            "RAW payload does not match. expected:",
+            field.raw.payload,
+            "actual:",
+            actualField.raw.payload,
+          );
+          return false;
+        }
+
+        return true;
+
+      case 10: // Dot3
+        console.log("Comparing Dot3 fields:", field, actualField);
+        if (field.dot3 == null || actualField.dot3 == null) {
+          console.log("Dot3 field is null.");
+          return false;
+        }
+
+        if (field.dot3.dst && field.dot3.dst !== actualField.dot3.dst) {
+          console.log(
+            "Dot3 dst does not match. expected:",
+            field.dot3.dst,
+            "actual:",
+            actualField.dot3.dst,
+          );
+          return false;
+        }
+
+        if (field.dot3.src && field.dot3.src !== actualField.dot3.src) {
+          console.log(
+            "Dot3 src does not match. expected:",
+            field.dot3.src,
+            "actual:",
+            actualField.dot3.src,
+          );
+          return false;
+        }
+
+        if (field.dot3.len && field.dot3.len !== actualField.dot3.len) {
+          console.log(
+            "Dot3 len does not match. expected:",
+            field.dot3.len,
+            "actual:",
+            actualField.dot3.len,
+          );
+          return false;
+        }
+
+        return true;
+
+      case 11: // LLC
+        console.log("Comparing LLC fields:", field, actualField);
+        if (field.llc == null || actualField.llc == null) {
+          console.log("LLC field is null.");
+          return false;
+        }
+
+        if (field.llc.dsap && field.llc.dsap !== actualField.llc.dsap) {
+          console.log(
+            "LLC dsap does not match. expected:",
+            field.llc.dsap,
+            "actual:",
+            actualField.llc.dsap,
+          );
+          return false;
+        }
+
+        if (field.llc.ssap && field.llc.ssap !== actualField.llc.ssap) {
+          console.log(
+            "LLC ssap does not match. expected:",
+            field.llc.ssap,
+            "actual:",
+            actualField.llc.ssap,
+          );
+          return false;
+        }
+
+        if (field.llc.ctrl && field.llc.ctrl !== actualField.llc.ctrl) {
+          console.log(
+            "LLC ctrl does not match. expected:",
+            field.llc.ctrl,
+            "actual:",
+            actualField.llc.ctrl,
+          );
+          return false;
+        }
+
+        return true;
+
       default:
         return false;
     }

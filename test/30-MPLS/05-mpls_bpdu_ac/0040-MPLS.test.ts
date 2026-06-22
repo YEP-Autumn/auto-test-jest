@@ -1,4 +1,7 @@
 import { Port } from "../../../utils";
+import { TransmitMode } from "../../../utils/comm/Components";
+import { RenixPort } from "../../../utils/comm/Config";
+import { PacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
 import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
@@ -89,6 +92,70 @@ test("支持vpls bpdu ac和ethernet ac同时使用", async () => {
   );
   testHelper.ReadyCheckDutB("show ldp session", "11.11.1.1.*?OPERATIONAL");
 
+  testHelper.startCapture(RenixPort.B);
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setDot3({
+        dst: "01:80:c2:00:00:00",
+        src: "2.2.2",
+        len: 39,
+      })
+      .setLLC({ ctrl: 10, dsap: 10, ssap: 10 }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
+
+  testHelper.addPktChecker({
+    expected_count: 10,
+    packet: new PacketBuilder()
+      .setDot3({
+        dst: "01:80:c2:00:00:00",
+        src: "2.2.2",
+        len: 39,
+      })
+      .setLLC({ ctrl: 10, dsap: 10, ssap: 10 }),
+    port: RenixPort.B,
+  });
+
+  testHelper.startCapture(RenixPort.B);
+  testHelper.addPktSender({
+    port: RenixPort.A,
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: "00:00:01:00:00:ee",
+        src: "00:00:a0:0a:00:66",
+        type: 0x8100,
+      })
+      .setVLAN({ vlan: 2, type: 0x0800 })
+      .setIPv4({ src: "1.1.1.1", dst: "2.2.2.2" }),
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
+  testHelper.addPktChecker({
+    port: RenixPort.B,
+    packet: new PacketBuilder()
+      .setEthernet({
+        dst: "00:00:01:00:00:ee",
+        src: "00:00:a0:0a:00:66",
+        type: 0x8100,
+      })
+      .setVLAN({ vlan: 2, type: 0x0800 })
+      .setIPv4({
+        src: "1.1.1.1",
+        dst: "2.2.2.2",
+      }),
+    expected_count: 10,
+  });
+
   testHelper.CleanConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -127,5 +194,3 @@ test("支持vpls bpdu ac和ethernet ac同时使用", async () => {
 
   expect(testHelper.result()).toBeTruthy();
 });
-
-test.skip("未验证流量", async () => {});

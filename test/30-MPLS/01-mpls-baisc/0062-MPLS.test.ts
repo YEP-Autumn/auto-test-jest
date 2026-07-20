@@ -8,7 +8,7 @@ beforeAll(async () => {
   testHelper = await new TestHelper(
     LinkConstraint.three_devices_topo_links_type_1,
   ).init();
-}, 120_000);
+});
 
 afterAll(async () => {
   if (testHelper) {
@@ -49,6 +49,7 @@ test("测试MPLS L3VPN 多跳 PING功能", async () => {
     "ip address 5.5.5.5/32",
     "exit",
     "router ospf",
+    "router-id 5.5.5.5",
     "network 1.1.1.0/24 area 0",
     "network 5.5.5.5/32 area 0",
     "exit",
@@ -130,6 +131,7 @@ test("测试MPLS L3VPN 多跳 PING功能", async () => {
     "ip address 7.7.7.7/32",
     "exit",
     "router ospf",
+    "router-id 7.7.7.7",
     "network 2.2.2.0/24 area 0",
     "network 7.7.7.7/32 area 0",
     "exit",
@@ -248,4 +250,4 @@ test("测试MPLS L3VPN 多跳 PING功能", async () => {
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 180_000);
+});

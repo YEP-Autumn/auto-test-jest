@@ -8,7 +8,7 @@ beforeAll(async () => {
   testHelper = await new TestHelper(
     LinkConstraint.three_devices_topo_links_type_1,
   ).init();
-}, 120_000);
+});
 
 afterAll(async () => {
   if (testHelper) {
@@ -251,4 +251,4 @@ test("测试MPLS L3VPN 多跳 PING功能 (explicit-null)", async () => {
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();
-}, 180_000);
+});

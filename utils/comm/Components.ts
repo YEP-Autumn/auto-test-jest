@@ -1196,7 +1196,7 @@ export class ExecCustom implements Actuator {
 }
 
 export enum ModifierField {
-  EthernetII_MAC_SRC,
+  EthernetII_MAC_SRC = 0,
   EthernetII_MAC_DST,
   IPv4_IP_SRC,
   IPv4_IP_DST,
@@ -1204,6 +1204,8 @@ export enum ModifierField {
   TCP_PORT_DST,
   UDP_PORT_SRC,
   UDP_PORT_DST,
+  Dot3_MAC_SRC,
+  Dot3_MAC_DST,
 }
 
 export enum TransmitMode {

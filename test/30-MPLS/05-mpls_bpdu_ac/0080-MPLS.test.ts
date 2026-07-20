@@ -1,4 +1,11 @@
 import { Port } from "../../../utils";
+import {
+  ModifierField,
+  ModifierMode,
+  TransmitMode,
+} from "../../../utils/comm/Components";
+import { RenixPort } from "../../../utils/comm/Config";
+import { PacketBuilder } from "../../../utils/stream/thrift_packet";
 import { TestHelper } from "../../../utils/TestHelper";
 import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
@@ -123,6 +130,43 @@ test("支持在agg接口配置bpud ac", async () => {
   );
   testHelper.ReadyCheckDutB("show ldp session", "11.11.1.1.*?OPERATIONAL");
 
+  testHelper.startCapture(RenixPort.B);
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setDot3({
+        dst: "01:80:c2:00:00:00",
+        src: "00:02:00:02:00:02",
+        len: 39,
+      })
+      .setLLC({ ctrl: 10, dsap: 10, ssap: 10 })
+      .setRaw({
+        payload: Buffer.from("0000000000000000000000000000000000000000000000"),
+      }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+    modifier_param: [
+      {
+        modifier_field: ModifierField.Dot3_MAC_SRC,
+        count: 10,
+        mode: ModifierMode.Increment,
+        start_value: "00:02:00:02:00:02",
+      },
+    ],
+  });
+
+  testHelper.addPktChecker({
+    expected_count: 5,
+    packet: new PacketBuilder().setDot3({
+      dst: "01:80:c2:00:00:00",
+    }),
+    port: RenixPort.B,
+  });
+
   testHelper.CleanConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
@@ -185,5 +229,3 @@ test("支持在agg接口配置bpud ac", async () => {
 
   expect(testHelper.result()).toBeTruthy();
 });
-
-test.skip("未验证流量", async () => {});

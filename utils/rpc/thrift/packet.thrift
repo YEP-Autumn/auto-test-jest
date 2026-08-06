@@ -19,7 +19,8 @@ enum FieldType {
   ARP  = 8,
   RAW  = 9,
   Dot3 = 10,
-  LLC = 11
+  LLC  = 11,
+  SNMP = 12
 }
 
 struct EthernetII {
@@ -123,6 +124,29 @@ struct LLC {
     3: optional i16 ctrl
 }
 
+struct Varbind {
+    1: optional string oid,        # 点分形式，如 "1.3.6.1.2.1.1.1.0"
+    2: optional string value,      # 值字符串：INTEGER 为十进制数；OCTET STRING 为 UTF-8 文本
+    3: optional i32 value_type     # 0/缺省=无值(GET 用)，2=INTEGER，4=OCTET STRING，5=NULL，6=OID
+}
+
+struct SNMP {
+    1: optional i32 version,           # 0=v1, 1=v2c, 2=v3
+    2: optional string community,      # 默认 "public"
+    3: optional i32 pdu_type,          # 0=GET,1=NEXT,2=RESPONSE,3=SET,4=TRAPv1,5=BULK,6=INFORM,7=TRAPv2
+    4: optional i32 request_id,        # PDU request-id
+    5: optional list<Varbind> varbinds,
+    6: optional i32 error,             # RESPONSE 用
+    7: optional i32 error_index,
+    8: optional string enterprise,     # TRAPv1
+    9: optional string agent_addr,     # TRAPv1
+    10: optional i32 generic_trap,     # TRAPv1
+    11: optional i32 specific_trap,    # TRAPv1
+    12: optional i64 time_stamp,       # TRAPv1 (timetick)
+    13: optional i32 non_repeaters,    # BULK
+    14: optional i32 max_repetitions   # BULK
+}
+
 union Field {
     1: optional EthernetII ether,
     2: optional VLAN vlan,
@@ -134,7 +158,8 @@ union Field {
     8: optional ICMP icmp,
     9: optional RAW raw,
     10: optional Dot3 dot3,
-    11: optional LLC llc
+    11: optional LLC llc,
+    12: optional SNMP snmp
 }
 
 struct FieldMeta {

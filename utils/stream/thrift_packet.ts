@@ -20,6 +20,8 @@ export const {
   RAW,
   Dot3,
   LLC,
+  Varbind,
+  SNMP,
   FieldMeta,
   Field,
   FieldType,
@@ -126,6 +128,44 @@ interface LLCOptions {
   dsap?: number;
   ssap?: number;
   ctrl?: number;
+}
+
+interface VarbindOptions {
+  /** 点分形式 OID，如 "1.3.6.1.2.1.1.1.0" */
+  oid?: string;
+  /** 值字符串：INTEGER 为十进制数；OCTET STRING 为 UTF-8 文本 */
+  value?: string;
+  /** 0/缺省=无值(GET 用)，2=INTEGER，4=OCTET STRING，5=NULL，6=OID */
+  value_type?: number;
+}
+
+interface SNMPOptions {
+  /** 0=v1, 1=v2c, 2=v3 */
+  version?: number;
+  /** 默认 "public" */
+  community?: string;
+  /** 0=GET,1=NEXT,2=RESPONSE,3=SET,4=TRAPv1,5=BULK,6=INFORM,7=TRAPv2 */
+  pdu_type?: number;
+  /** PDU request-id */
+  request_id?: number;
+  varbinds?: VarbindOptions[];
+  /** RESPONSE 用 */
+  error?: number;
+  error_index?: number;
+  /** TRAPv1 */
+  enterprise?: string;
+  /** TRAPv1 */
+  agent_addr?: string;
+  /** TRAPv1 */
+  generic_trap?: number;
+  /** TRAPv1 */
+  specific_trap?: number;
+  /** TRAPv1 (timetick) */
+  time_stamp?: number;
+  /** BULK */
+  non_repeaters?: number;
+  /** BULK */
+  max_repetitions?: number;
 }
 
 /**
@@ -313,6 +353,19 @@ export class PacketBuilder {
     const fieldMeta = new FieldMeta({
       type: FieldType.LLC,
       field: new Field({ llc: new LLC(options) }),
+    });
+
+    this.fieldList.push(fieldMeta);
+    return this;
+  }
+
+  /**
+   * 设置 SNMP 报文
+   */
+  setSNMP(options: SNMPOptions = {}): PacketBuilder {
+    const fieldMeta = new FieldMeta({
+      type: FieldType.SNMP,
+      field: new Field({ snmp: new SNMP(options) }),
     });
 
     this.fieldList.push(fieldMeta);

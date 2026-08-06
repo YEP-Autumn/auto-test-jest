@@ -82,6 +82,12 @@ test("支持在VLAN子接口上配置PIM-DM", async () => {
     1000 * 10,
   );
 
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.D}.1`,
+    `Interface current state: UP`,
+    1000 * 10,
+  );
+
   testHelper.ExecRetMatchDutA(
     "show ip pim dense-mode interface",
     `11.1.1.1 *?${Port.D}.1`,

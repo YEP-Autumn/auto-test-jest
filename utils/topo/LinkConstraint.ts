@@ -399,7 +399,6 @@ export class LinkConstraint {
    *            |                            |                            |
    *         RenixA                       RenixB                      *RenixC
    */
-
   static four_devices_topo_links_type_2: Topolinks = {
     links: [
       {

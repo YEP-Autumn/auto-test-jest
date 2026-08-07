@@ -1,0 +1,94 @@
+import { Port } from "../../../utils";
+import {
+  BurstGapUnit,
+  BurstRateUnit,
+  TransmitMode,
+} from "../../../utils/comm/Components";
+import { RenixPort } from "../../../utils/comm/Config";
+import { PacketBuilder } from "../../../utils/stream/thrift_packet";
+import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
+
+let testHelper: TestHelper;
+
+beforeAll(async () => {
+  testHelper = await new TestHelper(
+    LinkConstraint.one_device_topo_links_type_1,
+  ).init();
+});
+
+afterAll(async () => {
+  await testHelper.destroy();
+});
+
+/**
+ *
+ *                    +--------+
+ *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
+ *                    +--------+
+ *
+ */
+test("开启storm control action shutdown时，如果接口已经处于风暴控制状态，则直接将接口errdisable", async () => {
+  testHelper.ExecConfigDutA([
+    "configure terminal",
+    "storm-control event timer interval 8000",
+    `interface ${Port.A}`,
+    "storm-control unicast level 1",
+    "end",
+  ]);
+
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.A}`,
+    `Interface current state: UP`,
+  );
+
+  // 再发送限速类型报文(unicast), 校验接口errdisable
+  testHelper.addPktSender({
+    port: RenixPort.A,
+    packet: new PacketBuilder()
+      .setEthernet({ src: "0.0.1", dst: "0.0.2" })
+      .setIPv4({ src: "1.1.1.1", dst: "2.2.2.2" }),
+    transmit_param: {
+      mode: TransmitMode.BURST,
+      param: {
+        burst_count: 1000000,
+        burst_size: 1,
+        gap: 1,
+        gap_unit: BurstGapUnit.NS,
+        step_count: 1,
+        rate: 100,
+        rate_unit: BurstRateUnit.PERCENT,
+      },
+    },
+  });
+
+  testHelper.ExecRetMatchDutA("show storm-control", "OCCUR");
+
+  testHelper.ExecRetMatchDutA(
+    `show interface ${Port.A}`,
+    "Error Disabled",
+    true,
+  );
+
+  testHelper.ExecConfigDutA([
+    "configure terminal",
+    `interface ${Port.A}`,
+    "storm-control action shutdown",
+    "end",
+  ]);
+
+  testHelper.ExecRetMatchDutA(`show interface ${Port.A}`, "Error Disabled");
+
+  testHelper.CleanConfigDutA([
+    "configure terminal",
+    "no storm-control event timer interval",
+    `interface ${Port.A}`,
+    "no storm-control unicast",
+    "no storm-control action",
+    "end",
+  ]);
+
+  await testHelper.startTest();
+
+  expect(testHelper.result()).toBeTruthy();
+});

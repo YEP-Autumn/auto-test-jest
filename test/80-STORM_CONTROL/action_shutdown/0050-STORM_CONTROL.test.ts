@@ -37,6 +37,11 @@ test("接口配置 Sotrm Control shtudown action后，multicast pps到达限速�
     "end",
   ]);
 
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.A}`,
+    `Interface current state: UP`,
+  );
+
   // 先发送非限速类型报文(unicast), 校验不会导致接口errdisable
   testHelper.addPktSender({
     port: RenixPort.A,

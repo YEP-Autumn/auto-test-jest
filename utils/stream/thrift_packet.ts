@@ -1,6 +1,19 @@
 export const thrift = require("thrift");
 const ttypes = require("../rpc/gen-nodejs/packet_types");
 
+// 兼容层：thrift js:node 生成的代码把 read/write 挂在 Symbol.for("read")/Symbol.for("write") 上，
+// 这里为所有生成的 struct 类补上普通的 read/write 别名，便于直接调用（如 packet.write(protocol)）。
+for (const key of Object.keys(ttypes)) {
+  const cls: any = (ttypes as any)[key];
+  if (typeof cls !== "function" || !cls.prototype) continue;
+  for (const m of ["read", "write"]) {
+    const sym = Symbol.for(m);
+    if (!cls.prototype[m] && typeof cls.prototype[sym] === "function") {
+      cls.prototype[m] = cls.prototype[sym];
+    }
+  }
+}
+
 import { PARSE_STRATEGIES } from "./packet_utils";
 import {
   ThriftFullProtocolType,
@@ -140,9 +153,9 @@ interface VarbindOptions {
 }
 
 interface SNMPOptions {
-  /** 0=v1, 1=v2c, 2=v3 */
+  /** 0=v1, 1=v2c, 3=v3 */
   version?: number;
-  /** 默认 "public" */
+  /** v1/v2c 社区名 */
   community?: string;
   /** 0=GET,1=NEXT,2=RESPONSE,3=SET,4=TRAPv1,5=BULK,6=INFORM,7=TRAPv2 */
   pdu_type?: number;
@@ -166,6 +179,30 @@ interface SNMPOptions {
   non_repeaters?: number;
   /** BULK */
   max_repetitions?: number;
+  /** v3 msgGlobalData.msgID */
+  msg_id?: number;
+  /** v3 msgGlobalData.msgMaxSize */
+  msg_max_size?: number;
+  /** v3 msgGlobalData.msgFlags（bit0=auth, bit1=priv, bit2=reportable） */
+  msg_flags?: number;
+  /** v3 msgSecurityModel（3=USM） */
+  msg_security_model?: number;
+  /** v3 USM msgAuthoritativeEngineID（十六进制） */
+  engine_id?: string;
+  /** v3 USM msgAuthoritativeEngineBoots */
+  engine_boots?: number;
+  /** v3 USM msgAuthoritativeEngineTime */
+  engine_time?: number;
+  /** v3 USM msgUserName */
+  user_name?: string;
+  /** v3 USM msgAuthenticationParameters（十六进制） */
+  auth_params?: string;
+  /** v3 USM msgPrivacyParameters（十六进制） */
+  privacy_params?: string;
+  /** v3 scopedPDU contextEngineID（十六进制） */
+  context_engine_id?: string;
+  /** v3 scopedPDU contextName */
+  context_name?: string;
 }
 
 /**

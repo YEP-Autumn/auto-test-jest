@@ -385,12 +385,9 @@ export function matchSNMP(field: any, actualField: any): boolean {
   if (!fieldEq("SNMP.request_id", snmp.request_id, actualSnmp.request_id))
     return false;
 
-  // varbinds 列表比较
+  // varbinds 列表比较：期望的每条 varbind 需按顺序存在于实际 varbinds 中，实际可以有多余的 varbind
   if (snmp.varbinds && snmp.varbinds.length > 0) {
-    if (
-      !actualSnmp.varbinds ||
-      snmp.varbinds.length !== actualSnmp.varbinds.length
-    ) {
+    if (!actualSnmp.varbinds || actualSnmp.varbinds.length === 0) {
       console.log(
         `[mismatch] SNMP.varbinds length: expected=${snmp.varbinds.length}, actual=${
           actualSnmp.varbinds ? actualSnmp.varbinds.length : 0
@@ -399,29 +396,38 @@ export function matchSNMP(field: any, actualField: any): boolean {
       return false;
     }
 
+    // 在 actualSnmp.varbinds 中按顺序查找每条期望的 varbind，找到后从下一个位置继续
+    // 比较规则：仅比较 expectedVb 中已指定的字段，未指定（null/undefined）的字段不参与比较
+    let actualStart = 0;
     for (let i = 0; i < snmp.varbinds.length; i++) {
       const expectedVb = snmp.varbinds[i];
-      const actualVb = actualSnmp.varbinds[i];
-      if (!fieldEq(`SNMP.varbinds[${i}].oid`, expectedVb.oid, actualVb.oid))
-        return false;
-      if (
-        expectedVb.value !== undefined &&
-        expectedVb.value !== null &&
-        expectedVb.value !== actualVb.value
-      ) {
+      let found = false;
+      for (let j = actualStart; j < actualSnmp.varbinds.length; j++) {
+        const actualVb = actualSnmp.varbinds[j];
+        const oidOk =
+          expectedVb.oid === undefined ||
+          expectedVb.oid === null ||
+          expectedVb.oid === actualVb.oid;
+        const valueOk =
+          expectedVb.value === undefined ||
+          expectedVb.value === null ||
+          expectedVb.value === actualVb.value;
+        const typeOk =
+          expectedVb.value_type === undefined ||
+          expectedVb.value_type === null ||
+          expectedVb.value_type === actualVb.value_type;
+        if (oidOk && valueOk && typeOk) {
+          actualStart = j + 1;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
         console.log(
-          `[mismatch] SNMP.varbinds[${i}].value: expected=${expectedVb.value}, actual=${actualVb.value}`,
+          `[mismatch] SNMP.varbinds[${i}] not found in order in actual: oid=${expectedVb.oid}, value=${expectedVb.value}`,
         );
         return false;
       }
-      if (
-        !fieldEq(
-          `SNMP.varbinds[${i}].value_type`,
-          expectedVb.value_type,
-          actualVb.value_type,
-        )
-      )
-        return false;
     }
   }
 
@@ -470,43 +476,220 @@ export function matchSNMP(field: any, actualField: any): boolean {
   )
     return false;
 
+  // v3 头字段：仅比较期望中已指定的字段，未指定（null/undefined）不比较
+  if (!fieldEq("SNMP.msg_id", snmp.msg_id, actualSnmp.msg_id)) return false;
+  if (!fieldEq("SNMP.msg_max_size", snmp.msg_max_size, actualSnmp.msg_max_size))
+    return false;
+  if (!fieldEq("SNMP.msg_flags", snmp.msg_flags, actualSnmp.msg_flags))
+    return false;
+  if (
+    !fieldEq(
+      "SNMP.msg_security_model",
+      snmp.msg_security_model,
+      actualSnmp.msg_security_model,
+    )
+  )
+    return false;
+  if (!fieldEq("SNMP.engine_id", snmp.engine_id, actualSnmp.engine_id))
+    return false;
+  if (!fieldEq("SNMP.engine_boots", snmp.engine_boots, actualSnmp.engine_boots))
+    return false;
+  if (!fieldEq("SNMP.engine_time", snmp.engine_time, actualSnmp.engine_time))
+    return false;
+  if (!fieldEq("SNMP.user_name", snmp.user_name, actualSnmp.user_name))
+    return false;
+  if (!fieldEq("SNMP.auth_params", snmp.auth_params, actualSnmp.auth_params))
+    return false;
+  if (
+    !fieldEq(
+      "SNMP.privacy_params",
+      snmp.privacy_params,
+      actualSnmp.privacy_params,
+    )
+  )
+    return false;
+  if (
+    !fieldEq(
+      "SNMP.context_engine_id",
+      snmp.context_engine_id,
+      actualSnmp.context_engine_id,
+    )
+  )
+    return false;
+  if (!fieldEq("SNMP.context_name", snmp.context_name, actualSnmp.context_name))
+    return false;
+
   return true;
 }
 
-// ---- 紧凑打印 pkt_list：每个报文一层一行，过滤 null 字段 ----
-function compactValue(v: any): string {
+// ---- 紧凑打印 pkt_list：结构化缩进；数组每个元素一行，层级缩进一致 ----
+const PRINT_WIDTH = 100; // 单行最大宽度，超过自动折行
+const PRINT_BODY = "      "; // 层字段续行缩进（6 空格）
+const PRINT_INDENT = "  "; // 每加深一层的缩进
+
+/** 一次渲染结果：first 为无缩进前缀的首行（拼接在调用方前缀后），cont 为已完成缩进的续行 */
+interface Rendered {
+  first: string;
+  cont: string[];
+}
+
+/** 标量渲染：含控制字符(如 agent_addr)的字符串只留长度 */
+function renderScalar(v: any): string {
+  if (typeof v === "string") {
+    for (let i = 0; i < v.length; i++) {
+      if (v.charCodeAt(i) < 32) return `<bytes:${v.length}>`;
+    }
+  }
+  return String(v);
+}
+
+/** 单行紧凑渲染（仅用于长度估算，不实际输出） */
+function inlineRender(v: any): string {
   if (v == null) return "";
-  if (Array.isArray(v)) return `[${v.map(compactValue).join(", ")}]`;
+  if (Array.isArray(v)) return `[${v.map(inlineRender).join(", ")}]`;
   if (typeof v === "object") {
     if (v.type === "Buffer") return `<Buffer:${v.data?.length ?? 0}B>`;
     const parts: string[] = [];
     for (const [k, val] of Object.entries(v)) {
-      const s = compactValue(val);
+      const s = inlineRender(val);
       if (s) parts.push(`${k}=${s}`);
     }
     return `{${parts.join(" ")}}`;
   }
-  if (typeof v === "string" && /[\u0000-\u001f]/.test(v))
-    return `<bytes:${v.length}>`; // 控制字符(如 agent_addr)只留长度
-  return String(v);
+  return renderScalar(v);
 }
 
-/** 提取 field 中唯一非空的协议层，格式化为 name({k=v ...}) */
-function formatField(f: any): string {
+/** 数组：能单行则单行，否则每个元素独占一行（首元素前换行），] 收回到父级缩进 */
+function renderArray(arr: any[], indent: string): Rendered {
+  if (arr.length === 0) return { first: "[]", cont: [] };
+  const elemIndent = indent + PRINT_INDENT;
+  const oneLine = `[${arr.map(inlineRender).join(", ")}]`;
+  if (indent.length + oneLine.length <= PRINT_WIDTH) {
+    return { first: oneLine, cont: [] };
+  }
+  const cont: string[] = [];
+  arr.forEach((e, i) => {
+    const er = renderValue(e, elemIndent);
+    const sep = i < arr.length - 1 ? "," : "";
+    cont.push(elemIndent + er.first + sep);
+    cont.push(...er.cont);
+  });
+  cont.push(indent + "]");
+  return { first: "[", cont };
+}
+
+/** 渲染值。indent：数组 ] 行 / 嵌套对象续行所在层的缩进 */
+function renderValue(v: any, indent: string): Rendered {
+  if (v == null) return { first: "", cont: [] };
+  if (Array.isArray(v)) return renderArray(v, indent);
+  if (typeof v === "object") {
+    if (v.type === "Buffer")
+      return { first: `<Buffer:${v.data?.length ?? 0}B>`, cont: [] };
+    return renderObject(v, indent + PRINT_INDENT);
+  }
+  return { first: renderScalar(v), cont: [] };
+}
+
+/**
+ * 对象：字段尽量打包到一行；遇到多行字段(数组块)则先换行，块内各行按层级缩进，
+ * 块后字段续拼到 "]" 行。首行预算用 firstBudget（其余行用 PRINT_WIDTH - contIndent）。
+ */
+function renderObject(
+  obj: any,
+  contIndent: string,
+  firstBudget?: number,
+): Rendered {
+  const entries = Object.entries(obj).filter(([, v]) => v != null);
+  if (entries.length === 0) return { first: "{}", cont: [] };
+
+  const fields = entries.map(([k, v]) => {
+    const vr = renderValue(v, contIndent);
+    return {
+      full: `${k}=${vr.first}`,
+      cont: vr.cont,
+      isMulti: vr.cont.length > 0,
+    };
+  });
+
+  // 单行尝试
+  if (fields.every((f) => !f.isMulti)) {
+    const oneLine = "{" + fields.map((f) => f.full).join(" ") + "}";
+    const budget = firstBudget ?? PRINT_WIDTH - contIndent.length;
+    if (oneLine.length <= budget) return { first: oneLine, cont: [] };
+  }
+
+  // 多行打包
+  const lines: string[] = [];
+  let cur = "{";
+  let curIndent = "";
+  let curBudget = firstBudget ?? PRINT_WIDTH - contIndent.length;
+  const flush = () => {
+    if (cur.length) {
+      lines.push(curIndent + cur);
+      cur = "";
+      curIndent = contIndent;
+      curBudget = PRINT_WIDTH - contIndent.length;
+    }
+  };
+
+  for (const f of fields) {
+    if (f.isMulti) {
+      // 数组块独占一行，块后字段续拼到 "]" 行
+      if (cur.length && cur !== "{") flush();
+      lines.push(curIndent + cur + f.full); // "varbinds=["（或首行 "{varbinds=["）
+      lines.push(...f.cont);
+      lines.pop(); // 移除 "]" 行
+      cur = "]";
+      curIndent = contIndent;
+      curBudget = PRINT_WIDTH - contIndent.length;
+      continue;
+    }
+    // 拼字段到当前行；行首 "{" 或换行后的新行不加前导空格
+    const sep = cur === "" || cur === "{" ? "" : " ";
+    if (cur && cur !== "{" && cur.length + 1 + f.full.length > curBudget) {
+      flush();
+      cur = f.full;
+    } else {
+      cur = cur + sep + f.full;
+    }
+  }
+  cur += "}";
+  flush();
+
+  return { first: lines[0], cont: lines.slice(1) };
+}
+
+/** 渲染单个协议层为多行文本：name({...}) */
+function renderLayer(name: string, layer: any, prefix: string): string {
+  const open = `${prefix}${name}(`;
+  const r = renderObject(layer, PRINT_BODY, PRINT_WIDTH - open.length);
+  if (r.cont.length === 0) return `${open}${r.first})`;
+  r.cont[r.cont.length - 1] += ")";
+  return `${open}${r.first}\n${r.cont.join("\n")}`;
+}
+
+/** 提取 field 中唯一非空的协议层 */
+function formatField(f: any, prefix: string): string {
   for (const [name, layer] of Object.entries(f?.field ?? {})) {
-    if (layer != null) return `${name}(${compactValue(layer)})`;
+    if (layer != null) return renderLayer(name, layer, prefix);
   }
   return "";
 }
 
-/** 每个报文一层一行（首层与 [i] 同行，后续层缩进 4 空格） */
+/**
+ * 每个报文一层一行（首层带 [i] 前缀，后续层缩进 4 空格）；
+ * 超长层按层级结构化折行，数组每个元素独占一行。
+ */
 export function formatPktList(pktList: any[]): string {
   return pktList
     .map((pkt, i) => {
-      const layers = (pkt?.field_list ?? []).map(formatField).filter(Boolean);
+      const layers = (pkt?.field_list ?? [])
+        .map((fl: any, idx: number) =>
+          formatField(fl, idx === 0 ? `[${i}] ` : `    `),
+        )
+        .filter(Boolean);
       if (layers.length === 0) return `[${i}] (empty)`;
-      const [first, ...rest] = layers;
-      return `[${i}] ${first}\n${rest.map((l: string) => `    ${l}`).join("\n")}`;
+      return layers.join("\n");
     })
     .join("\n");
 }

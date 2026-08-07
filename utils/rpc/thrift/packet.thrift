@@ -131,8 +131,8 @@ struct Varbind {
 }
 
 struct SNMP {
-    1: optional i32 version,           # 0=v1, 1=v2c, 2=v3
-    2: optional string community,      # 默认 "public"
+    1: optional i32 version,           # 0=v1, 1=v2c, 3=v3
+    2: optional string community,      # v1/v2c 社区名
     3: optional i32 pdu_type,          # 0=GET,1=NEXT,2=RESPONSE,3=SET,4=TRAPv1,5=BULK,6=INFORM,7=TRAPv2
     4: optional i32 request_id,        # PDU request-id
     5: optional list<Varbind> varbinds,
@@ -144,7 +144,19 @@ struct SNMP {
     11: optional i32 specific_trap,    # TRAPv1
     12: optional i64 time_stamp,       # TRAPv1 (timetick)
     13: optional i32 non_repeaters,    # BULK
-    14: optional i32 max_repetitions   # BULK
+    14: optional i32 max_repetitions,  # BULK
+    15: optional i32 msg_id,           # v3 msgGlobalData.msgID
+    16: optional i32 msg_max_size,     # v3 msgGlobalData.msgMaxSize
+    17: optional i32 msg_flags,        # v3 msgGlobalData.msgFlags（bit0=auth, bit1=priv, bit2=reportable）
+    18: optional i32 msg_security_model, # v3 msgSecurityModel（3=USM）
+    19: optional string engine_id,     # v3 USM msgAuthoritativeEngineID（十六进制）
+    20: optional i32 engine_boots,     # v3 USM msgAuthoritativeEngineBoots
+    21: optional i32 engine_time,      # v3 USM msgAuthoritativeEngineTime
+    22: optional string user_name,     # v3 USM msgUserName
+    23: optional string auth_params,   # v3 USM msgAuthenticationParameters（十六进制）
+    24: optional string privacy_params,# v3 USM msgPrivacyParameters（十六进制）
+    25: optional string context_engine_id, # v3 scopedPDU contextEngineID（十六进制）
+    26: optional string context_name   # v3 scopedPDU contextName
 }
 
 union Field {

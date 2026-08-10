@@ -40,7 +40,7 @@ test("接口配置 Sotrm Control trap action后，multicast level 限速恢复�
     "snmp-server trap target-address 1.1.1.2 community public",
     "storm-control event timer interval 2000",
     `interface ${Port.A}`,
-    "storm-control multicast level 1",
+    "storm-control multicast level 0.01",
     "storm-control action trap",
     "exit",
     `interface ${Port.B}`,
@@ -50,6 +50,11 @@ test("接口配置 Sotrm Control trap action后，multicast level 限速恢复�
     "arp 1.1.1.2 1.1.12",
     "end",
   ]);
+
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.B}`,
+    `Interface current state: UP`,
+  );
 
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}`,

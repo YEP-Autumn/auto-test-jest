@@ -4,7 +4,7 @@
     "test": "jest -i",
     "default": "jest -i --config=config/jest.config.cjs --verbose",
     "failed": "jest -i --config=config/jest-failed.config.cjs --verbose",
-    "gen-failed": "node script/generate-jest-failed-config.cjs",
+    "gen-failed": "node script/generate-jest-failed-config.js",
     "format": "npx prettier --write test utils",
     "example": "jest -i --config=config/jest-example.config.ts --verbose"
   },

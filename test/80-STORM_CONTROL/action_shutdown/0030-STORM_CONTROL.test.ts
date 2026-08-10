@@ -32,7 +32,7 @@ test("接口配置 Sotrm Control shtudown action后，broadcast level 到达限�
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
-    "storm-control broadcast level 1",
+    "storm-control broadcast level 0.01",
     "storm-control action shutdown",
     "end",
   ]);

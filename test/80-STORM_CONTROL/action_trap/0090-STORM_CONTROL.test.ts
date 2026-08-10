@@ -55,6 +55,11 @@ test("接口配置 Sotrm Control trap action后，multicast pps到达限速将�
     `Interface current state: UP`,
   );
 
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.B}`,
+    `Interface current state: UP`,
+  );
+
   testHelper.startCapture(RenixPort.B);
 
   testHelper.addPktSender({

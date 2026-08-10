@@ -34,7 +34,7 @@ test("errdisable支持配置storm-control reason", async () => {
     "errdisable recovery reason storm-control",
     "errdisable recovery interval 30",
     `interface ${Port.A}`,
-    "storm-control unicast level 1",
+    "storm-control unicast level 0.01",
     "storm-control action shutdown",
     "end",
   ]);

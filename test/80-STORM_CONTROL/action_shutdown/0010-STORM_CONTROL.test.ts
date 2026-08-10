@@ -32,7 +32,7 @@ test("接口配置 Sotrm Control shtudown action后, unicast level 到达限速�
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
-    "storm-control unicast level 1",
+    "storm-control unicast level 0.01",
     "storm-control action shutdown",
     "end",
   ]);

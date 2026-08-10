@@ -56,6 +56,11 @@ test("接口配置 Sotrm Control trap action后，multicast pps限速恢复后�
     `Interface current state: UP`,
   );
 
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.B}`,
+    `Interface current state: UP`,
+  );
+
   testHelper.addPktSender({
     port: RenixPort.A,
     packet: new PacketBuilder()

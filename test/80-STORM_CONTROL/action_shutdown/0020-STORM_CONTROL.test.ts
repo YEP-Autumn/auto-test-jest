@@ -32,7 +32,7 @@ test("接口配置 Sotrm Control shtudown action后，multicast level 到达限�
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
-    "storm-control multicast level 1",
+    "storm-control multicast level 0.01",
     "storm-control action shutdown",
     "end",
   ]);

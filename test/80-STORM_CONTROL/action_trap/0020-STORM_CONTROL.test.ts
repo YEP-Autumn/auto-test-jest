@@ -40,7 +40,7 @@ test("接口配置 Sotrm Control trap action后，unicast level 限速恢复后�
     "snmp-server trap target-address 1.1.1.2 community public",
     "storm-control event timer interval 2000",
     `interface ${Port.A}`,
-    "storm-control unicast level 1",
+    "storm-control unicast level 0.01",
     "storm-control action trap",
     "exit",
     `interface ${Port.B}`,
@@ -53,6 +53,11 @@ test("接口配置 Sotrm Control trap action后，unicast level 限速恢复后�
 
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}`,
+    `Interface current state: UP`,
+  );
+
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.B}`,
     `Interface current state: UP`,
   );
 

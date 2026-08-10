@@ -33,7 +33,7 @@ test("关闭storm control action shutdown时，恢复接口因为storm control �
     "configure terminal",
     "storm-control event timer interval 8000",
     `interface ${Port.A}`,
-    "storm-control unicast level 1",
+    "storm-control unicast level 0.01",
     "storm-control action shutdown",
     "end",
   ]);

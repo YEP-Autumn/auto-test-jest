@@ -33,7 +33,7 @@ test("开启storm control action shutdown时，如果接口已经处于风暴控
     "configure terminal",
     "storm-control event timer interval 8000",
     `interface ${Port.A}`,
-    "storm-control unicast level 1",
+    "storm-control unicast level 0.01",
     "end",
   ]);
 

@@ -39,7 +39,7 @@ test("接口配置 Sotrm Control trap action后，multicast level 到达限速�
     "snmp-server target-params parm1 user admin security-model v3 message-processing v3 auth",
     "snmp-server trap target-address 1.1.1.2 community public",
     `interface ${Port.A}`,
-    "storm-control multicast level 1",
+    "storm-control multicast level 0.01",
     "storm-control action trap",
     "exit",
     `interface ${Port.B}`,
@@ -52,6 +52,11 @@ test("接口配置 Sotrm Control trap action后，multicast level 到达限速�
 
   testHelper.ReadyCheckDutA(
     `show interface ${Port.A}`,
+    `Interface current state: UP`,
+  );
+
+  testHelper.ReadyCheckDutA(
+    `show interface ${Port.B}`,
     `Interface current state: UP`,
   );
 

@@ -14,6 +14,15 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
+/**
+ *
+ *   +--------+                   +--------+
+ *   |        |--PortA <=> PortA--|        |
+ *   |  DUTA  |                   |  DUTB  |
+ *   |        |--PortB <=> PortB--|        |
+ *   +--------+                   +--------+
+ *
+ */
 test("测试BGP多实例配置 ipv4 地址族路由重分布", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",

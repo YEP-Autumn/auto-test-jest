@@ -1,6 +1,6 @@
-import { Port } from "../../utils";
-import { TestHelper } from "../../utils/TestHelper";
-import { LinkConstraint } from "../../utils/topo/LinkConstraint";
+import { Port } from "../../../utils";
+import { TestHelper } from "../../../utils/TestHelper";
+import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
 
 let testHelper: TestHelper;
 

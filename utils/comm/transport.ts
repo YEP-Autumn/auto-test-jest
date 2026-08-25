@@ -1,5 +1,5 @@
-import { Telnet } from "telnet-client";
 import { Client, ClientChannel } from "ssh2";
+import { Telnet } from "telnet-client";
 
 /**
  * 统一的传输层选项。同时覆盖 Telnet 与 SSH 所需的字段。
@@ -18,15 +18,21 @@ export interface ITransportOptions {
   timeout?: number;
   execTimeout?: number;
   debug?: boolean;
-  /** 是否从返回结果中剥离命令提示符（默认 false，与 telnet 路径一致） */
+  /** 是否从返回结果中剥离命令提示符。与 telnet-client 默认保持一致（true） */
   stripShellPrompt?: boolean;
-  /** 是否剥离控制字符 / ANSI 转义序列 */
+  /** 是否剥离控制字符 / ANSI 转义序列。与 telnet-client 默认保持一致（false） */
   stripControls?: boolean;
+  /** 缓存输出上限。达到后即便未等到底部提示符也返回（对应 telnet-client 的 maxBufferLength） */
+  maxBufferLength?: number;
+  /** 分页提示字符串/正则。命中时发送空格翻页（对应 telnet-client 的 pageSeparator） */
+  pageSeparator?: string | RegExp;
   portList?: string[];
   portMapping?: { device: string; if_index: number }[];
 
   // ---- Telnet 相关 ----
   disableLogon?: boolean;
+  /** 命令回显丢弃行数，与 telnet-client 的 echoLines 对应（默认 1） */
+  echoLines?: number;
 
   // ---- SSH 相关 ----
   /** SSH 登录用户名（账号/密码认证） */
@@ -81,14 +87,20 @@ export class SshConnection implements ITransport {
 
   private shellPrompt: RegExp = /(?:)/;
   private execTimeout = 1000 * 30;
-  private stripShellPrompt = false;
-  private stripControls = true;
+  // 默认与 telnet-client 对齐
+  private stripShellPrompt = true;
+  private stripControls = false;
+  private maxBufferLength = 1048576;
+  private pageSeparator: RegExp = /-{1,4}\s*More/mi;
+  private echoLines = 1;
 
   /** 当前命令累积的输出 */
   private data = "";
   /** 当前正在等待命令结果的 resolve 回调 */
   private pendingResolve?: (v: string) => void;
   private pendingTimer?: NodeJS.Timeout;
+  /** exec 串行化队列，避免并发写命令互相污染缓冲 */
+  private execQueue: Promise<unknown> = Promise.resolve();
 
   constructor() {
     this.client = new Client();
@@ -101,8 +113,17 @@ export class SshConnection implements ITransport {
         "(Switch.*?#|password:|CTC_CLI|Password:|\\[confirm\\])",
     );
     this.execTimeout = opts.execTimeout ?? 1000 * 30;
-    this.stripShellPrompt = opts.stripShellPrompt ?? false;
-    this.stripControls = opts.stripControls ?? true;
+    // 对齐 telnet-client 默认值：stripShellPrompt=true, stripControls=false
+    this.stripShellPrompt = opts.stripShellPrompt ?? true;
+    this.stripControls = opts.stripControls ?? false;
+    this.maxBufferLength = opts.maxBufferLength ?? this.maxBufferLength;
+    this.echoLines = opts.echoLines ?? 1;
+    if (opts.pageSeparator) {
+      this.pageSeparator = this.buildRegex(opts.pageSeparator);
+    } else {
+      // 兼容常见的 `--More--` / `-- More --` / `----More----` 等写法
+      this.pageSeparator = /-{1,4}\s*More/mi;
+    }
 
     // 1. 建立 SSH 会话（账号/密码认证）
     if (opts.username === undefined) {
@@ -127,10 +148,14 @@ export class SshConnection implements ITransport {
 
     // 2. 打开交互式 shell，获得双工流
     this.stream = await new Promise<ClientChannel>((resolve, reject) => {
-      this.client.shell({ term: "vt100", rows: 120, cols: 200 }, (err, stream) => {
-        if (err) return reject(err);
-        resolve(stream);
-      });
+      // 尽量使用非分页终端类型，避免长输出（如 show run）卡在 --More--
+      this.client.shell(
+        { term: "dumb", rows: 500, cols: 200 },
+        (err, stream) => {
+          if (err) return reject(err);
+          resolve(stream);
+        },
+      );
     });
     this.stream.on("data", (d: Buffer) => this.onData(d));
 
@@ -140,7 +165,7 @@ export class SshConnection implements ITransport {
         () => reject(new Error(`[${this.host}] SSH 未等到 shell prompt`)),
         this.execTimeout,
       );
-      this.oncePrompt(data => {
+      this.oncePrompt((data) => {
         clearTimeout(timer);
         this.data = "";
         resolve();
@@ -149,6 +174,14 @@ export class SshConnection implements ITransport {
   }
 
   async exec(command: string): Promise<string> {
+    // 串行化：同一时刻只有一条命令在等待结果，避免 data 缓冲互相污染
+    const res = this.execQueue.then(() => this.execRaw(command));
+    // 队列吞掉错误，真正的错误仍由调用者从 res 捕获
+    this.execQueue = res.catch(() => undefined);
+    return res;
+  }
+
+  private async execRaw(command: string): Promise<string> {
     // 清空上次累积
     this.data = "";
     this.stream?.write(command + "\n");
@@ -156,6 +189,9 @@ export class SshConnection implements ITransport {
     const raw = await new Promise<string>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pendingResolve = undefined;
+        this.pendingTimer = undefined;
+        // 超时后清空缓冲，避免残留污染下一条命令
+        this.data = "";
         reject(new Error(`[${this.host}] exec '${command}' 超时`));
       }, this.execTimeout);
       this.pendingTimer = timer;
@@ -182,25 +218,51 @@ export class SshConnection implements ITransport {
     if (!this.stream) return;
     this.data += chunk.toString("utf8");
 
-    // 简单分页处理：遇到 More 提示发送空格/回车继续
-    if (/----\s*More/.test(this.data)) {
+    const hasPrompt = this.shellPrompt.test(this.data);
+
+    // 缓冲超限：即便未等到底部提示符也立即返回（对应 telnet-client 的 bufferexceeded）
+    if (this.data.length > this.maxBufferLength) {
+      this.settle();
+      return;
+    }
+
+    // 分页处理：提示符尚未出现，且本数据块落在分页提示上就发送空格翻页。
+    // 只检查数据块（chunk）而非累积 data，避免把命令输出里含 'More' 的文本误当成翻页。
+    if (
+      !hasPrompt &&
+      SshConnection.endsWithPage(chunk.toString("utf8"), this.pageSeparator)
+    ) {
       this.stream.write(" ");
       return;
     }
 
     // 等到底部命中 shell 提示符，才认为本条命令输出结束
-    if (this.shellPrompt.test(this.data)) {
-      const result = this.data;
-      this.data = "";
-      if (this.pendingResolve) {
-        const cb = this.pendingResolve;
-        this.pendingResolve = undefined;
-        cb(result);
-      } else if (this.readyCallback) {
-        const cb = this.readyCallback;
-        this.readyCallback = undefined;
-        cb(result);
-      }
+    if (hasPrompt) {
+      this.settle();
+    }
+  }
+
+  /** 判断数据块结尾是否命中分页提示正则 */
+  private static endsWithPage(src: string, p: RegExp): boolean {
+    for (let i = src.length - 1; i >= 0; i--) {
+      const m = src.slice(i).match(p);
+      if (m && m.index === 0 && src.endsWith(m[0])) return true;
+    }
+    return false;
+  }
+
+  /** 触发一次 pendingResolve / readyCallback，并清空缓冲 */
+  private settle() {
+    const result = this.data;
+    this.data = "";
+    if (this.pendingResolve) {
+      const cb = this.pendingResolve;
+      this.pendingResolve = undefined;
+      cb(result);
+    } else if (this.readyCallback) {
+      const cb = this.readyCallback;
+      this.readyCallback = undefined;
+      cb(result);
     }
   }
 
@@ -221,25 +283,47 @@ export class SshConnection implements ITransport {
     return new RegExp(s);
   }
 
-  /** 对原始输出做处理，使其与 Telnet 路径返回格式一致 */
+  /**
+   * 对原始输出做处理，使其与 telnet-client 返回格式一致。
+   * 顺序参考 telnet-client 的 parseData(response 分支)：
+   *   1) 剥控制字符（stripControls）
+   *   2) 换行符归一化
+   *   3) 逐行剥除分页提示残留，并丢弃空行
+   *   4) 丢弃命令回显行（echoLines）
+   *   5) 末尾行剥除提示符（stripShellPrompt）
+   */
   private postProcess(raw: string): string {
     let text = raw;
     if (this.stripControls) {
       // 去 ANSI 转义
       text = text.replace(/\x1B((\[.*?[a-z])|.)/gi, "");
-      // 去除除 tab/lf/cr 外的控制字符
+      // 去除除 tab/ll/cr 外的控制字符
       text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
     }
+    // 换行归一化（对应 telnet-client 按 irs 拆行的语义）
     text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 
-    const lines = text.split("\n").filter(l => l.length);
-    // 首行是命令回显，丢弃（对应 telnet-client 的 echoLines=1）
-    if (lines.length) lines.shift();
-    text = lines.join("\n");
+    let lines = text.split("\n");
 
-    if (this.stripShellPrompt)
-      text = text.replace(this.shellPrompt, "\n");
+    // 分页残留剥除（对齐 telnet-client：replace(pageSeparator) 后丢弃空行）
+    lines = lines.map((l) =>
+      this.pageSeparator.test(l) ? l.replace(this.pageSeparator, "") : l,
+    );
+    lines = lines.filter((l) => l.length > 0);
 
-    return text;
+    // 丢弃命令回显行（对应 telnet-client 的 echoLines）
+    if (this.echoLines === 1) lines.shift();
+    else if (this.echoLines > 1) lines.splice(0, this.echoLines);
+    else if (this.echoLines < 0) lines.splice(0, Math.max(0, lines.length - 2));
+
+    // 末尾行剥除提示符（与 telnet-client 一致，只剥最后一行）
+    if (this.stripShellPrompt && lines.length > 0) {
+      const idx = lines.length - 1;
+      lines[idx] = this.shellPrompt.test(lines[idx])
+        ? lines[idx].replace(this.shellPrompt, "")
+        : "";
+    }
+
+    return lines.join("\n");
   }
 }

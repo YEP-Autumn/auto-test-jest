@@ -19,7 +19,6 @@
     "@types/ssh2": "^1.15.5",
     "babel-jest": "^30.3.0",
     "baseline-browser-mapping": "^2.10.16",
-    "eslint-plugin-check-file": "^3.3.2",
     "jest": "^30.3.0",
     "jest-html-reporter": "^4.4.0",
     "jest-junit": "^17.0.0",

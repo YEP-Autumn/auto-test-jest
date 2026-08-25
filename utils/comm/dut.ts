@@ -7,26 +7,22 @@ import {
 } from "./transport";
 
 export class Dut {
-  private conn_param: ICONN_PARAM;
+  private conn_param: ITransportOptions;
   private transport: ITransport;
 
   private lastCmdMode = "Switch# ";
 
-  constructor(conn_param: ICONN_PARAM) {
-    this.conn_param = conn_param;
+  constructor(conn_param: ITransportOptions) {
+    this.conn_param = Object.assign(Config.default_cfg, conn_param);
 
     // 根据 protocol 字段选择传输方式，默认 Telnet，向后兼容。
-    const protocol = conn_param.protocol ?? "telnet";
+    const protocol = this.conn_param.protocol ?? "telnet";
     this.transport =
       protocol === "ssh" ? new SshConnection() : new TelnetConnection();
   }
 
   public async connect() {
-    const opts = Object.assign(
-      Config.default_cfg,
-      this.conn_param,
-    ) as ITransportOptions;
-    await this.transport.connect(opts);
+    await this.transport.connect(this.conn_param);
 
     return this;
   }
@@ -71,18 +67,4 @@ export class Dut {
   public getPortList(): string[] {
     return this.conn_param.portList ?? [];
   }
-}
-
-interface ICONN_PARAM extends ITransportOptions {
-  host: string /** e.g. "172.16.9.107" */;
-  port?: number /** e.g. 23 (telnet) / 22 (ssh) */;
-  shellPrompt?: string /** e.g. "Switch\\(.*\\)#" */;
-  timeout?: number /** e.g. 1000 * 60 * 5 */;
-  debug?: boolean /** e.g. true */;
-  stripShellPrompt?: boolean /** e.g. false */;
-  stripControls?: boolean /** e.g. true */;
-  execTimeout?: number /** e.g. 1000 * 5 */;
-  disableLogon?: boolean /** e.g. true */;
-  portList?: string[];
-  portMapping?: { device: string; if_index: number }[];
 }

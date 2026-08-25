@@ -6,7 +6,7 @@ module.exports = {
   rootDir: "../",
   roots: ["<rootDir>"],
   testPathIgnorePatterns: ["/node_modules/"],
-  transformIgnorePatterns: ["/node_modules/", "\\.pnp\\.[^\\/]+$"],
+  transformIgnorePatterns: ["/node_modules/(?!uuid)/", "\\.pnp\\.[^\\/]+$"],
   testTimeout: 1000 * 60 * 50,
   verbose: true,
   reporters: [

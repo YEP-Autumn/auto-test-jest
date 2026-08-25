@@ -14,11 +14,11 @@ import {
   matchUDP,
   matchVLAN,
   packet_thrift_buffer_build,
-} from "../stream/packet_utils";
-import { StreamBackendApi } from "../stream/StreamBackendApi";
-import { PacketBuilder } from "../stream/thrift_packet";
-import { RenixPort } from "./Config";
-import { Dut } from "./Dut";
+} from "../stream/packet-utils";
+import { StreamBackendApi } from "../stream/stream-backend-api";
+import { PacketBuilder } from "../stream/thrift-packet";
+import { RenixPort } from "./config";
+import { Dut } from "./dut";
 
 export interface Actuator {
   start(any?: any): any;

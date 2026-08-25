@@ -3,7 +3,7 @@ import {
   ThriftPresets,
   ThriftProtocolFactory,
 } from "./thrift-protocol.factory";
-import { IFieldMeta, Packet, thrift } from "./thrift_packet";
+import { IFieldMeta, Packet, thrift } from "./thrift-packet";
 
 /**
  * 将IP地址字符串转换为32位整数

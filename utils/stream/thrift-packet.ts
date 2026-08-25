@@ -14,7 +14,7 @@ for (const key of Object.keys(ttypes)) {
   }
 }
 
-import { PARSE_STRATEGIES } from "./packet_utils";
+import { PARSE_STRATEGIES } from "./packet-utils";
 import {
   ThriftFullProtocolType,
   ThriftProtocolFactory,

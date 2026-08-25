@@ -1,4 +1,4 @@
-import { Config } from "../comm/Config";
+import { Config } from "../comm/config";
 
 interface link {
   stream_id: number;
@@ -381,23 +381,24 @@ export class LinkConstraint {
 
   /**
    *
-   *                                      +--------+
-   *             +-----------------PortC--|  DUTD  |--PortA-----------------+
-   *             |                        +--------+                       |
-   *             |                            |                            |
-   *             |                          PortB                          |
-   *             |                            |                            |
-   *           PortC                        PortC                        PortA
-   *             |                            |                            |
-   *        +--------+                   +--------+                   +--------+
-   *        |        |--PortA <=> PortA--|        |                   |        |
-   *        |  DUTA  |                   |  DUTB  |                   |  DUTC  |
-   *        |        |--PortB <=> PortB--|        |                   |        |
-   *        +--------+                   +--------+                   +--------+
-   *            |                            |                            |
-   *          PortD                        PortD                        PortD
-   *            |                            |                            |
-   *         RenixA                       RenixB                      *RenixC
+   *                                  +--------+
+   *         +-----------------PortC--|  DUTD  |--PortA-----------------+
+   *         |                        +--------+                       |
+   *         |                            |                            |
+   *         |                          PortB                          |
+   *         |                            |                            |
+   *       PortC                        PortC                        PortA
+   *         |                            |                            |
+   *    +--------+                   +--------+                   +--------+
+   *    |        |--PortA <=> PortA--|        |                   |        |
+   *    |  DUTA  |                   |  DUTB  |                   |  DUTC  |
+   *    |        |--PortB <=> PortB--|        |                   |        |
+   *    +--------+                   +--------+                   +--------+
+   *        |                            |                            |
+   *      PortD                        PortD                        PortD
+   *        |                            |                            |
+   *     RenixA                       RenixB                      *RenixC
+   *
    */
   static four_devices_topo_links_type_2: Topolinks = {
     links: [

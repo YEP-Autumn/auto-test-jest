@@ -1,8 +1,8 @@
-import { TransmitMode } from "../../utils/comm/Components";
-import { StreamBackendApi } from "../../utils/stream/StreamBackendApi";
-import { RenixPort } from "../../utils/comm/Config";
-import { PacketBuilder } from "../../utils/stream/thrift_packet";
-import { TestHelper } from "../../utils/TestHelper";
+import { TransmitMode } from "../../utils/comm/components";
+import { StreamBackendApi } from "../../utils/stream/stream-backend-api";
+import { RenixPort } from "../../utils/comm/config";
+import { PacketBuilder } from "../../utils/stream/thrift-packet";
+import { TestHelper } from "../../utils/test-helper";
 
 jest.setTimeout(1000 * 60 * 10);
 

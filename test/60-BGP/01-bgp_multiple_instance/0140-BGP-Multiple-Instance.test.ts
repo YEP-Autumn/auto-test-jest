@@ -1,7 +1,7 @@
 import { Port } from "../../../utils";
-import { StreamBackendApi } from "../../../utils/stream/StreamBackendApi";
-import { TestHelper } from "../../../utils/TestHelper";
-import { LinkConstraint } from "../../../utils/topo/LinkConstraint";
+import { StreamBackendApi } from "../../../utils/stream/stream-backend-api";
+import { TestHelper } from "../../../utils/test-helper";
+import { LinkConstraint } from "../../../utils/topo/link-constraint";
 
 jest.setTimeout(1000 * 60 * 10);
 

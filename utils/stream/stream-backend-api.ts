@@ -1,7 +1,7 @@
 import axios from "axios";
 import FormData from "form-data";
-import { RenixPort } from "../comm/Config";
-import { IPacketList, PacketListParser } from "./thrift_packet";
+import { RenixPort } from "../comm/config";
+import { IPacketList, PacketListParser } from "./thrift-packet";
 
 export interface LoginResponse {
   token: string;

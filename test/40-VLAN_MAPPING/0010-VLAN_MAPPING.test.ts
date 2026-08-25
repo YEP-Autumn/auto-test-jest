@@ -1,5 +1,5 @@
 import { Port } from "../../utils";
-import { TestHelper } from "../../utils/TestHelper";
+import { TestHelper } from "../../utils/test-helper";
 
 let testHelper: TestHelper;
 

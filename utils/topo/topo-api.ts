@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Topolinks } from "./LinkConstraint";
+import { Topolinks } from "./link-constraint";
 
 export class TopoApi {
   private api = axios.create({

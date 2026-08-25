@@ -14,12 +14,12 @@ import {
   replaceCmdTemplates,
   Sleep,
   StartCapture,
-} from "./comm/Components";
-import { Config, RenixPort } from "./comm/Config";
-import { Dut } from "./comm/Dut";
-import { StreamBackendApi } from "./stream/StreamBackendApi";
-import { Topolinks } from "./topo/LinkConstraint";
-import { TopoApi } from "./topo/TopoBackendApi";
+} from "./comm/components";
+import { Config, RenixPort } from "./comm/config";
+import { Dut } from "./comm/dut";
+import { StreamBackendApi } from "./stream/stream-backend-api";
+import { Topolinks } from "./topo/link-constraint";
+import { TopoApi } from "./topo/topo-backend-api";
 
 export let DeviceARouteMac: string;
 export let DeviceBRouteMac: string;

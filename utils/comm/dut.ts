@@ -13,7 +13,8 @@ export class Dut {
   private lastCmdMode = "Switch# ";
 
   constructor(conn_param: ITransportOptions) {
-    this.conn_param = Object.assign(Config.default_cfg, conn_param);
+    // 浅拷贝合并，避免就地修改并共享 Config.default_cfg（否则所有 Dut 的 host 会被最后一次连接覆盖）
+    this.conn_param = Object.assign({}, Config.default_cfg, conn_param);
 
     // 根据 protocol 字段选择传输方式，默认 Telnet，向后兼容。
     const protocol = this.conn_param.protocol ?? "telnet";

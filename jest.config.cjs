@@ -2,6 +2,7 @@
  * For a detailed explanation regarding each configuration property, visit:
  * https://jestjs.io/docs/configuration
  */
+const path = require("path");
 
 module.exports = {
   // The regexp pattern or array of patterns that Jest uses to detect test files
@@ -135,7 +136,8 @@ module.exports = {
   // runner: "jest-runner",
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  // setupFiles: [],
+  setupFiles: ["<rootDir>/script/setup/jest.setup.ts"],
+  globals: { ENV_FILE: path.resolve(__dirname, ".env") },
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   // setupFilesAfterEnv: [],

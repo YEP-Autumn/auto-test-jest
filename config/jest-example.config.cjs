@@ -1,6 +1,9 @@
+const path = require("path");
+
 module.exports = {
   clearMocks: true,
   setupFiles: ["<rootDir>/script/setup/jest.setup.ts"],
+  globals: { ENV_FILE: path.resolve(__dirname, "../.env") },
   testSequencer: "<rootDir>/script/jest.sequencer.js",
   maxWorkers: "1",
   rootDir: "../",

@@ -1,9 +1,7 @@
 export enum RenixPort {
-  A = "//192.168.2.11/5/5",
-  B = "//192.168.2.11/5/6",
-  C = "WIN_NIC1",
-  D = "WIN_NIC2",
-  E = "WIN_NIC3",
+  A = "//172.16.254.11/5/1",
+  B = "//172.16.254.11/5/2",
+  C = "//172.16.254.11/3/15",
 }
 
 export class Config {
@@ -25,7 +23,9 @@ export class Config {
    */
 
   public static default_cfg = {
-    port: 23,
+    protocol: "telnet",
+    username: process.env.DUT_USERNAME,
+    password: process.env.DUT_PASSWORD,
     shellPrompt: "(Switch.*#|password:|CTC_CLI|Password:|\\[confirm\\])",
     timeout: 1000 * 60 * 5,
     debug: true,
@@ -140,9 +140,9 @@ export class Config {
     this.dut_e530_108,
     this.dut_e530_109,
     this.dut_e530_104,
-    this.dut_e670_112,
-    this.dut_e680_120,
-    this.dut_e361_130,
-    this.dut_e730_140,
+    // this.dut_e670_112,
+    // this.dut_e680_120,
+    // this.dut_e361_130,
+    // this.dut_e730_140,
   ];
 }

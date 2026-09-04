@@ -17,7 +17,7 @@ import {
 } from "../stream/packet-utils";
 import { StreamBackendApi } from "../stream/stream-backend-api";
 import { PacketBuilder } from "../stream/thrift-packet";
-import { RenixPort } from "./config";
+import { StreamPort } from "./config";
 import { Dut } from "./dut";
 
 export interface Actuator {
@@ -151,13 +151,13 @@ export class ReadyCheck implements Actuator {
 }
 
 export class StartCapture implements Actuator {
-  private renix_port: RenixPort;
-  constructor(renix_port: RenixPort) {
-    this.renix_port = renix_port;
+  private stream_port: StreamPort;
+  constructor(stream_port: StreamPort) {
+    this.stream_port = stream_port;
   }
   async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
     try {
-      await streamBackendApi?.streamPacketCaptureStart(this.renix_port);
+      await streamBackendApi?.streamPacketCaptureStart(this.stream_port);
     } catch (error) {
       console.error("Error: ", error);
       return false;
@@ -570,7 +570,7 @@ export interface PacketTransmitModeParam {
 }
 
 export interface PacketSendParam {
-  port: RenixPort;
+  port: StreamPort;
   packet: PacketBuilder;
   modifier_param?: PacketModifierParam[];
   transmit_param: PacketTransmitModeParam;
@@ -601,7 +601,7 @@ export function EqualTo(cnt: number): NumberCompare {
 }
 
 export interface PacketCheckParam {
-  port: RenixPort;
+  port: StreamPort;
   expected_count: NumberCompare | number;
   packet: PacketBuilder;
 }

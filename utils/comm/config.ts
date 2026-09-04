@@ -1,7 +1,27 @@
-export enum RenixPort {
-  A = "//172.16.254.11/5/1",
-  B = "//172.16.254.11/5/2",
-  C = "//172.16.254.11/3/15",
+export interface StreamPort {
+  name: string;
+  type: "renix" | "scapy";
+}
+
+export class RenixPort {
+  static get A(): StreamPort {
+    return Config.Renix.portList[0].port;
+  }
+  static get B(): StreamPort {
+    return Config.Renix.portList[1].port;
+  }
+  static get C(): StreamPort {
+    return Config.Renix.portList[2].port;
+  }
+  static get D(): StreamPort {
+    return Config.Renix.portList[3].port;
+  }
+  static get E(): StreamPort {
+    return Config.Renix.portList[4].port;
+  }
+  static get F(): StreamPort {
+    return Config.Renix.portList[5].port;
+  }
 }
 
 export class Config {
@@ -123,15 +143,46 @@ export class Config {
     ],
   };
 
-  public static Renix = {
-    portList: [RenixPort.A, RenixPort.B],
-    portMapping: [
-      { device: "172.16.9.106", if_index: 25 },
-      { device: "172.16.9.106", if_index: 26 },
-      // { device: "172.16.9.110", if_index: 9 },
-      // { device: "172.16.9.110", if_index: 23 },
-      // { device: "172.16.9.110", if_index: 24 },
-      // { device: "172.16.9.106", if_index: 32 },
+  public static Renix: {
+    portList: {
+      port: StreamPort;
+      portMapping: { device: string; if_index: number };
+    }[];
+  } = {
+    portList: [
+      {
+        port: {
+          name: "\\Device\\NPF_{D0DB71B0-1C1E-419C-8360-20C25AF8A6E1}",
+          type: "scapy",
+        },
+        portMapping: { device: "172.16.9.110", if_index: 23 },
+      },
+      {
+        port: {
+          name: "\\Device\\NPF_{02DCC5B0-C8A6-4440-9362-21B78C286280}",
+          type: "scapy",
+        },
+        portMapping: { device: "172.16.9.110", if_index: 24 },
+      },
+      {
+        port: {
+          name: "\\Device\\NPF_{CD6CB24F-5008-4F71-8D48-2E92DB1DAA88}",
+          type: "scapy",
+        },
+        portMapping: { device: "172.16.9.106", if_index: 32 },
+      },
+      {
+        port: { name: "//172.16.254.11/5/1", type: "renix" },
+        portMapping: { device: "172.16.9.106", if_index: 25 },
+      },
+      {
+        port: { name: "//172.16.254.11/5/2", type: "renix" },
+        portMapping: { device: "172.16.9.106", if_index: 25 },
+      },
+      {
+        port: { name: "//172.16.254.11/3/15", type: "renix" },
+        portMapping: { device: "172.16.9.106", if_index: 25 },
+      },
     ],
   };
 

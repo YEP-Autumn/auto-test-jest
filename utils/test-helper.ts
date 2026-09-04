@@ -15,7 +15,7 @@ import {
   Sleep,
   StartCapture,
 } from "./comm/components";
-import { Config, RenixPort } from "./comm/config";
+import { Config, StreamPort } from "./comm/config";
 import { Dut } from "./comm/dut";
 import { StreamBackendApi } from "./stream/stream-backend-api";
 import { Topolinks } from "./topo/link-constraint";
@@ -35,6 +35,8 @@ export class TestHelper {
   private topoApi: TopoApi;
   private topoId?: number;
   private _inner_debug_preserve_scene_when_failed: boolean = false;
+
+  private streamPortSet: Map<string, StreamPort> = new Map();
 
   constructor(topo?: Topolinks) {
     this.topoApi = new TopoApi();
@@ -93,10 +95,8 @@ export class TestHelper {
     });
 
     if (this.streamBackendApi) {
-      for (let i = 0; i < Config.Renix.portList.length; i++) {
-        promise.push(
-          this.streamBackendApi.port_release(Config.Renix.portList[i]),
-        );
+      for (const port of this.streamPortSet.values()) {
+        promise.push(this.streamBackendApi.port_release(port));
       }
     }
 
@@ -140,10 +140,8 @@ export class TestHelper {
             this.streamBackendApi = new StreamBackendApi();
             await this.streamBackendApi.login();
             /** 预约Renix端口 */
-            for (let i = 0; i < Config.Renix.portList.length; i++) {
-              await this.streamBackendApi.port_reserve(
-                Config.Renix.portList[i],
-              );
+            for (const port of this.streamPortSet.values()) {
+              await this.streamBackendApi.port_reserve(port);
             }
           } catch (err) {
             console.error("StreamBackendApi init or port_reserve error:", err);
@@ -163,12 +161,14 @@ export class TestHelper {
     return this.testResult;
   }
 
-  startCapture(renix_port: RenixPort) {
-    this.actuator.push(new StartCapture(renix_port));
+  startCapture(stream_port: StreamPort) {
+    this.streamPortSet.set(stream_port.name, stream_port);
+    this.actuator.push(new StartCapture(stream_port));
     return this;
   }
 
   addPktSender(packetSendParam: PacketSendParam) {
+    this.streamPortSet.set(packetSendParam.port.name, packetSendParam.port);
     this.actuator.push(new PacketSender(packetSendParam));
     return this;
   }
@@ -179,6 +179,7 @@ export class TestHelper {
    * @returns
    */
   addPktChecker(packetCheckParam: PacketCheckParam) {
+    this.streamPortSet.set(packetCheckParam.port.name, packetCheckParam.port);
     this.actuator.push(new PacketChecker(packetCheckParam));
     return this;
   }

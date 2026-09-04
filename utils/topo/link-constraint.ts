@@ -40,9 +40,10 @@ const DutD = {
 };
 
 const Renix = {
-  portA: Config.Renix.portMapping[0],
-  portB: Config.Renix.portMapping[1],
-  portC: Config.Renix.portMapping[2],
+  portA: Config.Renix.portList[0].portMapping,
+  portB: Config.Renix.portList[1].portMapping,
+  portC: Config.Renix.portList[2].portMapping,
+  portD: Config.Renix.portList[3].portMapping,
 };
 
 export class LinkConstraint {

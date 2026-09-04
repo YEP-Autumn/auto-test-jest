@@ -6,6 +6,9 @@ import {
   TelnetConnection,
 } from "./transport";
 
+/**
+ * Device Under Test
+ */
 export class Dut {
   private conn_param: ITransportOptions;
   private transport: ITransport;

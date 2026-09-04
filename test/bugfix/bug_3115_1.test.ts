@@ -1,4 +1,11 @@
 import { Port } from "../../utils";
+import {
+  ModifierField,
+  ModifierMode,
+  TransmitMode,
+} from "../../utils/comm/components";
+import { RenixPort } from "../../utils/comm/config";
+import { PacketBuilder } from "../../utils/stream/thrift-packet";
 import { TestHelper } from "../../utils/test-helper";
 import { LinkConstraint } from "../../utils/topo/link-constraint";
 
@@ -202,6 +209,46 @@ test("删除bgp evpn地址族重新配置后，本地evpn type 2/3路由丢失�
   testHelper.ReadyCheckDutB("show overlay", "10.*?10.1.1.1 *?10.2.2.2");
   testHelper.ReadyCheckDutC("show overlay", "10.*?10.1.1.1 *?10.3.3.3");
 
+  testHelper.startCapture(RenixPort.B);
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setVLAN({ vlan: 10 })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+    modifier_param: [
+      {
+        modifier_field: ModifierField.EthernetII_MAC_SRC,
+        count: 10,
+        mode: ModifierMode.Increment,
+        start_value: "3.3.3",
+      },
+    ],
+  });
+
+  testHelper.addPktChecker({
+    expected_count: 10,
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1" })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.B,
+  });
+
+  testHelper.ReadyCheckDutB("show mac address-table", "0003.0003.0003");
+  testHelper.ReadyCheckDutB("show mac address-table", "0003.0003.0005");
+  testHelper.ReadyCheckDutB("show mac address-table", "0003.0003.000a");
+
+  testHelper.ReadyCheckDutC("show mac address-table", "0003.0003.0005");
+  testHelper.ReadyCheckDutC("show mac address-table", "0003.0003.0003");
+  testHelper.ReadyCheckDutC("show mac address-table", "0003.0003.000a");
+
   testHelper.ExecConfigDutA([
     "configure terminal",
     "router bgp 100",
@@ -224,6 +271,14 @@ test("删除bgp evpn地址族重新配置后，本地evpn type 2/3路由丢失�
 
   testHelper.ReadyCheckDutB("show overlay", "10.*?10.1.1.1 *?10.2.2.2");
   testHelper.ReadyCheckDutC("show overlay", "10.*?10.1.1.1 *?10.3.3.3");
+
+  testHelper.ReadyCheckDutB("show mac address-table", "0003.0003.0003");
+  testHelper.ReadyCheckDutB("show mac address-table", "0003.0003.0005");
+  testHelper.ReadyCheckDutB("show mac address-table", "0003.0003.000a");
+
+  testHelper.ReadyCheckDutC("show mac address-table", "0003.0003.0003");
+  testHelper.ReadyCheckDutC("show mac address-table", "0003.0003.0005");
+  testHelper.ReadyCheckDutC("show mac address-table", "0003.0003.000a");
 
   testHelper.CleanConfigDutA([
     "configure terminal",

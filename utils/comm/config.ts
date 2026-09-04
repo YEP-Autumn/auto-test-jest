@@ -16,12 +16,6 @@ export class RenixPort {
   static get D(): StreamPort {
     return Config.Renix.portList[3].port;
   }
-  static get E(): StreamPort {
-    return Config.Renix.portList[4].port;
-  }
-  static get F(): StreamPort {
-    return Config.Renix.portList[5].port;
-  }
 }
 
 export class Config {

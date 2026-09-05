@@ -153,6 +153,9 @@ test("测试MPLS中间节点支持agg接口对MPLS内层dst mac进行负载均�
   );
   testHelper.ReadyCheckDutB("show ldp session", "11.11.4.4.*?OPERATIONAL");
 
+  testHelper.ReadyCheckDutA("show ldp session", "11.11.4.4.*?OPERATIONAL");
+  testHelper.ReadyCheckDutC("show ldp session", "11.11.1.1.*?OPERATIONAL");
+
   testHelper.ReadyCheckDutA("show ldp vpls", "Up     ethernet", 1000 * 60);
   testHelper.ReadyCheckDutC("show ldp vpls", "Up     ethernet", 1000 * 60);
 

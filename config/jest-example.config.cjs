@@ -9,7 +9,8 @@ module.exports = {
   rootDir: "../",
   roots: ["<rootDir>"],
   testPathIgnorePatterns: ["/node_modules/"],
-  transformIgnorePatterns: ["/node_modules/", "\\.pnp\\.[^\\/]+$"],
+  // uuid v14+ is ESM-only ("type": "module"); un-ignore it so babel-jest converts it to CJS.
+  transformIgnorePatterns: ["/node_modules/(?!uuid)/", "\\.pnp\\.[^\\/]+$"],
   testTimeout: 1000 * 60 * 50,
   verbose: true,
   reporters: [

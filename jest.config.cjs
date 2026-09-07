@@ -176,7 +176,8 @@ module.exports = {
   // transform: undefined,
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-  transformIgnorePatterns: ["/node_modules/", "\\.pnp\\.[^\\/]+$"],
+  // uuid v14+ is ESM-only ("type": "module"); un-ignore it so babel-jest converts it to CJS.
+  transformIgnorePatterns: ["/node_modules/(?!uuid)/", "\\.pnp\\.[^\\/]+$"],
 
   // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
   // unmockedModulePathPatterns: undefined,

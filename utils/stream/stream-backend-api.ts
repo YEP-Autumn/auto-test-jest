@@ -104,7 +104,10 @@ export class StreamBackendApi {
    * 开始抓包（JSON: { port, backend }）
    */
   async streamPacketCaptureStart(port: StreamPort) {
-    const response = await this.api.post("/capture/start", resolvePortArg(port));
+    const response = await this.api.post(
+      "/capture/start",
+      resolvePortArg(port),
+    );
     return response.data;
   }
 

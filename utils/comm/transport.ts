@@ -91,7 +91,7 @@ export class SshConnection implements ITransport {
   private stripShellPrompt = true;
   private stripControls = false;
   private maxBufferLength = 1048576;
-  private pageSeparator: RegExp = /-{1,4}\s*More/mi;
+  private pageSeparator: RegExp = /-{1,4}\s*More/im;
   private echoLines = 1;
 
   /** 当前命令累积的输出 */
@@ -122,7 +122,7 @@ export class SshConnection implements ITransport {
       this.pageSeparator = this.buildRegex(opts.pageSeparator);
     } else {
       // 兼容常见的 `--More--` / `-- More --` / `----More----` 等写法
-      this.pageSeparator = /-{1,4}\s*More/mi;
+      this.pageSeparator = /-{1,4}\s*More/im;
     }
 
     // 1. 建立 SSH 会话（账号/密码认证）

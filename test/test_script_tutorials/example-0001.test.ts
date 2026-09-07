@@ -1,5 +1,4 @@
 import { TransmitMode } from "../../utils/comm/components";
-import { StreamBackendApi } from "../../utils/stream/stream-backend-api";
 import { RenixPort } from "../../utils/comm/config";
 import { PacketBuilder } from "../../utils/stream/thrift-packet";
 import { TestHelper } from "../../utils/test-helper";
@@ -7,7 +6,6 @@ import { TestHelper } from "../../utils/test-helper";
 jest.setTimeout(1000 * 60 * 10);
 
 let testHelper: TestHelper;
-const streamBackendApi = new StreamBackendApi();
 
 beforeAll(async () => {
   testHelper = await new TestHelper().init();

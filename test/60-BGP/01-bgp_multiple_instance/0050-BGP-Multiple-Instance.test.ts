@@ -1,12 +1,10 @@
 import { Port } from "../../../utils";
-import { StreamBackendApi } from "../../../utils/stream/stream-backend-api";
 import { TestHelper } from "../../../utils/test-helper";
 import { LinkConstraint } from "../../../utils/topo/link-constraint";
 
 jest.setTimeout(1000 * 60 * 10);
 
 let testHelper: TestHelper;
-const streamBackendApi = new StreamBackendApi();
 
 beforeAll(async () => {
   testHelper = await new TestHelper(

@@ -83,6 +83,11 @@ test("测试BGP多实例配置 ipv6 地址族路由重分布", async () => {
     "Interface current state: UP",
   );
 
+  testHelper.sleep(5 * 1000);
+
+  testHelper.ExecRetMatchDutA("ping ipv6 1::2", " 0% packet loss");
+  testHelper.ExecRetMatchDutA("ping ipv6 2::2", " 0% packet loss");
+
   testHelper.ExecConfigDutA(["clear bgp ipv6 view test1 *"]);
   testHelper.ExecConfigDutA(["clear bgp ipv6 view test2 *"]);
 
@@ -97,6 +102,7 @@ test("测试BGP多实例配置 ipv6 地址族路由重分布", async () => {
     "show bgp ipv6 neighbors 2::2",
     "BGP state = Established",
   );
+
   testHelper.ExecConfigDutB([
     "configure terminal",
     "router bgp 100 view test1",

@@ -92,10 +92,24 @@ test("ip bgp存在递归路由的时候，bgp路由选路无法正确优选，�
   testHelper.ExecConfigDutB(["clear bgp *"]);
   testHelper.sleep(10000);
 
+  testHelper.ReadyCheckDutA("show ip route", "10.2.67.1/32", 1000 * 60);
+  testHelper.ReadyCheckDutA("show ip route", "10.2.68.1/32");
+
+  testHelper.ExecConfigDutA(["clear ip bgp 10.2.67.1"]);
+
   testHelper.ReadyCheckDutA(
-    "show ip bgp neighbors",
+    "show ip bgp neighbors 10.2.67.1",
     "BGP state = Established",
-    1000 * 60,
+  );
+
+  testHelper.sleep(10 * 1000);
+
+  testHelper.ExecRetMatchDutA("show ip route", "10.2.67.1/32");
+  testHelper.ExecRetMatchDutA("show ip route", "10.2.68.1/32");
+
+  testHelper.ExecRetMatchDutA(
+    "show ip bgp neighbors 10.2.67.1",
+    "BGP state = Established",
   );
 
   testHelper.CleanConfigDutA([

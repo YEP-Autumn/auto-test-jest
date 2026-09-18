@@ -33,6 +33,10 @@ export interface ITransportOptions {
   disableLogon?: boolean;
   /** 命令回显丢弃行数，与 telnet-client 的 echoLines 对应（默认 1） */
   echoLines?: number;
+  /** 终端宽度（列），非 0 时 telnet-client 会协商 NAWS，避免交换机按 80 列硬换行。默认见 Config.default_cfg */
+  terminalWidth?: number;
+  /** 终端高度（行），同 terminalWidth */
+  terminalHeight?: number;
 
   // ---- SSH 相关 ----
   /** SSH 登录用户名（账号/密码认证） */
@@ -242,11 +246,13 @@ export class SshConnection implements ITransport {
     }
   }
 
-  /** 判断数据块结尾是否命中分页提示正则 */
+  /** 判断数据块结尾是否命中分页提示正则（先去除 ANSI 转义，兼容 `\x1b[7m--More--\x1b[m` 这类包裹写法） */
   private static endsWithPage(src: string, p: RegExp): boolean {
-    for (let i = src.length - 1; i >= 0; i--) {
-      const m = src.slice(i).match(p);
-      if (m && m.index === 0 && src.endsWith(m[0])) return true;
+    // 去掉 ANSI 转义后再判断，避免 `--More--\x1b[m` 因结尾多出 `\x1b[m` 而漏掉翻页
+    const plain = src.replace(/\x1B((\[.*?[a-z])|.)/gi, "");
+    for (let i = plain.length - 1; i >= 0; i--) {
+      const m = plain.slice(i).match(p);
+      if (m && m.index === 0 && plain.endsWith(m[0])) return true;
     }
     return false;
   }

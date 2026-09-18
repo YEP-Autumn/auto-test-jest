@@ -112,6 +112,8 @@ export class TestHelper {
   }
 
   async startTest() {
+    this.testResult = true;
+
     for (const act of this.actuator) {
       if (
         this.testResult == false &&
@@ -154,6 +156,9 @@ export class TestHelper {
         this.testResult = this.testResult ? await act.start() : this.testResult;
       }
     }
+
+    this.actuator = [];
+
     return this;
   }
 

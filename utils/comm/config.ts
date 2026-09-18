@@ -47,6 +47,15 @@ export class Config {
     stripControls: true,
     execTimeout: 1000 * 30,
     disableLogon: true,
+    // 分页提示：Hohunet 交换机输出分页时发送的是 `\x1b[7m--More--\x1b[m`（ANSI 反显包裹），
+    // 必须匹配 `--More--`，否则 telnet-client 永远不发空格翻页，exec 会一直等到 execTimeout 抛 "response not received"。
+    pageSeparator: /-{1,4}\s*More/im,
+    // 缓存上限放宽到 16MB：长输出（如交换机一次 dump 约 9448 行的配置）默认 1MB 上限会在到达前截断返回，影响正则匹配。
+    maxBufferLength: 1024 * 1024 * 16,
+    // 协商更大的终端窗口，避免长输出（如 show running-config）被交换机按默认 80 列硬换行，
+    // 导致 ExecRetMatch 等按整行正则匹配失败。宽度 500 对齐 SSH 路径的 cols: 200 以上。
+    terminalWidth: 500,
+    terminalHeight: 200,
   };
 
   public static dut_e530_107 = {
@@ -134,6 +143,17 @@ export class Config {
       { device: "172.16.9.110", if_index: 54 },
       { device: "172.16.9.110", if_index: 55 },
       { device: "172.16.9.110", if_index: 56 },
+    ],
+  };
+
+  public static dut_e530_150 = {
+    host: "172.16.9.150",
+    portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
+    portMapping: [
+      { device: "172.16.9.110", if_index: 17 },
+      { device: "172.16.9.110", if_index: 18 },
+      { device: "172.16.9.110", if_index: 19 },
+      { device: "172.16.9.110", if_index: 20 },
     ],
   };
 

@@ -1,0 +1,130 @@
+import { Port } from "../../../../utils";
+import { TransmitMode } from "../../../../utils/comm/components";
+import { RenixPort } from "../../../../utils/comm/config";
+import { PacketBuilder } from "../../../../utils/stream/thrift-packet";
+import { TestHelper } from "../../../../utils/test-helper";
+import { LinkConstraint } from "../../../../utils/topo/link-constraint";
+
+let testHelper: TestHelper;
+
+beforeAll(async () => {
+  testHelper = await new TestHelper(
+    LinkConstraint.two_devices_topo_links_type_1,
+  ).init();
+});
+
+afterAll(async () => {
+  await testHelper.destroy();
+});
+
+/**
+ *
+ *                    +--------+                   +--------+
+ *                    |        |--PortA <=> PortA--|        |
+ *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
+ *                    |        |--PortC <=> PortC--|        |
+ *                    +--------+                   +--------+
+ *
+ */
+test("配置静态VPWS", async () => {
+  testHelper.ExecConfigDutA([
+    "configure terminal",
+    `interface ${Port.A}`,
+    "no switchport",
+    "label-switching",
+    "ip address 8.8.8.1/24",
+    "exit",
+    `interface ${Port.D}`,
+    "mpls-l2-circuit t2 ethernet",
+    "exit",
+    "interface loopback0",
+    "ip address 192.168.10.10/32",
+    "exit",
+    "mpls ftn-entry 192.168.11.0/24 111 8.8.8.2",
+    "mpls l2-circuit t2 201 192.168.11.10 raw manual",
+    "mpls l2-circuit-fib-entry t2 44 33",
+    "mpls ilm-entry pop 222",
+    "end",
+  ]);
+
+  testHelper.ExecConfigDutB([
+    "configure terminal",
+    `interface ${Port.A}`,
+    "no switchport",
+    "label-switching",
+    "ip address 8.8.8.2/24",
+    "exit",
+    `interface ${Port.D}`,
+    "mpls-l2-circuit t2 ethernet",
+    "exit",
+    "interface loopback0",
+    "ip address 192.168.11.10/32",
+    "exit",
+    "mpls ftn-entry 192.168.10.0/24 222 8.8.8.1",
+    "mpls l2-circuit t2 201 192.168.10.10 raw manual",
+    "mpls l2-circuit-fib-entry t2 33 44",
+    "mpls ilm-entry pop 111",
+    "end",
+  ]);
+  testHelper.sleep(5000);
+
+  testHelper.ExecRetMatchDutB("show mpls l2-circuit", "t2.*?201");
+  testHelper.ExecRetMatchDutB("show mpls vc-table", "201.*?33\/44");
+
+  testHelper.startCapture(RenixPort.B);
+
+  testHelper.addPktSender({
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.A,
+    transmit_param: {
+      mode: TransmitMode.STEP,
+      param: {
+        step_count: 10,
+      },
+    },
+  });
+
+  testHelper.addPktChecker({
+    expected_count: 10,
+    packet: new PacketBuilder()
+      .setEthernet({ dst: "1.1.1", src: "2.2.2" })
+      .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
+    port: RenixPort.B,
+  });
+
+  testHelper.CleanConfigDutA([
+    "configure terminal",
+    `interface ${Port.A}`,
+    "switchport",
+    "exit",
+    `interface ${Port.D}`,
+    "no mpls-l2-circuit t2",
+    "exit",
+    "no interface loopback0",
+    "no mpls ftn-entry 192.168.11.0/24 8.8.8.2",
+    "no mpls l2-circuit t2",
+    "no mpls ilm-entry 222",
+    "end",
+  ]);
+
+  testHelper.CleanConfigDutB([
+    "configure terminal",
+    `interface ${Port.A}`,
+    "switchport",
+    "exit",
+    `interface ${Port.D}`,
+    "no mpls-l2-circuit t2",
+    "exit",
+    "no interface loopback0",
+    "no mpls l2-circuit t2",
+    "no mpls ftn-entry 192.168.10.0/24 8.8.8.1",
+    "no mpls ilm-entry 111",
+    "end",
+  ]);
+
+  await testHelper.startTest();
+
+  expect(testHelper.result()).toBeTruthy();
+});

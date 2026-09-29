@@ -14,6 +14,7 @@ import {
   replaceCmdTemplates,
   Sleep,
   StartCapture,
+  StopStream,
 } from "./comm/components";
 import { Config, StreamPort } from "./comm/config";
 import { Dut } from "./comm/dut";
@@ -131,7 +132,8 @@ export class TestHelper {
       } else if (
         act instanceof PacketSender ||
         act instanceof StartCapture ||
-        act instanceof PacketChecker
+        act instanceof PacketChecker ||
+        act instanceof StopStream
       ) {
         if (!this.testResult) {
           continue;
@@ -175,6 +177,12 @@ export class TestHelper {
   addPktSender(packetSendParam: PacketSendParam) {
     this.streamPortSet.set(packetSendParam.port.name, packetSendParam.port);
     this.actuator.push(new PacketSender(packetSendParam));
+    return this;
+  }
+
+  stopStream(stream_port: StreamPort) {
+    this.streamPortSet.set(stream_port.name, stream_port);
+    this.actuator.push(new StopStream(stream_port));
     return this;
   }
 

@@ -1,8 +1,8 @@
 import { Port } from "../../../../utils";
 import {
-    ModifierField,
-    ModifierMode,
-    TransmitMode,
+  ModifierField,
+  ModifierMode,
+  TransmitMode,
 } from "../../../../utils/comm/components";
 import { RenixPort } from "../../../../utils/comm/config";
 import { PacketBuilder } from "../../../../utils/stream/thrift-packet";

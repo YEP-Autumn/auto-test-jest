@@ -199,6 +199,22 @@ export class PacketSender implements Actuator {
   }
 }
 
+export class StopStream implements Actuator {
+  private stream_port: StreamPort;
+  constructor(stream_port: StreamPort) {
+    this.stream_port = stream_port;
+  }
+  async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
+    try {
+      await streamBackendApi?.streamPacketStreamStop(this.stream_port);
+    } catch (error) {
+      console.error("Error: ", error);
+      return false;
+    }
+    return true;
+  }
+}
+
 export class PacketChecker implements Actuator {
   private param: PacketCheckParam;
 

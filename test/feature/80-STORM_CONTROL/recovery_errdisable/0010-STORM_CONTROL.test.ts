@@ -1,8 +1,8 @@
 import { Port } from "../../../../utils";
 import {
-    BurstGapUnit,
-    BurstRateUnit,
-    TransmitMode,
+  BurstGapUnit,
+  BurstRateUnit,
+  TransmitMode,
 } from "../../../../utils/comm/components";
 import { RenixPort } from "../../../../utils/comm/config";
 import { PacketBuilder } from "../../../../utils/stream/thrift-packet";
@@ -58,6 +58,8 @@ test("errdisable支持配置storm-control reason", async () => {
       },
     },
   });
+
+  testHelper.stopStream(RenixPort.A);
 
   testHelper.ExecRetMatchDutA(`show interface ${Port.A}`, "Error Disabled");
   testHelper.ExecRetMatchDutA(

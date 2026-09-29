@@ -1,6 +1,6 @@
-import { Port } from "../../../utils";
-import { TestHelper } from "../../../utils/test-helper";
-import { LinkConstraint } from "../../../utils/topo/link-constraint";
+import { Port } from "../../../../utils";
+import { TestHelper } from "../../../../utils/test-helper";
+import { LinkConstraint } from "../../../../utils/topo/link-constraint";
 
 let testHelper: TestHelper;
 
@@ -82,7 +82,7 @@ test("[BGP多实例] show bgp evpn summary无对应信息显示", async () => {
 
   testHelper.CleanConfigDutB([
     "configure terminal",
-    "no router bgp 100 view test",  
+    "no router bgp 100 view test",
     "no evpn",
     `interface ${Port.A}`,
     "switchport",

@@ -1,8 +1,8 @@
 import { Port } from "../../../../utils";
 import {
-    BurstGapUnit,
-    BurstRateUnit,
-    TransmitMode,
+  BurstGapUnit,
+  BurstRateUnit,
+  TransmitMode,
 } from "../../../../utils/comm/components";
 import { RenixPort } from "../../../../utils/comm/config";
 import { PacketBuilder } from "../../../../utils/stream/thrift-packet";

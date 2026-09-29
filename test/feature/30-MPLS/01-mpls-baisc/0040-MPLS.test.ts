@@ -3,9 +3,9 @@ import { TransmitMode } from "../../../../utils/comm/components";
 import { RenixPort } from "../../../../utils/comm/config";
 import { PacketBuilder } from "../../../../utils/stream/thrift-packet";
 import {
-    DeviceARouteMac,
-    DeviceCRouteMac,
-    TestHelper,
+  DeviceARouteMac,
+  DeviceCRouteMac,
+  TestHelper,
 } from "../../../../utils/test-helper";
 import { LinkConstraint } from "../../../../utils/topo/link-constraint";
 

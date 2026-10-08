@@ -20,7 +20,7 @@ import {
 import { Config, StreamPort } from "./comm/config";
 import { Dut } from "./comm/dut";
 import { StreamBackendApi } from "./stream/stream-backend-api";
-import { Topolinks } from "./topo/link-constraint";
+import { TopoLinks } from "./topo/types";
 import { TopoApi } from "./topo/topo-backend-api";
 
 export let DeviceARouteMac: string;
@@ -44,7 +44,7 @@ export class TestHelper {
   private dut_list: Dut[] = [];
   private actuator: Actuator[] = [];
   private testResult: boolean = true;
-  private topo: Topolinks | undefined;
+  private topo: TopoLinks | undefined;
   private streamBackendApi: StreamBackendApi | undefined;
   private topoApi: TopoApi;
   private topoId?: number;
@@ -52,7 +52,7 @@ export class TestHelper {
 
   private streamPortSet: Map<string, StreamPort> = new Map();
 
-  constructor(topo?: Topolinks) {
+  constructor(topo?: TopoLinks) {
     this.topoApi = new TopoApi();
     this.topo = topo;
   }

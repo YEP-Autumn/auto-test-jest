@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Topolinks } from "./link-constraint";
+import { REVERSE_STREAM_ID_BASE, TopoLinks } from "./types";
 
 export class TopoApi {
   private api = axios.create({
@@ -7,7 +7,7 @@ export class TopoApi {
     timeout: 5000,
   });
 
-  async topoLinksAdd(links: Topolinks) {
+  async topoLinksAdd(links: TopoLinks) {
     const response = await this.api.post(
       "/stream/link/add",
       _tmp_set_topo_links_two_way(links),
@@ -16,7 +16,7 @@ export class TopoApi {
     return response.data;
   }
 
-  async topoLinksDelete(links: Topolinks) {
+  async topoLinksDelete(links: TopoLinks) {
     const response = await this.api.post(
       "/stream/link/delete",
       _tmp_set_topo_links_two_way(links),
@@ -26,12 +26,12 @@ export class TopoApi {
   }
 }
 
-function _tmp_set_topo_links_two_way(links: Topolinks): Topolinks {
-  let new_links: Topolinks = { links: [] };
+function _tmp_set_topo_links_two_way(links: TopoLinks): TopoLinks {
+  let new_links: TopoLinks = { links: [] };
   links.links.forEach((link) => {
     new_links.links.push(link);
     new_links.links.push({
-      stream_id: (1 << 12) + link.stream_id,
+      stream_id: REVERSE_STREAM_ID_BASE + link.stream_id,
       in_port: link.out_port,
       out_port: link.in_port,
     });

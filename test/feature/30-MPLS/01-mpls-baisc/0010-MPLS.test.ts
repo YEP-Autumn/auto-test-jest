@@ -89,10 +89,13 @@ test("配置LDP功能", async () => {
 
   testHelper.ReadyCheckDutB(
     "show ldp session",
-    "1.1.1.1.*?OPERATIONAL",
+    new RegExp("1.1.1.1.*?OPERATIONAL"),
     60_000,
   );
-  testHelper.ReadyCheckDutB("show ldp session", "3.3.3.3.*?OPERATIONAL");
+  testHelper.ReadyCheckDutB(
+    "show ldp session",
+    new RegExp("3.3.3.3.*?OPERATIONAL"),
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

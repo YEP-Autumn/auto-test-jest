@@ -68,8 +68,8 @@ test("配置静态VPWS", async () => {
   ]);
   testHelper.sleep(5000);
 
-  testHelper.ExecRetMatchDutB("show mpls l2-circuit", "t2.*?201");
-  testHelper.ExecRetMatchDutB("show mpls vc-table", "201.*?33\/44");
+  testHelper.ExecRetMatchDutB("show mpls l2-circuit", new RegExp("t2.*?201"));
+  testHelper.ExecRetMatchDutB("show mpls vc-table", new RegExp("201.*?33\/44"));
 
   testHelper.startCapture(RenixPort.B);
 

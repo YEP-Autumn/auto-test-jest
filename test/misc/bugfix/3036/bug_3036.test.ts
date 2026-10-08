@@ -240,7 +240,10 @@ test("bgp路由数据库中学到路由后，bgp进程再使能“address-family
 
   testHelper.sleep(5000);
 
-  testHelper.ExecRetMatchDutB("show ip route vrf vpna", "B.*?40.40.40.0/24");
+  testHelper.ExecRetMatchDutB(
+    "show ip route vrf vpna",
+    new RegExp("B.*?40.40.40.0/24"),
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

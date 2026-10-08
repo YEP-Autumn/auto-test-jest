@@ -121,10 +121,13 @@ test("BGP VPN路由表出现直连路由", async () => {
 
   testHelper.ReadyCheckDutA("show ip bgp neighbors", "BGP state = Established");
 
-  testHelper.ExecRetMatchDutA("show ip route vrf vpn1", "B.*?11.11.11.100/32");
+  testHelper.ExecRetMatchDutA(
+    "show ip route vrf vpn1",
+    new RegExp("B.*?11.11.11.100/32"),
+  );
   testHelper.ExecRetMatchDutA(
     "show ip route vrf vpn1 bgp",
-    "B.*?11.11.11.100/32",
+    new RegExp("B.*?11.11.11.100/32"),
   );
 
   testHelper.CleanConfigDutA([

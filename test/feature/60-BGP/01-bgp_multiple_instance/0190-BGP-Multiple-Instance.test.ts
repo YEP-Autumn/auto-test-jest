@@ -166,8 +166,16 @@ test("测试BGP多实例VPNv4地址族", async () => {
   testHelper.ExecConfigDutB(["clear ldp session *"]);
   testHelper.ExecConfigDutC(["clear ldp session *"]);
 
-  testHelper.ReadyCheckDutA("show ip route", `R.*?7.7.7.7\/32`, 120 * 1000);
-  testHelper.ReadyCheckDutD("show ip route", `R.*?4.4.4.4\/32`, 120 * 1000);
+  testHelper.ReadyCheckDutA(
+    "show ip route",
+    new RegExp(`R.*?7.7.7.7\/32`),
+    120 * 1000,
+  );
+  testHelper.ReadyCheckDutD(
+    "show ip route",
+    new RegExp(`R.*?4.4.4.4\/32`),
+    120 * 1000,
+  );
 
   testHelper.ReadyCheckDutB("show ldp session", "OPERATIONAL", 120 * 1000);
   testHelper.ReadyCheckDutC("show ldp session", "OPERATIONAL", 120 * 1000);

@@ -226,12 +226,12 @@ test("测试BGP多实例配置 VXLAN L3 EVPN", async () => {
 
   testHelper.ExecRetMatchDutB(
     "show ip arp vrf evpn",
-    `192.168.10.100.*?${DeviceARouteMac}`,
+    new RegExp(`192.168.10.100.*?${DeviceARouteMac}`),
   );
 
   testHelper.ReadyCheckDutD(
     "show ip route vrf evpn",
-    "B.*?192.168.10.100/32",
+    new RegExp("B.*?192.168.10.100/32"),
     1000 * 60,
   );
 

@@ -81,7 +81,7 @@ test("非VRF中的router-id的重新选择, 不影响VRF BGP实例的router-id",
   testHelper.ReadyCheckDutA("show ip bgp neighbors", "BGP state = Established");
   testHelper.ExecRetMatchDutA(
     "show ip bgp scan",
-    "Default\[\\s\\S\]*?router-id 1.1.1.1",
+    new RegExp("Default\[\\s\\S\]*?router-id 1.1.1.1"),
   );
 
   testHelper.ReadyCheckDutA(
@@ -90,7 +90,7 @@ test("非VRF中的router-id的重新选择, 不影响VRF BGP实例的router-id",
   );
   testHelper.ExecRetMatchDutA(
     "show ip bgp scan",
-    "vpn1\[\\s\\S\]*?router-id 2.2.2.1",
+    new RegExp("vpn1\[\\s\\S\]*?router-id 2.2.2.1"),
   );
 
   testHelper.ExecRetMatchDutB(
@@ -115,11 +115,11 @@ test("非VRF中的router-id的重新选择, 不影响VRF BGP实例的router-id",
   testHelper.sleep(3000);
   testHelper.ExecRetMatchDutA(
     "show ip bgp scan",
-    "Default\[\\s\\S\]*?router-id 1.1.1.1",
+    new RegExp("Default\[\\s\\S\]*?router-id 1.1.1.1"),
   );
   testHelper.ExecRetMatchDutA(
     "show ip bgp scan",
-    "vpn1\[\\s\\S\]*?router-id 2.2.2.1",
+    new RegExp("vpn1\[\\s\\S\]*?router-id 2.2.2.1"),
   );
   testHelper.ExecRetMatchDutB(
     "show ip bgp neighbors",
@@ -138,7 +138,7 @@ test("非VRF中的router-id的重新选择, 不影响VRF BGP实例的router-id",
   testHelper.ReadyCheckDutA("show ip bgp neighbors", "BGP state = Established");
   testHelper.ExecRetMatchDutA(
     "show ip bgp scan",
-    "Default\[\\s\\S\]*?router-id 12.12.12.12",
+    new RegExp("Default\[\\s\\S\]*?router-id 12.12.12.12"),
   );
 
   testHelper.ReadyCheckDutA(
@@ -147,7 +147,7 @@ test("非VRF中的router-id的重新选择, 不影响VRF BGP实例的router-id",
   );
   testHelper.ExecRetMatchDutA(
     "show ip bgp scan",
-    "vpn1\[\\s\\S\]*?router-id 2.2.2.1",
+    new RegExp("vpn1\[\\s\\S\]*?router-id 2.2.2.1"),
   );
 
   testHelper.ExecRetMatchDutB(

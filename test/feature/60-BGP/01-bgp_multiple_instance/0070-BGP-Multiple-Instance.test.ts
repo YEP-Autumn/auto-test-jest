@@ -103,13 +103,13 @@ test("测试BGP多实例 Network 通告路由 只在自身实例中生效", asyn
 
   testHelper.ReadyCheckDutA(
     "show ip bgp view test1",
-    "\\*> 10.10.10.0\\/24",
+    new RegExp("\\*> 10.10.10.0\\/24"),
     30 * 1000,
   );
 
   testHelper.ExecRetMatchDutA(
     "show ip bgp view test2",
-    "\\*> 10.10.10.0\\/24",
+    new RegExp("\\*> 10.10.10.0\\/24"),
     true,
   );
 

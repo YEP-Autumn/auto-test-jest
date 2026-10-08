@@ -155,8 +155,16 @@ test("测试MPLS L3VPN 多跳 PING功能 (explicit-null)", async () => {
 
   /** 等待ospf建立连接 */
   testHelper.sleep(20_000);
-  testHelper.ReadyCheckDutB("show ip ospf neighbor", "5.5.5.5.*?Full", 80_000);
-  testHelper.ReadyCheckDutB("show ip ospf neighbor", "7.7.7.7.*?Full", 60_000);
+  testHelper.ReadyCheckDutB(
+    "show ip ospf neighbor",
+    new RegExp("5.5.5.5.*?Full"),
+    80_000,
+  );
+  testHelper.ReadyCheckDutB(
+    "show ip ospf neighbor",
+    new RegExp("7.7.7.7.*?Full"),
+    60_000,
+  );
 
   /** 等待bgp建立连接 */
   testHelper.sleep(5_000);
@@ -178,12 +186,12 @@ test("测试MPLS L3VPN 多跳 PING功能 (explicit-null)", async () => {
   testHelper.sleep(10_000);
   testHelper.ReadyCheckDutB(
     "show ldp session",
-    "5.5.5.5.*?OPERATIONAL",
+    new RegExp("5.5.5.5.*?OPERATIONAL"),
     90_000,
   );
   testHelper.ReadyCheckDutB(
     "show ldp session",
-    "7.7.7.7.*?OPERATIONAL",
+    new RegExp("7.7.7.7.*?OPERATIONAL"),
     60_000,
   );
 

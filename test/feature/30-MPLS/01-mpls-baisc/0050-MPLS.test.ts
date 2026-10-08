@@ -112,10 +112,13 @@ test("配置MPLS VPLS (三设备)", async () => {
 
   testHelper.ReadyCheckDutB(
     "show ldp session",
-    "11.11.1.1.*?OPERATIONAL",
+    new RegExp("11.11.1.1.*?OPERATIONAL"),
     60 * 1000,
   );
-  testHelper.ReadyCheckDutB("show ldp session", "11.11.4.4.*?OPERATIONAL");
+  testHelper.ReadyCheckDutB(
+    "show ldp session",
+    new RegExp("11.11.4.4.*?OPERATIONAL"),
+  );
 
   testHelper.sleep(5000);
 

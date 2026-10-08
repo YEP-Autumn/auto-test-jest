@@ -115,16 +115,16 @@ test("配置静态MPLS LSP", async () => {
 
   testHelper.ExecRetMatchDutA(
     "show mpls ftn-database",
-    "172.22.4.0\/24(.*?)100(.*?)11.11.9.2",
+    new RegExp("172.22.4.0\/24(.*?)100(.*?)11.11.9.2"),
   );
   testHelper.ExecRetMatchDutB(
     "show mpls ilm-database",
-    "0.0.0.0\/0(.*?)100\/200(.*?)11.11.17.3",
+    new RegExp("0.0.0.0\/0(.*?)100\/200(.*?)11.11.17.3"),
   );
 
   testHelper.ExecRetMatchDutC(
     "show mpls ilm-database",
-    "0.0.0.0\/0(.*?)200\/3(.*?)20.20.20.2",
+    new RegExp("0.0.0.0\/0(.*?)200\/3(.*?)20.20.20.2"),
   );
 
   testHelper.CleanConfigDutA([

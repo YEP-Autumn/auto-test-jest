@@ -119,25 +119,25 @@ test("mpls ac支持配置vlan range + cvid", async () => {
 
   testHelper.ReadyCheckDutA(
     "show ldp session",
-    "11.11.2.2.*?OPERATIONAL",
+    new RegExp("11.11.2.2.*?OPERATIONAL"),
     1000 * 45,
   );
 
   testHelper.ReadyCheckDutA(
     "show ldp session",
-    "11.11.4.4.*?OPERATIONAL",
+    new RegExp("11.11.4.4.*?OPERATIONAL"),
     1000 * 45,
   );
 
   testHelper.ReadyCheckDutC(
     "show ldp session",
-    "11.11.1.1.*?OPERATIONAL",
+    new RegExp("11.11.1.1.*?OPERATIONAL"),
     1000 * 45,
   );
 
   testHelper.ReadyCheckDutC(
     "show ldp session",
-    "11.11.2.2.*?OPERATIONAL",
+    new RegExp("11.11.2.2.*?OPERATIONAL"),
     1000 * 45,
   );
 

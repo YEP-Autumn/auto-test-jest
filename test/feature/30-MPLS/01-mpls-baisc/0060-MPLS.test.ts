@@ -170,8 +170,16 @@ test("配置MPLS L3VPN", async () => {
   testHelper.sleep(10_000);
   testHelper.ReadyCheckDutB("show ldp session", "OPERATIONAL", 90_000);
 
-  testHelper.ReadyCheckDutA("show ip route", `R.*?7.7.7.7\/32`, 1000 * 60);
-  testHelper.ReadyCheckDutD("show ip route", `R.*?4.4.4.4\/32`, 1000 * 60);
+  testHelper.ReadyCheckDutA(
+    "show ip route",
+    new RegExp(`R.*?7.7.7.7\/32`),
+    1000 * 60,
+  );
+  testHelper.ReadyCheckDutD(
+    "show ip route",
+    new RegExp(`R.*?4.4.4.4\/32`),
+    1000 * 60,
+  );
 
   testHelper.ExecRetMatchDutA("ping 7.7.7.7", " 0% packet loss");
   testHelper.ExecRetMatchDutD("ping 4.4.4.4", " 0% packet loss");

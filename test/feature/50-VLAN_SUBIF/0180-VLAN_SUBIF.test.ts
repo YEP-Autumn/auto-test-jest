@@ -90,25 +90,25 @@ test("支持在VLAN子接口上配置PIM-DM", async () => {
 
   testHelper.ExecRetMatchDutA(
     "show ip pim dense-mode interface",
-    `11.1.1.1 *?${Port.D}.1`,
+    new RegExp(`11.1.1.1 *?${Port.D}.1`),
   );
 
   testHelper.ExecRetMatchDutA(
     "show ip pim dense-mode interface",
-    `12.1.1.1 *?${Port.A}.1`,
+    new RegExp(`12.1.1.1 *?${Port.A}.1`),
   );
 
   testHelper.sleep(1000 * 30);
 
   testHelper.ReadyCheckDutA(
     "show ip pim dense-mode neighbor",
-    `12.1.1.2.*?${Port.A}.1`,
+    new RegExp(`12.1.1.2.*?${Port.A}.1`),
     1000 * 10,
   );
 
   testHelper.ReadyCheckDutB(
     "show ip pim dense-mode neighbor",
-    `12.1.1.1.*?${Port.A}.1`,
+    new RegExp(`12.1.1.1.*?${Port.A}.1`),
     1000 * 10,
   );
 

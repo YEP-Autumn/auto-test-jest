@@ -59,7 +59,7 @@ test("测试 VRF 下一跳静态路由配置recursive-lookup host-route", async 
   testHelper.ExecRetMatchDutA("show ip route", "12.12.12.0/24");
   testHelper.ExecRetMatchDutA(
     "show ip route database",
-    "11.11.11.0/24.*?inactive",
+    new RegExp("11.11.11.0/24.*?inactive"),
   );
 
   /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */

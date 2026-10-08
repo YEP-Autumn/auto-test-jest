@@ -226,12 +226,12 @@ test("通过BGP EVPN 发布 分布式vxlan三层网关的ARP表项", async () =>
 
   testHelper.ExecRetMatchDutB(
     "show ip arp vrf evpn",
-    `192.168.10.100.*?${DeviceARouteMac}`,
+    new RegExp(`192.168.10.100.*?${DeviceARouteMac}`),
   );
 
   testHelper.ReadyCheckDutD(
     "show ip route vrf evpn",
-    "B.*?192.168.10.100/32",
+    new RegExp("B.*?192.168.10.100/32"),
     1000 * 60,
   );
 

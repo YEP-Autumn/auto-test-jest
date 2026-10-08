@@ -202,8 +202,8 @@ test("测试 bgp evpn vxlan loopback ping功能, L2集中式网关下设备通�
 
   testHelper.sleep(10 * 1000);
 
-  testHelper.ReadyCheckDutA("show overlay", "10.*?10.2.2.2");
-  testHelper.ReadyCheckDutA("show overlay", "10.*?10.3.3.3");
+  testHelper.ReadyCheckDutA("show overlay", new RegExp("10.*?10.2.2.2"));
+  testHelper.ReadyCheckDutA("show overlay", new RegExp("10.*?10.3.3.3"));
 
   testHelper.startCapture(RenixPort.B);
 

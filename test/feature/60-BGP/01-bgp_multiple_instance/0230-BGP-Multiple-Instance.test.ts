@@ -202,8 +202,8 @@ test("测试BGP多实例配置 VXLAN L2 EVPN", async () => {
 
   testHelper.sleep(10 * 1000);
 
-  testHelper.ReadyCheckDutA("show overlay", "10.*?10.2.2.2");
-  testHelper.ReadyCheckDutA("show overlay", "10.*?10.3.3.3");
+  testHelper.ReadyCheckDutA("show overlay", new RegExp("10.*?10.2.2.2"));
+  testHelper.ReadyCheckDutA("show overlay", new RegExp("10.*?10.3.3.3"));
 
   testHelper.startCapture(RenixPort.B);
 

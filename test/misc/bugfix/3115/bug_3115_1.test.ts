@@ -206,8 +206,14 @@ test("删除bgp evpn地址族重新配置后，本地evpn type 2/3路由丢失�
 
   testHelper.sleep(10 * 1000);
 
-  testHelper.ReadyCheckDutB("show overlay", "10.*?10.1.1.1 *?10.2.2.2");
-  testHelper.ReadyCheckDutC("show overlay", "10.*?10.1.1.1 *?10.3.3.3");
+  testHelper.ReadyCheckDutB(
+    "show overlay",
+    new RegExp("10.*?10.1.1.1 *?10.2.2.2"),
+  );
+  testHelper.ReadyCheckDutC(
+    "show overlay",
+    new RegExp("10.*?10.1.1.1 *?10.3.3.3"),
+  );
 
   testHelper.startCapture(RenixPort.B);
 
@@ -269,8 +275,14 @@ test("删除bgp evpn地址族重新配置后，本地evpn type 2/3路由丢失�
   ]);
   testHelper.sleep(10 * 1000);
 
-  testHelper.ReadyCheckDutB("show overlay", "10.*?10.1.1.1 *?10.2.2.2");
-  testHelper.ReadyCheckDutC("show overlay", "10.*?10.1.1.1 *?10.3.3.3");
+  testHelper.ReadyCheckDutB(
+    "show overlay",
+    new RegExp("10.*?10.1.1.1 *?10.2.2.2"),
+  );
+  testHelper.ReadyCheckDutC(
+    "show overlay",
+    new RegExp("10.*?10.1.1.1 *?10.3.3.3"),
+  );
 
   testHelper.ReadyCheckDutB("show mac address-table", "0003.0003.0003");
   testHelper.ReadyCheckDutB("show mac address-table", "0003.0003.0005");

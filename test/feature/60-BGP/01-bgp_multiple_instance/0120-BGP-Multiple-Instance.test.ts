@@ -114,11 +114,15 @@ test("测试BGP多实例配置邻居route-map功能", async () => {
 
   testHelper.sleep(10 * 1000);
 
-  testHelper.ReadyCheckDutB("show ip route", "B.*?11.11.11.0\\/24", 60 * 1000);
+  testHelper.ReadyCheckDutB(
+    "show ip route",
+    new RegExp("B.*?11.11.11.0\\/24"),
+    60 * 1000,
+  );
 
   testHelper.ReadyCheckDutB(
     "show ip bgp view test1",
-    "i100.100.100.0\\/24 1.2.3.4",
+    new RegExp("i100.100.100.0\\/24 1.2.3.4"),
     60 * 1000,
   );
 

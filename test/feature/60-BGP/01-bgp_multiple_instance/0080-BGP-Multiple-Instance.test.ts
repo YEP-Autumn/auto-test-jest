@@ -103,13 +103,13 @@ test("测试BGP多实例 接收的路由只出现在自身的路由表中", asyn
 
   testHelper.ReadyCheckDutB(
     "show ip bgp view test1",
-    "\\*>i10.10.10.0\\/24",
+    new RegExp("\\*>i10.10.10.0\\/24"),
     30 * 1000,
   );
 
   testHelper.ExecRetMatchDutB(
     "show ip bgp view test2",
-    "\\*>i10.10.10.0\\/24",
+    new RegExp("\\*>i10.10.10.0\\/24"),
     true,
   );
 

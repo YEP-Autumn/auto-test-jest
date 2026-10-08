@@ -110,10 +110,10 @@ test("支持在开启了vlan-translate功能的接口上配置vlan 类型mpls-vp
    * (删除其中任意一个'mpls或vlan-translate'不会影响另一个的功能)
    */
 
-  testHelper.ExecRetMatchDutB("show mpls l2-circuit", "t1.*?200 ");
+  testHelper.ExecRetMatchDutB("show mpls l2-circuit", new RegExp("t1.*?200 "));
   testHelper.ExecRetMatchDutB(
     "show mpls vc-table",
-    "200.*?192.168.10.10.*?Active",
+    new RegExp("200.*?192.168.10.10.*?Active"),
   );
 
   testHelper.CleanConfigDutA([

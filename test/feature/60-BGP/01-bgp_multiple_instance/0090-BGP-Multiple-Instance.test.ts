@@ -105,25 +105,25 @@ test("测试BGP多实例路由引入功能只在自身实例生效", async () =>
 
   testHelper.ReadyCheckDutA(
     "show ip bgp view test1",
-    "\\*> 100.100.100.0\\/24",
+    new RegExp("\\*> 100.100.100.0\\/24"),
     30 * 1000,
   );
 
   testHelper.ExecRetMatchDutA(
     "show ip bgp view test2",
-    "\\*> 100.100.100.0\\/24",
+    new RegExp("\\*> 100.100.100.0\\/24"),
     true,
   );
 
   testHelper.ReadyCheckDutB(
     "show ip bgp view test1",
-    "\\*>i100.100.100.0\\/24",
+    new RegExp("\\*>i100.100.100.0\\/24"),
     30 * 1000,
   );
 
   testHelper.ExecRetMatchDutB(
     "show ip bgp view test2",
-    "\\*>i100.100.100.0\\/24",
+    new RegExp("\\*>i100.100.100.0\\/24"),
     true,
   );
 

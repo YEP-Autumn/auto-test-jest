@@ -139,7 +139,7 @@ test("测试BGP多实例Next-hop功能", async () => {
 
   testHelper.ReadyCheckDutA(
     "show ip route",
-    "B.*?1.2.3.0\\/24 \\[200\\/0\\] via 2.2.2.2",
+    new RegExp("B.*?1.2.3.0\\/24 \\[200\\/0\\] via 2.2.2.2"),
     60 * 1000,
   );
 

@@ -174,30 +174,38 @@ test("设备支持通过VLAN子接口配置MPLS L3VPN", async () => {
 
   testHelper.ReadyCheckDutB(
     "show ip ospf neighbor",
-    "6.6.6.6.*?Full",
+    new RegExp("6.6.6.6.*?Full"),
     1000 * 30,
   );
 
   testHelper.ReadyCheckDutC(
     "show ip ospf neighbor",
-    "5.5.5.5.*?Full",
+    new RegExp("5.5.5.5.*?Full"),
     1000 * 30,
   );
 
   testHelper.sleep(1000 * 45);
 
-  testHelper.ReadyCheckDutA("show ip route", "R.*?7.7.7.7/32", 1000 * 60);
-  testHelper.ReadyCheckDutD("show ip route", "R.*?4.4.4.4/32", 1000 * 60);
+  testHelper.ReadyCheckDutA(
+    "show ip route",
+    new RegExp("R.*?7.7.7.7/32"),
+    1000 * 60,
+  );
+  testHelper.ReadyCheckDutD(
+    "show ip route",
+    new RegExp("R.*?4.4.4.4/32"),
+    1000 * 60,
+  );
 
   testHelper.ReadyCheckDutB(
     "show ldp session",
-    "6.6.6.6.*?OPERATIONAL",
+    new RegExp("6.6.6.6.*?OPERATIONAL"),
     1000 * 45,
   );
 
   testHelper.ReadyCheckDutC(
     "show ldp session",
-    "5.5.5.5.*?OPERATIONAL",
+    new RegExp("5.5.5.5.*?OPERATIONAL"),
     1000 * 45,
   );
 

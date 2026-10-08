@@ -148,13 +148,22 @@ test("重启中间节点，负载分担功能失效(实际原因为先配置hash
 
   testHelper.ReadyCheckDutB(
     "show ldp session",
-    "11.11.1.1.*?OPERATIONAL",
+    new RegExp("11.11.1.1.*?OPERATIONAL"),
     60_000,
   );
-  testHelper.ReadyCheckDutB("show ldp session", "11.11.4.4.*?OPERATIONAL");
+  testHelper.ReadyCheckDutB(
+    "show ldp session",
+    new RegExp("11.11.4.4.*?OPERATIONAL"),
+  );
 
-  testHelper.ReadyCheckDutA("show ldp session", "11.11.4.4.*?OPERATIONAL");
-  testHelper.ReadyCheckDutC("show ldp session", "11.11.1.1.*?OPERATIONAL");
+  testHelper.ReadyCheckDutA(
+    "show ldp session",
+    new RegExp("11.11.4.4.*?OPERATIONAL"),
+  );
+  testHelper.ReadyCheckDutC(
+    "show ldp session",
+    new RegExp("11.11.1.1.*?OPERATIONAL"),
+  );
 
   testHelper.ReadyCheckDutA("show ldp vpls", "Up     ethernet", 1000 * 60);
   testHelper.ReadyCheckDutC("show ldp vpls", "Up     ethernet", 1000 * 60);

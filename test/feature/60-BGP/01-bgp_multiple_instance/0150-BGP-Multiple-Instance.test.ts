@@ -139,7 +139,7 @@ test("测试BGP多实例配置邻居default-originate功能", async () => {
 
   testHelper.ReadyCheckDutA(
     "show ip route",
-    "B\\*.*?0.0.0.0\\/0 \\[200\\/0\\] via 2.2.2.2",
+    new RegExp("B\\*.*?0.0.0.0\\/0 \\[200\\/0\\] via 2.2.2.2"),
     60 * 1000,
   );
 

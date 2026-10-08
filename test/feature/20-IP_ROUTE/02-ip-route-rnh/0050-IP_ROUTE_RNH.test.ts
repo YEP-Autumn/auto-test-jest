@@ -51,7 +51,7 @@ test("测试当主机路由到达后，recursive-lookup host-route路由生效",
   testHelper.ExecRetMatchDutA("show ip route", "12.12.12.0/24", true);
   testHelper.ExecRetMatchDutA(
     "show ip route database",
-    "12.12.12.0/24.*?inactive",
+    new RegExp("12.12.12.0/24.*?inactive"),
   );
 
   /** 打流验证: 主机路由99.99.99.100/32未到达, 12.12.12.0/24路由inactive, RenixB不应收到报文 */

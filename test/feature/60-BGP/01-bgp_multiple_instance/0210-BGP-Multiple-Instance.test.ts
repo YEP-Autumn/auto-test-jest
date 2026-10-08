@@ -158,20 +158,28 @@ test("测试bgp多实例 ebgp underlay 叠加 ibgp evpn路由", async () => {
   testHelper.ExecConfigDutB(["clear ip bgp *"]);
   testHelper.ExecConfigDutC(["clear ip bgp *"]);
 
-  testHelper.ReadyCheckDutA("show ip route", "B.*?11.11.11.11/32", 60 * 1000);
-  testHelper.ReadyCheckDutB("show ip route", "B.*?10.10.10.10/32", 60 * 1000);
+  testHelper.ReadyCheckDutA(
+    "show ip route",
+    new RegExp("B.*?11.11.11.11/32"),
+    60 * 1000,
+  );
+  testHelper.ReadyCheckDutB(
+    "show ip route",
+    new RegExp("B.*?10.10.10.10/32"),
+    60 * 1000,
+  );
 
   testHelper.ExecConfigDutA(["clear bgp view 64512 *"]);
   testHelper.ExecConfigDutC(["clear bgp view 64512 *"]);
 
   testHelper.ReadyCheckDutA(
     "show ip route vrf v1",
-    "B.*?11.1.1.1/32",
+    new RegExp("B.*?11.1.1.1/32"),
     60 * 1000,
   );
   testHelper.ReadyCheckDutC(
     "show ip route vrf v1",
-    "B.*?10.1.1.1/32",
+    new RegExp("B.*?10.1.1.1/32"),
     60 * 1000,
   );
 

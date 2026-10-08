@@ -85,7 +85,7 @@ test("支持通过VLAN子接口建立OSPF邻居连接", async () => {
 
   testHelper.ReadyCheckDutA(
     "show ip ospf neighbor",
-    `1.1.1.2.*?Full`,
+    new RegExp(`1.1.1.2.*?Full`),
     1000 * 30,
   );
   testHelper.ReadyCheckDutA("show ip route", `10.10.10.0\/24`, 1000 * 30);

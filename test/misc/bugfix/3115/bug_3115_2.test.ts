@@ -226,13 +226,13 @@ test("删除bgp evpn地址族重新配置后，本地evpn type 3 host 路由丢�
 
   testHelper.ExecRetMatchDutB(
     "show ip arp vrf evpn",
-    `192.168.10.100.*?${DeviceARouteMac}`,
+    new RegExp(`192.168.10.100.*?${DeviceARouteMac}`),
   );
 
   // 校验dutA收到的ARP条目，被 evpn host route通告到dutD
   testHelper.ReadyCheckDutD(
     "show ip route vrf evpn",
-    "B.*?192.168.10.100/32",
+    new RegExp("B.*?192.168.10.100/32"),
     1000 * 60,
   );
 
@@ -260,7 +260,7 @@ test("删除bgp evpn地址族重新配置后，本地evpn type 3 host 路由丢�
   // 验证重新配置l2 evpn地址族后，evpn host路由可以再次通告到dutD
   testHelper.ReadyCheckDutD(
     "show ip route vrf evpn",
-    "B.*?192.168.10.100/32",
+    new RegExp("B.*?192.168.10.100/32"),
     1000 * 60,
   );
 

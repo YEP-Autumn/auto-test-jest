@@ -15,6 +15,7 @@ import {
   Sleep,
   StartCapture,
   StopStream,
+  toRegExp,
 } from "./comm/components";
 import { Config, StreamPort } from "./comm/config";
 import { Dut } from "./comm/dut";
@@ -26,6 +27,18 @@ export let DeviceARouteMac: string;
 export let DeviceBRouteMac: string;
 export let DeviceCRouteMac: string;
 export let DeviceDRouteMac: string;
+
+/** DUT 索引，与 Config.dut_list / this.dut_list 的下标一一对应 */
+export enum DutIndex {
+  A = 0,
+  B = 1,
+  C = 2,
+  D = 3,
+  E = 4,
+  F = 5,
+  G = 6,
+  H = 7,
+}
 
 export class TestHelper {
   private dut_list: Dut[] = [];
@@ -42,6 +55,22 @@ export class TestHelper {
   constructor(topo?: Topolinks) {
     this.topoApi = new TopoApi();
     this.topo = topo;
+  }
+
+  /**
+   * 按索引获取已连接的 DUT，并做存在性校验。
+   * 避免在 Config.dut_list 未配置对应设备时，后续 replaceCmdTemplate 访问
+   * undefined.getPortList() 抛出难以定位的异常。
+   */
+  private getDut(idx: DutIndex): Dut {
+    const dut = this.dut_list[idx];
+    if (!dut) {
+      throw new Error(
+        `DUT ${DutIndex[idx]} 未配置或未初始化（dut_list 长度=${this.dut_list.length}，` +
+          `Config.dut_list 长度=${Config.dut_list.length}）。请检查 Config.dut_list 配置。`,
+      );
+    }
+    return dut;
   }
 
   async init() {
@@ -198,170 +227,149 @@ export class TestHelper {
   }
 
   /** Exec Config */
-  ExecConfigDutA(config: string[]) {
-    replaceCmdTemplates(config, this.dut_list[0]);
-    this.actuator.push(new ExecConfig(this.dut_list[0], config));
+  ExecConfigDut(idx: DutIndex, config: string[]) {
+    const dut = this.getDut(idx);
+    const cmds = replaceCmdTemplates([...config], dut);
+    this.actuator.push(new ExecConfig(dut, cmds));
     return this;
+  }
+
+  ExecConfigDutA(config: string[]) {
+    return this.ExecConfigDut(DutIndex.A, config);
   }
 
   ExecConfigDutB(config: string[]) {
-    replaceCmdTemplates(config, this.dut_list[1]);
-    this.actuator.push(new ExecConfig(this.dut_list[1], config));
-    return this;
+    return this.ExecConfigDut(DutIndex.B, config);
   }
 
   ExecConfigDutC(config: string[]) {
-    replaceCmdTemplates(config, this.dut_list[2]);
-    this.actuator.push(new ExecConfig(this.dut_list[2], config));
-    return this;
+    return this.ExecConfigDut(DutIndex.C, config);
   }
 
   ExecConfigDutD(config: string[]) {
-    replaceCmdTemplates(config, this.dut_list[3]);
-    this.actuator.push(new ExecConfig(this.dut_list[3], config));
-    return this;
+    return this.ExecConfigDut(DutIndex.D, config);
   }
 
   /** Clean Config */
-  CleanConfigDutA(config: string[]) {
-    replaceCmdTemplates(config, this.dut_list[0]);
-    this.actuator.push(new CleanConfig(this.dut_list[0], config));
+  CleanConfigDut(idx: DutIndex, config: string[]) {
+    const dut = this.getDut(idx);
+    const cmds = replaceCmdTemplates([...config], dut);
+    this.actuator.push(new CleanConfig(dut, cmds));
     return this;
+  }
+
+  CleanConfigDutA(config: string[]) {
+    return this.CleanConfigDut(DutIndex.A, config);
   }
 
   CleanConfigDutB(config: string[]) {
-    replaceCmdTemplates(config, this.dut_list[1]);
-    this.actuator.push(new CleanConfig(this.dut_list[1], config));
-    return this;
+    return this.CleanConfigDut(DutIndex.B, config);
   }
 
   CleanConfigDutC(config: string[]) {
-    replaceCmdTemplates(config, this.dut_list[2]);
-    this.actuator.push(new CleanConfig(this.dut_list[2], config));
-    return this;
+    return this.CleanConfigDut(DutIndex.C, config);
   }
 
   CleanConfigDutD(config: string[]) {
-    replaceCmdTemplates(config, this.dut_list[3]);
-    this.actuator.push(new CleanConfig(this.dut_list[3], config));
-    return this;
+    return this.CleanConfigDut(DutIndex.D, config);
   }
 
   /** Exec Match */
-  ExecRetMatchDutA(config: string, expect: string, notMatch: boolean = false) {
-    const cmd = replaceCmdTemplate(config, this.dut_list[0]);
-    expect = replaceCmdTemplate(expect, this.dut_list[0]);
+  ExecRetMatchDut(
+    idx: DutIndex,
+    config: string,
+    expect: string | RegExp,
+    notMatch: boolean = false,
+  ) {
+    const dut = this.getDut(idx);
+    const cmd = replaceCmdTemplate(config, dut);
     this.actuator.push(
-      new ExecRetMatch(this.dut_list[0], cmd, new RegExp(expect), notMatch),
+      new ExecRetMatch(dut, cmd, toRegExp(expect, dut), notMatch),
     );
     return this;
   }
 
-  ExecRetMatchDutB(config: string, expect: string, notMatch: boolean = false) {
-    const cmd = replaceCmdTemplate(config, this.dut_list[1]);
-    expect = replaceCmdTemplate(expect, this.dut_list[1]);
-    this.actuator.push(
-      new ExecRetMatch(this.dut_list[1], cmd, new RegExp(expect), notMatch),
-    );
-    return this;
+  ExecRetMatchDutA(
+    config: string,
+    expect: string | RegExp,
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIndex.A, config, expect, notMatch);
   }
 
-  ExecRetMatchDutC(config: string, expect: string, notMatch: boolean = false) {
-    const cmd = replaceCmdTemplate(config, this.dut_list[2]);
-    expect = replaceCmdTemplate(expect, this.dut_list[2]);
-    this.actuator.push(
-      new ExecRetMatch(this.dut_list[2], cmd, new RegExp(expect), notMatch),
-    );
-    return this;
+  ExecRetMatchDutB(
+    config: string,
+    expect: string | RegExp,
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIndex.B, config, expect, notMatch);
   }
 
-  ExecRetMatchDutD(config: string, expect: string, notMatch: boolean = false) {
-    const cmd = replaceCmdTemplate(config, this.dut_list[3]);
-    expect = replaceCmdTemplate(expect, this.dut_list[3]);
+  ExecRetMatchDutC(
+    config: string,
+    expect: string | RegExp,
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIndex.C, config, expect, notMatch);
+  }
+
+  ExecRetMatchDutD(
+    config: string,
+    expect: string | RegExp,
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIndex.D, config, expect, notMatch);
+  }
+
+  ReadyCheckDut(
+    idx: DutIndex,
+    config: string,
+    expect: string | RegExp,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
+    const dut = this.getDut(idx);
+    const cmd = replaceCmdTemplate(config, dut);
     this.actuator.push(
-      new ExecRetMatch(this.dut_list[3], cmd, new RegExp(expect), notMatch),
+      new ReadyCheck(dut, cmd, toRegExp(expect, dut), timeout, notMatch),
     );
     return this;
   }
 
   ReadyCheckDutA(
     config: string,
-    expect: string,
+    expect: string | RegExp,
     timeout: number = 30 * 1000,
     notMatch: boolean = false,
   ) {
-    const cmd = replaceCmdTemplate(config, this.dut_list[0]);
-    expect = replaceCmdTemplate(expect, this.dut_list[0]);
-    this.actuator.push(
-      new ReadyCheck(
-        this.dut_list[0],
-        cmd,
-        new RegExp(expect),
-        timeout,
-        notMatch,
-      ),
-    );
-    return this;
+    return this.ReadyCheckDut(DutIndex.A, config, expect, timeout, notMatch);
   }
 
   ReadyCheckDutB(
     config: string,
-    expect: string,
+    expect: string | RegExp,
     timeout: number = 30 * 1000,
     notMatch: boolean = false,
   ) {
-    const cmd = replaceCmdTemplate(config, this.dut_list[1]);
-    expect = replaceCmdTemplate(expect, this.dut_list[1]);
-    this.actuator.push(
-      new ReadyCheck(
-        this.dut_list[1],
-        cmd,
-        new RegExp(expect),
-        timeout,
-        notMatch,
-      ),
-    );
-    return this;
+    return this.ReadyCheckDut(DutIndex.B, config, expect, timeout, notMatch);
   }
 
   ReadyCheckDutC(
     config: string,
-    expect: string,
+    expect: string | RegExp,
     timeout: number = 30 * 1000,
     notMatch: boolean = false,
   ) {
-    const cmd = replaceCmdTemplate(config, this.dut_list[2]);
-    expect = replaceCmdTemplate(expect, this.dut_list[2]);
-    this.actuator.push(
-      new ReadyCheck(
-        this.dut_list[2],
-        cmd,
-        new RegExp(expect),
-        timeout,
-        notMatch,
-      ),
-    );
-    return this;
+    return this.ReadyCheckDut(DutIndex.C, config, expect, timeout, notMatch);
   }
 
   ReadyCheckDutD(
     config: string,
-    expect: string,
+    expect: string | RegExp,
     timeout: number = 30 * 1000,
     notMatch: boolean = false,
   ) {
-    const cmd = replaceCmdTemplate(config, this.dut_list[3]);
-    expect = replaceCmdTemplate(expect, this.dut_list[3]);
-    this.actuator.push(
-      new ReadyCheck(
-        this.dut_list[3],
-        cmd,
-        new RegExp(expect),
-        timeout,
-        notMatch,
-      ),
-    );
-    return this;
+    return this.ReadyCheckDut(DutIndex.D, config, expect, timeout, notMatch);
   }
 
   sleep(milliseconds: number) {
@@ -373,63 +381,41 @@ export class TestHelper {
    * Exec Custom Callback (Read-only or controlled operations)
    * The callback receives a safe `DutHandle` with port alias replacement.
    */
+  ExecCustomDut(
+    idx: DutIndex,
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
+    const dut = this.getDut(idx);
+    this.actuator.push(new ExecCustom(dut, cb, exec_clean));
+    return this;
+  }
+
   ExecCustomDutA(
     cb: (h: DutHandle) => Promise<boolean> | boolean,
     exec_clean: boolean = false,
   ) {
-    this.actuator.push(
-      new ExecCustom(
-        this.dut_list[0],
-        Config.dut_list[0].portList,
-        cb,
-        exec_clean,
-      ),
-    );
-    return this;
+    return this.ExecCustomDut(DutIndex.A, cb, exec_clean);
   }
 
   ExecCustomDutB(
     cb: (h: DutHandle) => Promise<boolean> | boolean,
     exec_clean: boolean = false,
   ) {
-    this.actuator.push(
-      new ExecCustom(
-        this.dut_list[1],
-        Config.dut_list[1].portList,
-        cb,
-        exec_clean,
-      ),
-    );
-    return this;
+    return this.ExecCustomDut(DutIndex.B, cb, exec_clean);
   }
 
   ExecCustomDutC(
     cb: (h: DutHandle) => Promise<boolean> | boolean,
     exec_clean: boolean = false,
   ) {
-    this.actuator.push(
-      new ExecCustom(
-        this.dut_list[2],
-        Config.dut_list[2].portList,
-        cb,
-        exec_clean,
-      ),
-    );
-    return this;
+    return this.ExecCustomDut(DutIndex.C, cb, exec_clean);
   }
 
   ExecCustomDutD(
     cb: (h: DutHandle) => Promise<boolean> | boolean,
     exec_clean: boolean = false,
   ) {
-    this.actuator.push(
-      new ExecCustom(
-        this.dut_list[3],
-        Config.dut_list[3].portList,
-        cb,
-        exec_clean,
-      ),
-    );
-    return this;
+    return this.ExecCustomDut(DutIndex.D, cb, exec_clean);
   }
 }

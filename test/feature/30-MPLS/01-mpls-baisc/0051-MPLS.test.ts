@@ -89,7 +89,7 @@ test("配置MPLS VPLS (两设备)", async () => {
 
   testHelper.ReadyCheckDutA(
     "show ldp session",
-    "11.11.4.4.*?OPERATIONAL",
+    new RegExp("11.11.4.4.*?OPERATIONAL"),
     60 * 1000,
   );
 

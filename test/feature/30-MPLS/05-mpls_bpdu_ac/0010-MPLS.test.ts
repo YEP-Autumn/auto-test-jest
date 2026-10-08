@@ -110,10 +110,13 @@ test("支持tagged模式vpls配置bpdu ac", async () => {
 
   testHelper.ReadyCheckDutB(
     "show ldp session",
-    "11.11.1.1.*?OPERATIONAL",
+    new RegExp("11.11.1.1.*?OPERATIONAL"),
     60 * 1000,
   );
-  testHelper.ReadyCheckDutB("show ldp session", "11.11.4.4.*?OPERATIONAL");
+  testHelper.ReadyCheckDutB(
+    "show ldp session",
+    new RegExp("11.11.4.4.*?OPERATIONAL"),
+  );
 
   testHelper.startCapture(RenixPort.B);
 

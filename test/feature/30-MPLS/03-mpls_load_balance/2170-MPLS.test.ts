@@ -132,10 +132,13 @@ test.skip("测试MPLS VPWS AC出口支持agg接口对MPLS内层src mac进行负�
 
   testHelper.ReadyCheckDutB(
     "show ldp session",
-    "11.11.1.1.*?OPERATIONAL",
+    new RegExp("11.11.1.1.*?OPERATIONAL"),
     60_000,
   );
-  testHelper.ReadyCheckDutB("show ldp session", "11.11.4.4.*?OPERATIONAL");
+  testHelper.ReadyCheckDutB(
+    "show ldp session",
+    new RegExp("11.11.4.4.*?OPERATIONAL"),
+  );
 
   testHelper.ReadyCheckDutA(
     "show ldp mpls-l2-circuit",

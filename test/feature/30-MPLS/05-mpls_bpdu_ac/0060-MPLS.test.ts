@@ -81,10 +81,10 @@ test("支持raw模式vpws配置bpdu ac", async () => {
   testHelper.ReadyCheckDutB("show ldp session", "OPERATIONAL", 60 * 1000);
   testHelper.ReadyCheckDutB("show ldp session", "OPERATIONAL");
 
-  testHelper.ExecRetMatchDutB("show mpls l2-circuit", "t1.*?200 ");
+  testHelper.ExecRetMatchDutB("show mpls l2-circuit", new RegExp("t1.*?200 "));
   testHelper.ExecRetMatchDutB(
     "show mpls vc-table",
-    "200.*?192.168.10.10.*?Active",
+    new RegExp("200.*?192.168.10.10.*?Active"),
   );
 
   testHelper.startCapture(RenixPort.B);

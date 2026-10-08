@@ -441,6 +441,22 @@ export function replaceCmdTemplates(configs: string[], dut: Dut): string[] {
   return configs;
 }
 
+/**
+ * 将期望值统一转换为 RegExp，并完成端口模板替换，明确“文本 vs 正则”语义：
+ * - 传入 RegExp：按正则语义匹配（保留 flags）
+ * - 传入 string：按纯文本语义匹配（自动转义元字符）
+ */
+export function toRegExp(expect: string | RegExp, dut: Dut): RegExp {
+  if (expect instanceof RegExp) {
+    return new RegExp(replaceCmdTemplate(expect.source, dut), expect.flags);
+  }
+  const escaped = replaceCmdTemplate(expect, dut).replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&",
+  );
+  return new RegExp(escaped);
+}
+
 export class DutHandle {
   private conn: Dut;
 
@@ -474,18 +490,15 @@ export class DutHandle {
  */
 export class ExecCustom implements Actuator {
   private conn: Dut;
-  private portList: string[];
   private cb: (h: DutHandle) => Promise<boolean> | boolean;
   private exec_clean: boolean;
 
   constructor(
     conn: Dut,
-    portList: string[],
     cb: (h: DutHandle) => Promise<boolean> | boolean,
     exec_clean: boolean = false,
   ) {
     this.conn = conn;
-    this.portList = portList;
     this.cb = cb;
     this.exec_clean = exec_clean;
   }

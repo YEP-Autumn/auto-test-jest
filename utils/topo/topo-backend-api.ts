@@ -1,4 +1,5 @@
 import axios from "axios";
+import { TopoBackendConfig } from "../comm/config";
 
 export interface TopoLink {
   id: number;
@@ -44,7 +45,7 @@ export interface LoginResponse {
 
 export class TopoApi {
   private api = axios.create({
-    baseURL: "http://172.16.9.1:8000",
+    baseURL: TopoBackendConfig.baseURL,
     timeout: 5000,
   });
 
@@ -52,13 +53,13 @@ export class TopoApi {
 
   /** 登录并保存 token，后续所有请求自动携带 Authorization 头 */
   async login(
-    username: string = "test",
-    password: string = "autotest",
+    username: string = TopoBackendConfig.username,
+    password: string = TopoBackendConfig.password,
   ): Promise<LoginResponse> {
-    const response = await this.api.post<LoginResponse>("/api/auth/login/", {
-      username,
-      password,
-    });
+    const response = await axios.post<LoginResponse>(
+      TopoBackendConfig.loginURL,
+      { username, password },
+    );
     this.token = response.data.token;
     this.api.defaults.headers.common["Authorization"] = `Token ${this.token}`;
     return response.data;

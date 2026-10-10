@@ -97,11 +97,13 @@ export class TestHelper {
         name: string;
         links: unknown[];
       }[];
-      const existing = topologies.find((t) => t.name === "auto-test-topo");
+      const existing = topologies.find(
+        (t) => t.name === Config.defaultTopoName,
+      );
       if (existing) {
         await this.topoApi.delete(existing.id);
       }
-      const res = await this.topoApi.create("auto-test-topo");
+      const res = await this.topoApi.create(Config.defaultTopoName);
       this.topoId = res.id;
       const links = this.topo.links.map((link) => ({
         src_device: link.in_port.device,

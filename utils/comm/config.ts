@@ -49,6 +49,37 @@ export class StreamBackendConfig {
   }
 }
 
+/**
+ * 拓扑后端服务（topo backend）地址配置。
+ *
+ * IP、端口、默认登录账号集中在此维护，topo-backend-api.ts 只负责拼接接口路径，
+ * 避免地址硬编码在各个请求里、切换环境时到处改。
+ * 可通过环境变量覆盖：TOPO_BACKEND_HOST / TOPO_BACKEND_PORT /
+ * TOPO_BACKEND_USERNAME / TOPO_BACKEND_PASSWORD。
+ */
+export class TopoBackendConfig {
+  static readonly host = process.env.TOPO_BACKEND_HOST || "172.16.9.1";
+  static readonly port = process.env.TOPO_BACKEND_PORT || "8000";
+  /** 默认登录账号 */
+  static readonly username = process.env.TOPO_BACKEND_USERNAME || "test";
+  static readonly password = process.env.TOPO_BACKEND_PASSWORD || "autotest";
+
+  /** 服务根地址，如 http://172.16.9.1:8000 */
+  static get origin(): string {
+    return `http://${this.host}:${this.port}`;
+  }
+
+  /** 业务接口 baseURL，如 http://172.16.9.1:8000 */
+  static get baseURL(): string {
+    return this.origin;
+  }
+
+  /** 登录接口完整地址，如 http://172.16.9.1:8000/api/auth/login/ */
+  static get loginURL(): string {
+    return `${this.origin}/api/auth/login/`;
+  }
+}
+
 export class Config {
   /**
    * Full Example
@@ -66,6 +97,13 @@ export class Config {
       portList: ["eth-0-1", "eth-0-2", "eth-0-3", "eth-0-4"],
     };
    */
+
+  /**
+   * 自动测试使用的拓扑名称。
+   * TestHelper.init() 会按该名称查找并删除同名旧拓扑，再重新创建，
+   * 集中在此维护，避免名称散落在测试代码里。
+   */
+  public static readonly defaultTopoName = "auto-test-topo";
 
   public static default_cfg = {
     protocol: "telnet",

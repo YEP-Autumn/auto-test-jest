@@ -1,6 +1,6 @@
 import axios from "axios";
 import FormData from "form-data";
-import { StreamPort } from "../comm/config";
+import { StreamBackendConfig, StreamPort } from "../comm/config";
 import { IPacketList, PacketListParser } from "./thrift-packet";
 
 export interface LoginResponse {
@@ -41,8 +41,7 @@ function normalizeFormFields(
 
 export class StreamBackendApi {
   api = axios.create({
-    // baseURL: "http://172.16.9.1:8001/api/backend_proxy",
-    baseURL: "http://192.168.2.98:8000/api/backend_proxy",
+    baseURL: StreamBackendConfig.baseURL,
     timeout: 5000,
   });
 
@@ -64,11 +63,11 @@ export class StreamBackendApi {
 
   /** 登录并保存 token，后续所有请求自动携带 Authorization 头 */
   async login(
-    username: string = "test",
-    password: string = "autotest",
+    username: string = StreamBackendConfig.username,
+    password: string = StreamBackendConfig.password,
   ): Promise<LoginResponse> {
     const response = await axios.post<LoginResponse>(
-      "http://192.168.2.98:8000/api/auth/login/",
+      StreamBackendConfig.loginURL,
       { username, password },
     );
     this.token = response.data.token;

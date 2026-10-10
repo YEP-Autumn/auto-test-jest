@@ -18,6 +18,37 @@ export class RenixPort {
   }
 }
 
+/**
+ * 打流/抓包后端服务（stream backend）地址配置。
+ *
+ * IP、端口集中在此维护，stream-backend-api.ts 只负责拼接接口路径，
+ * 避免地址硬编码在各个请求里、切换环境时到处改。
+ * 可通过环境变量覆盖：STREAM_BACKEND_HOST / STREAM_BACKEND_PORT /
+ * STREAM_BACKEND_USERNAME / STREAM_BACKEND_PASSWORD。
+ */
+export class StreamBackendConfig {
+  static readonly host = process.env.STREAM_BACKEND_HOST || "172.16.9.1";
+  static readonly port = process.env.STREAM_BACKEND_PORT || "8001";
+  /** 默认登录账号 */
+  static readonly username = process.env.STREAM_BACKEND_USERNAME || "test";
+  static readonly password = process.env.STREAM_BACKEND_PASSWORD || "autotest";
+
+  /** 服务根地址，如 http://172.16.9.1:8001 */
+  static get origin(): string {
+    return `http://${this.host}:${this.port}`;
+  }
+
+  /** 业务接口 baseURL，如 http://172.16.9.1:8001/api/backend_proxy */
+  static get baseURL(): string {
+    return `${this.origin}/api/backend_proxy`;
+  }
+
+  /** 登录接口完整地址，如 http://172.16.9.1:8001/api/auth/login/ */
+  static get loginURL(): string {
+    return `${this.origin}/api/auth/login/`;
+  }
+}
+
 export class Config {
   /**
    * Full Example

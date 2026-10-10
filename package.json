@@ -1,8 +1,13 @@
 {
   "type": "commonjs",
   "scripts": {
+    "postinstall": "node script/gen-thrift.js",
+    "gen": "node script/gen-thrift.js --force",
+    "pretest": "node script/gen-thrift.js",
     "test": "jest -i",
+    "predefault": "node script/gen-thrift.js",
     "default": "jest -i --config=config/jest.config.cjs --verbose",
+    "prefailed": "node script/gen-thrift.js",
     "failed": "jest -i --config=config/jest-failed.config.cjs --verbose",
     "gen-failed": "node script/generate-jest-failed-config.js",
     "format": "npx prettier --write test utils",

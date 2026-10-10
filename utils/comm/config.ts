@@ -165,6 +165,22 @@ export class Config {
   } = {
     portList: [
       {
+        port: { name: "//172.16.254.11/3/13", type: "renix" },
+        portMapping: { device: "172.16.9.110", if_index: 305 },
+      },
+      {
+        port: { name: "//172.16.254.11/3/14", type: "renix" },
+        portMapping: { device: "172.16.9.110", if_index: 561 },
+      },
+      {
+        port: { name: "//172.16.254.11/3/15", type: "renix" },
+        portMapping: { device: "172.16.9.110", if_index: 817 },
+      },
+      {
+        port: { name: "//172.16.254.11/3/15", type: "renix" },
+        portMapping: { device: "172.16.9.110", if_index: 1073 },
+      },
+      {
         port: {
           name: "\\Device\\NPF_{D0DB71B0-1C1E-419C-8360-20C25AF8A6E1}",
           type: "scapy",

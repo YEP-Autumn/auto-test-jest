@@ -8,6 +8,8 @@ module.exports = {
   maxWorkers: "1",
   rootDir: "../",
   roots: ["<rootDir>"],
+  // 顶层路径别名：@/xxx -> <rootDir>/xxx（与 tsconfig paths 对应）
+  moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
   testPathIgnorePatterns: ["/node_modules/"],
   transformIgnorePatterns: ["/node_modules/(?!uuid)/", "\\.pnp\\.[^\\/]+$"],
   testTimeout: 1000 * 60 * 50,

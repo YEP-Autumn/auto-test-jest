@@ -132,6 +132,9 @@ module.exports = {
   // A list of paths to directories that Jest should use to search for files in
   roots: ["<rootDir>"],
 
+  // 顶层路径别名：@/xxx -> <rootDir>/xxx（与 tsconfig paths 对应）
+  moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
+
   // Allows you to use a custom runner instead of Jest's default test runner
   // runner: "jest-runner",
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 校验 test/ 目录下的目录与文件命名是否符合《测试用例命名规范》
- * （见 docs/naming-convention.md）。
+ * （见 docs/spec/naming-convention.md）。
  *
  * 用法：
  *   node script/check-test-names.js

@@ -8,7 +8,7 @@
 
 本规范基于 [Conventional Commits 1.0.0](https://www.conventionalcommits.org/zh-hans/v1.0.0/)，并结合本仓库实际使用的类型与 scope。
 
-校验脚本：[`script/check-commit-msg.js`](../script/check-commit-msg.js)（零依赖，与 `check:test-names` 同风格）
+校验脚本：[`script/check-commit-msg.js`](../../script/check-commit-msg.js)（零依赖，与 `check:test-names` 同风格）
 
 ```shell
 node script/check-commit-msg.js            # 校验最近一条提交
@@ -169,7 +169,7 @@ feat(test): 新增 thrift 代码生成脚本与 static route recursive-lookup �
 ## 10. 自动校验说明
 
 - `type` 必须属于 §2；`scope` 必须属于 §3，新增 scope 需同步登记到本文档与
-  [`script/check-commit-msg.js`](../script/check-commit-msg.js) 的 `SCOPES`。
+  [`script/check-commit-msg.js`](../../script/check-commit-msg.js) 的 `SCOPES`。
 - `Merge` / `Revert` / `fixup!` / `squash!` / `Initial commit` 开头的消息自动放行。
 - 标题过长（>50 字）、缺少中文、`chore` 缺 scope 等只**提醒不阻断**；格式错误、未知类型的
   type/scope、标题空洞、结尾带标点、标题与正文未空行则**阻断提交**。

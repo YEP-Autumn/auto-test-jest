@@ -142,3 +142,4 @@ test-report
 config/jest-failed.config.cjs
 test/local
 \.*
+!.gitkeep

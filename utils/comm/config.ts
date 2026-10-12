@@ -246,7 +246,7 @@ export class Config {
         portMapping: { device: "172.16.9.110", if_index: 817 },
       },
       {
-        port: { name: "//172.16.254.11/3/15", type: "renix" },
+        port: { name: "//172.16.254.11/3/16", type: "renix" },
         portMapping: { device: "172.16.9.110", if_index: 1073 },
       },
       {

@@ -143,3 +143,5 @@ config/jest-failed.config.cjs
 test/local
 \.*
 !.gitkeep
+# 版本受控的 CI 配置需要从“忽略点文件”中放行
+!.github/

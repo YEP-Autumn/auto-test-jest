@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# 同一分支的新推送取消旧的进行中任务
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # 1) 提交信息规范（见 docs/spec/commit-convention.md）
+  commit-msg:
+    name: commit message lint
+    runs-on: ubuntu-latest
+    # PR 校验区间需要完整历史
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 计算待校验区间
+        id: range
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "rev=${{ github.event.pull_request.base.sha }}..${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            echo "rev=${{ github.event.before }}..${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "rev=HEAD~1..HEAD" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 校验提交信息
+        run: node script/check-commit-msg.js --range '${{ steps.range.outputs.rev }}'
+
+  # 2) 静态质量门禁：命名规范 + 类型检查 + thrift 生成可复现
+  static-checks:
+    name: static checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # 生成 utils/rpc/gen-nodejs（被 .gitignore 忽略），tsc 与用例都依赖它
+      - name: 安装 Thrift 编译器
+        run: sudo apt-get update && sudo apt-get install -y thrift-compiler
+
+      - name: 安装依赖（含 postinstall 生成 thrift 代码）
+        run: npm ci
+
+      - name: 确认 thrift 代码已生成
+        run: test -f utils/rpc/gen-nodejs/packet_types.js
+
+      - name: 测试用例命名规范
+        run: npm run check:test-names
+
+      - name: TypeScript 类型检查
+        run: npm run typecheck
+
+  # 3) 设备用例不在 GitHub 托管 runner 上跑，改用自托管 runner（见 docs/spec/ci.md）
+  #    device-tests:
+  #      runs-on: [self-hosted, dut]
+  #      steps: ...

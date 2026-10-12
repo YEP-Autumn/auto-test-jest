@@ -1,13 +1,13 @@
-import { Port } from "../../../../utils";
+import { Port } from "@/utils";
 import {
   BurstGapUnit,
   BurstRateUnit,
   TransmitMode,
-} from "../../../../utils/comm/components";
-import { RenixPort } from "../../../../utils/comm/config";
-import { PacketBuilder } from "../../../../utils/stream/thrift-packet";
-import { TestHelper } from "../../../../utils/test-helper";
-import { LinkConstraint } from "../../../../utils/topo/link-constraint";
+} from "@/utils/comm/components";
+import { RenixPort } from "@/utils/comm/config";
+import { PacketBuilder } from "@/utils/stream/thrift-packet";
+import { TestHelper } from "@/utils/test-helper";
+import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
 

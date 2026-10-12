@@ -1,6 +1,6 @@
-import { RenixPort } from "../../utils/comm/config";
-import { PacketBuilder } from "../../utils/stream/thrift-packet";
-import { TestHelper } from "../../utils/test-helper";
+import { RenixPort } from "@/utils/comm/config";
+import { PacketBuilder } from "@/utils/stream/thrift-packet";
+import { TestHelper } from "@/utils/test-helper";
 
 jest.setTimeout(1000 * 60 * 10);
 

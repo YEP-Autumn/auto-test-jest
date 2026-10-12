@@ -2,6 +2,7 @@
   "type": "commonjs",
   "scripts": {
     "postinstall": "node script/gen-thrift.js",
+    "prepare": "node script/install-git-hooks.js",
     "gen": "node script/gen-thrift.js --force",
     "pretest": "node script/gen-thrift.js",
     "test": "jest -i",
@@ -12,6 +13,9 @@
     "gen-failed": "node script/generate-jest-failed-config.js",
     "format": "npx prettier --write test utils",
     "check:test-names": "node script/check-test-names.js",
+    "check:commit-msg": "node script/check-commit-msg.js",
+    "typecheck": "tsc --noEmit",
+    "hooks:install": "node script/install-git-hooks.js",
     "example": "jest -i --config=config/jest-example.config.ts --verbose"
   },
   "devDependencies": {

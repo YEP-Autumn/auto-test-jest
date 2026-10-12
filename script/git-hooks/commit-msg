@@ -1,0 +1,4 @@
+#!/bin/sh
+# git commit-msg hook：校验提交信息是否符合 docs/spec/commit-convention.md
+# 由 script/install-git-hooks.js 安装（core.hooksPath 指向本目录）
+node "$(git rev-parse --show-toplevel)/script/check-commit-msg.js" "$1"

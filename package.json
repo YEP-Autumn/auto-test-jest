@@ -11,6 +11,7 @@
     "failed": "jest -i --config=config/jest-failed.config.cjs --verbose",
     "gen-failed": "node script/generate-jest-failed-config.js",
     "format": "npx prettier --write test utils",
+    "check:test-names": "node script/check-test-names.js",
     "example": "jest -i --config=config/jest-example.config.ts --verbose"
   },
   "devDependencies": {

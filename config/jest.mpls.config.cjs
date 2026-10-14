@@ -94,15 +94,7 @@ module.exports = {
     "test/feature/30-MPLS/04-mpls_ac_vlan_range/0060-MPLS.test.ts",
     "test/feature/30-MPLS/04-mpls_ac_vlan_range/0070-MPLS.test.ts",
 
-    "test/feature/30-MPLS/06-mpls_bpdu_ac_cli/0010-MPLS.test.ts",
-    "test/feature/30-MPLS/06-mpls_bpdu_ac_cli/0020-MPLS.test.ts",
-    "test/feature/30-MPLS/06-mpls_bpdu_ac_cli/0030-MPLS.test.ts",
-    "test/feature/30-MPLS/06-mpls_bpdu_ac_cli/0040-MPLS.test.ts",
-    "test/feature/30-MPLS/06-mpls_bpdu_ac_cli/0050-MPLS.test.ts",
-    "test/feature/30-MPLS/06-mpls_bpdu_ac_cli/0060-MPLS.test.ts",
-    "test/feature/30-MPLS/06-mpls_bpdu_ac_cli/0070-MPLS.test.ts",
-    "test/feature/30-MPLS/06-mpls_bpdu_ac_cli/0080-MPLS.test.ts",
-    "test/feature/30-MPLS/06-mpls_bpdu_ac_cli/0090-MPLS.test.ts",
+    // 05-mpls_bpdu_ac：功能用例（打流）
     "test/feature/30-MPLS/05-mpls_bpdu_ac/0010-MPLS.test.ts",
     "test/feature/30-MPLS/05-mpls_bpdu_ac/0020-MPLS.test.ts",
     "test/feature/30-MPLS/05-mpls_bpdu_ac/0030-MPLS.test.ts",
@@ -111,6 +103,17 @@ module.exports = {
     "test/feature/30-MPLS/05-mpls_bpdu_ac/0060-MPLS.test.ts",
     "test/feature/30-MPLS/05-mpls_bpdu_ac/0070-MPLS.test.ts",
     "test/feature/30-MPLS/05-mpls_bpdu_ac/0080-MPLS.test.ts",
+
+    // 05-mpls_bpdu_ac_cli：仅 CLI 用例（同基号 05，类型后缀 _cli）
+    "test/feature/30-MPLS/05-mpls_bpdu_ac_cli/0010-MPLS.test.ts",
+    "test/feature/30-MPLS/05-mpls_bpdu_ac_cli/0020-MPLS.test.ts",
+    "test/feature/30-MPLS/05-mpls_bpdu_ac_cli/0030-MPLS.test.ts",
+    "test/feature/30-MPLS/05-mpls_bpdu_ac_cli/0040-MPLS.test.ts",
+    "test/feature/30-MPLS/05-mpls_bpdu_ac_cli/0050-MPLS.test.ts",
+    "test/feature/30-MPLS/05-mpls_bpdu_ac_cli/0060-MPLS.test.ts",
+    "test/feature/30-MPLS/05-mpls_bpdu_ac_cli/0070-MPLS.test.ts",
+    "test/feature/30-MPLS/05-mpls_bpdu_ac_cli/0080-MPLS.test.ts",
+    "test/feature/30-MPLS/05-mpls_bpdu_ac_cli/0090-MPLS.test.ts",
 
     "test/feature/41-VLAN_DOT1Q_TUNNEL/03-vlan_dot1q_type_flex/0010-VLAN_DOT1Q_TUNNEL.test.ts",
     "test/feature/41-VLAN_DOT1Q_TUNNEL/03-vlan_dot1q_type_flex/0020-VLAN_DOT1Q_TUNNEL.test.ts",

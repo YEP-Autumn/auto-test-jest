@@ -16,8 +16,11 @@ const TEST_DIR = path.join(ROOT, "test");
 
 // 顶层特性目录：NN-UPPER_SNAKE
 const RE_FEATURE_DIR = /^\d{2}-[A-Z][A-Z0-9_]*$/;
-// 二级子特性目录：NN-lower_snake
+// 二级子特性目录：NN-lower_snake（可带类型后缀，见 TYPE_SUFFIXES）
 const RE_SUBFEATURE_DIR = /^\d{2}-[a-z0-9]+(_[a-z0-9]+)*$/;
+// 类型后缀词表：区分 功能（无后缀）/ 仅 CLI / 反向 / 规格 / 性能
+// 见 docs/spec/naming-convention.md §3「子特性类型后缀」
+const TYPE_SUFFIXES = ["cli", "neg", "spec", "perf"];
 // misc 目录：小写单词（可含连字符）或纯数字缺陷号
 const RE_MISC_DIR = /^(\d+|[a-z0-9]+(-[a-z0-9]+)*)$/;
 // feature 用例文件：NNNN-FEATURE.test.ts
@@ -46,6 +49,22 @@ function listTestFiles(dir) {
 }
 function listEntries(dir) {
   return fs.readdirSync(dir);
+}
+
+// 拆解二级子特性目录名：05-mpls_bpdu_ac_cli -> { num:"05", base:"mpls_bpdu_ac", type:"cli" }
+function splitSubfeature(name) {
+  const m = name.match(/^(\d{2})-(.+)$/);
+  if (!m) return null;
+  let body = m[2];
+  let type = "";
+  for (const t of TYPE_SUFFIXES) {
+    if (body.endsWith(`_${t}`)) {
+      type = t;
+      body = body.slice(0, -(t.length + 1));
+      break;
+    }
+  }
+  return { num: m[1], base: body, type };
 }
 
 // ---- test/ 根 ----
@@ -77,12 +96,15 @@ if (fs.existsSync(featureDir)) {
         bad(path.join(featurePath, file), `文件后缀应等于特性名 ${featureToken}`);
     }
     // 二级子特性目录
-    for (const sub of listDirs(featurePath)) {
-      const subPath = path.join(featurePath, sub);
+    const subfeatureDirs = listDirs(featurePath).filter((sub) => {
       if (!RE_SUBFEATURE_DIR.test(sub)) {
-        bad(subPath, "子特性目录应为 NN-lower_snake");
-        continue;
+        bad(path.join(featurePath, sub), "子特性目录应为 NN-lower_snake");
+        return false;
       }
+      return true;
+    });
+    for (const sub of subfeatureDirs) {
+      const subPath = path.join(featurePath, sub);
       const nestedDirs = listDirs(subPath);
       if (nestedDirs.length > 0)
         bad(subPath, `不允许三级目录：${nestedDirs.join(", ")}`);
@@ -92,6 +114,19 @@ if (fs.existsSync(featureDir)) {
         else if (m[2] !== featureToken)
           bad(path.join(subPath, file), `文件后缀应等于顶层特性名 ${featureToken}`);
       }
+    }
+    // 同一子特性的各类型变体（如 05-mpls_bpdu_ac 与 05-mpls_bpdu_ac_cli）必须共用同一基号
+    const baseToNum = new Map();
+    for (const sub of subfeatureDirs) {
+      const parts = splitSubfeature(sub);
+      if (!parts) continue;
+      const prev = baseToNum.get(parts.base);
+      if (prev === undefined) baseToNum.set(parts.base, parts.num);
+      else if (prev !== parts.num)
+        bad(
+          path.join(featurePath, sub),
+          `类型变体未与主体共用基号（"${parts.base}" 已用基号 ${prev}，此处为 ${parts.num}）`,
+        );
     }
   }
 }

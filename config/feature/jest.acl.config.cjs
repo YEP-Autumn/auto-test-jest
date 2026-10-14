@@ -57,6 +57,8 @@ module.exports = {
     "test/feature/70-ACL_QOS/10-application_cli/0030-ACL_QOS\\.test\\.ts$",
     "test/feature/70-ACL_QOS/10-application_cli/0040-ACL_QOS\\.test\\.ts$",
     "test/feature/70-ACL_QOS/10-application_cli/0050-ACL_QOS\\.test\\.ts$",
+    "test/feature/70-ACL_QOS/10-application_cli/0051-ACL_QOS\\.test\\.ts$",
+    "test/feature/70-ACL_QOS/10-application_cli/0052-ACL_QOS\\.test\\.ts$",
     "test/feature/70-ACL_QOS/10-application_cli/0060-ACL_QOS\\.test\\.ts$",
     "test/feature/70-ACL_QOS/11-combination_cli/0010-ACL_QOS\\.test\\.ts$",
     "test/feature/70-ACL_QOS/11-combination_cli/0020-ACL_QOS\\.test\\.ts$",

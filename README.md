@@ -324,6 +324,10 @@ npm run failed       # 按该配置复跑
 
 - [测试用例命名规范](docs/spec/naming-convention.md)：目录 `NN-FEATURE[/NN-sub_feature]`、
   文件 `NNNN-<顶层特性>.test.ts`、标题必须非空且为中文陈述句。
+- [测试用例脚本编写规范](docs/spec/test-script-convention.md)：文件骨架、TestHelper 动作顺序、
+  `expect` 语义、打流/抓包、清理与反例，落地脚本时对照本文。
+- [测试用例描述规范与模板](docs/spec/test-case-template.md)：面向人的用例描述模板，
+  只依据它即可手工复现。
 - [提交信息规范](docs/spec/commit-convention.md)：Conventional Commits，格式
   `<type>(<scope>): <中文标题>`，由 `script/check-commit-msg.js` 校验。
 - [CI 集成说明](docs/spec/ci.md)：门禁范围、自托管 runner 接入方式。

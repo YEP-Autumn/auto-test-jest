@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("policy-map type performance-monitor 创建与 class（06-performance-monitor）", async () => {
+test("policy-map type performance-monitor 创建与 class", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "class-map type qos TC_PMF_C",

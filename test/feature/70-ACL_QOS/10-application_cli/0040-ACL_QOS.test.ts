@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("全局 ACL 相关应用（http server acl / snmp-server access-group / acl-statistics）（04-global-acl-apply）", async () => {
+test("全局 ACL 相关应用（http server acl / snmp-server access-group / acl-statistics）", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "ip access-list TC_ACL_G",

@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("MPLS ACL extend 满参数 rule 组合（02-mpls-acl-extend）", async () => {
+test("MPLS ACL extend 满参数 rule 组合", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "time-range TC_TR_MAX",

@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("policy-map type control-plane 动作（04-pm-control-plane）", async () => {
+test("policy-map type control-plane 动作", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "control-plane access-list TC_ACL_PMCP",

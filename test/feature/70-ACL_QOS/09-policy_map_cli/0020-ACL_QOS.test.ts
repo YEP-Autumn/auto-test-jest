@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("policy-map type qos policer 全参数 + aggregate-policer（02-pm-qos-policer-agg）", async () => {
+test("policy-map type qos policer 全参数 + aggregate-policer", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "qos aggregate-policer TC_AGG color-blind cir 2000 cbs 20000 statistics",

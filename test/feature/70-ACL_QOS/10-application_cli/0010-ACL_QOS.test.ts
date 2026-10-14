@@ -13,7 +13,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("ACL 绑定到接口（access-group input/output）（01-interface-access-group）", async () => {
+test("ACL 绑定到接口（access-group input/output）", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "ip access-list TC_ACL_IF",

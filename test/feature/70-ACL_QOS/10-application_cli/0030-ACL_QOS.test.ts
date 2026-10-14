@@ -13,7 +13,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("接口上的 qos policer（input/output）（03-interface-qos-policer）", async () => {
+test("接口上的 qos policer（input/output）", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,

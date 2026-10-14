@@ -13,7 +13,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("组合：IPv4 ACL + class-map + policy-map + 接口 service-policy（01-acl-cm-pm-interface）", async () => {
+test("组合：IPv4 ACL + class-map + policy-map + 接口 service-policy", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "ip access-list TC_C_IP",

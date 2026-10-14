@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("class-map match-all/any 传统形式（04-cm-match-all）", async () => {
+test("class-map match-all/any 传统形式", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "ip access-list TC_ACL_L",

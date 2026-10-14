@@ -13,7 +13,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("port-group / vlan-group 上引用 ACL（06-portgroup-vlangroup）", async () => {
+test("port-group / vlan-group 上引用 ACL", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "ip access-list TC_G_ACL",

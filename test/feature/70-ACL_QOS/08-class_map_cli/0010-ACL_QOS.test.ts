@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("class-map type qos 多种 match 组合（01-cm-qos）", async () => {
+test("class-map type qos 多种 match 组合", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "ip access-list TC_ACL_CM",

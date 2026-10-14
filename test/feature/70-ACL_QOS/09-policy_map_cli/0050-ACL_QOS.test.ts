@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("table-map 映射表参数（05-table-map）", async () => {
+test("table-map 映射表参数", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "table-map TC_TM",

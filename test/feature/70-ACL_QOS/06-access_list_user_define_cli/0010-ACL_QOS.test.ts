@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("user-define（UDF）ACL 满参数 rule 组合（01-udf-acl）", async () => {
+test("user-define（UDF）ACL 满参数 rule 组合", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "time-range TC_TR_MAX",

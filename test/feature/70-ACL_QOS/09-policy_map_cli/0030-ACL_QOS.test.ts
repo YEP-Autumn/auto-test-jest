@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("policy-map type traffic-class 全部队列/调度动作（03-pm-traffic-class）", async () => {
+test("policy-map type traffic-class 全部队列/调度动作", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "class-map type traffic-class TC_TC_1",

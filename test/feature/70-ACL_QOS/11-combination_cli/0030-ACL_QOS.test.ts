@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("组合：control-plane ACL + class-map type control-plane + policy-map type control-plane（03-cp-acl-in-policy）", async () => {
+test("组合：control-plane ACL + class-map type control-plane + policy-map type control-plane", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "control-plane access-list TC_C_CPACL",

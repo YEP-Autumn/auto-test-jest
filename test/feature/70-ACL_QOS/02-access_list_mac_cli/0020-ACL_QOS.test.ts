@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("MAC ACL basic 满参数 rule 组合（02-mac-acl-basic）", async () => {
+test("MAC ACL basic 满参数 rule 组合", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "time-range TC_TR_MAX",

@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("time-range 绝对/周期时间范围（01-time-range）", async () => {
+test("time-range 绝对/周期时间范围", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "time-range TC_TR_ABS",

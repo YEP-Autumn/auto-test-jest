@@ -13,7 +13,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("policy-map 绑定到接口（service-policy type qos input）（02-interface-service-policy）", async () => {
+test("policy-map 绑定到接口（service-policy type qos input）", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "ip access-list TC_ACL_SP",

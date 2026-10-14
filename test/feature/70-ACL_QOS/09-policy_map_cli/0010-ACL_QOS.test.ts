@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("policy-map type qos 全部标记/动作变体（01-pm-qos-actions）", async () => {
+test("policy-map type qos 全部标记/动作变体", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "table-map TC_TM_C",

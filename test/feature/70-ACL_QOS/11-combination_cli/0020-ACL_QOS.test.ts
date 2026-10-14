@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("组合：MAC ACL 用于 class-map match access-group（02-mac-acl-in-classmap）", async () => {
+test("组合：MAC ACL 用于 class-map match access-group", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "mac access-list TC_C_MAC",

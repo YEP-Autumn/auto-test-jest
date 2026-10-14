@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("组合：time-range + UDF/ip ACL 引用（04-acl-time-range-udf）", async () => {
+test("组合：time-range + UDF/ip ACL 引用", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "time-range TC_C_TR",

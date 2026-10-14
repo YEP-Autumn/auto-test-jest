@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("ARP ACL 满参数 rule 组合（01-arp-acl）", async () => {
+test("ARP ACL 满参数 rule 组合", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "arp access-list TC_ARP",

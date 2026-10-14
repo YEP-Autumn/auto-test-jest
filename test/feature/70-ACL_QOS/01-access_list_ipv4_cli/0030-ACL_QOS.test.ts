@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("IPv4 ACL extend 满参数 rule 组合（03-ip-acl-extend）", async () => {
+test("IPv4 ACL extend 满参数 rule 组合", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     "time-range TC_TR_MAX",

@@ -49,8 +49,9 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── jest.config.cjs         # 默认：跑 test/feature 下登记的全部用例
 │   ├── jest-failed.config.cjs  # 由 gen-failed 生成，只跑上次失败的用例
 │   ├── jest-example.config.cjs # 跑 docs/test_script_tutorials 教程用例
-│   ├── jest.ipv6.config.cjs    # IPv6 场景集合
-│   └── jest.mpls.config.cjs    # MPLS 场景集合
+│   └── stm_profile/
+│       ├── jest.ipv6.config.cjs    # IPv6 场景集合
+│       └── jest.mpls.config.cjs    # MPLS 场景集合
 ├── docs/
 │   ├── local-setup.md          # 本地使用技巧（skip-worktree）
 │   ├── spec/                   # 用例命名、提交信息、CI 规范

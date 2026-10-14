@@ -280,20 +280,22 @@ export class TestHelper {
   ExecRetMatchDut(
     idx: DutIdx,
     config: string,
-    expect: string | RegExp,
+    expect: string | RegExp | (string | RegExp)[],
     notMatch: boolean = false,
   ) {
     const dut = this.getDut(idx);
     const cmd = replaceCmdTemplate(config, dut);
-    this.actuator.push(
-      new ExecRetMatch(dut, cmd, toRegExp(expect, dut), notMatch),
+    /** 统一成数组：命令只执行一次，输出同时对多条期望做 AND 校验 */
+    const expects = (Array.isArray(expect) ? expect : [expect]).map((e) =>
+      toRegExp(e, dut),
     );
+    this.actuator.push(new ExecRetMatch(dut, cmd, expects, notMatch));
     return this;
   }
 
   ExecRetMatchDutA(
     config: string,
-    expect: string | RegExp,
+    expect: string | RegExp | (string | RegExp)[],
     notMatch: boolean = false,
   ) {
     return this.ExecRetMatchDut(DutIdx.A, config, expect, notMatch);
@@ -301,7 +303,7 @@ export class TestHelper {
 
   ExecRetMatchDutB(
     config: string,
-    expect: string | RegExp,
+    expect: string | RegExp | (string | RegExp)[],
     notMatch: boolean = false,
   ) {
     return this.ExecRetMatchDut(DutIdx.B, config, expect, notMatch);
@@ -309,7 +311,7 @@ export class TestHelper {
 
   ExecRetMatchDutC(
     config: string,
-    expect: string | RegExp,
+    expect: string | RegExp | (string | RegExp)[],
     notMatch: boolean = false,
   ) {
     return this.ExecRetMatchDut(DutIdx.C, config, expect, notMatch);
@@ -317,7 +319,7 @@ export class TestHelper {
 
   ExecRetMatchDutD(
     config: string,
-    expect: string | RegExp,
+    expect: string | RegExp | (string | RegExp)[],
     notMatch: boolean = false,
   ) {
     return this.ExecRetMatchDut(DutIdx.D, config, expect, notMatch);

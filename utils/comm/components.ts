@@ -69,28 +69,48 @@ export class CleanConfig implements Actuator {
 export class ExecRetMatch implements Actuator {
   private conn: Dut;
   private config: string;
-  private expect: RegExp;
+  private expects: RegExp[];
   private notMatch: boolean;
 
-  constructor(conn: Dut, config: string, expect: RegExp, notMatch: boolean) {
+  /**
+   * @param expect 期望的正则列表：命令只执行一次，输出对每条期望做 AND 校验。
+   *               归一化（string / 单条 / 数组 -> RegExp[]）由 TestHelper 完成。
+   */
+  constructor(
+    conn: Dut,
+    config: string,
+    expect: RegExp[],
+    notMatch: boolean,
+  ) {
     this.conn = conn;
     this.config = config;
-    this.expect = expect;
+    this.expects = expect;
     this.notMatch = notMatch;
   }
 
   async start(): Promise<boolean> {
-    let success: boolean;
-    let result = await this.conn.safeExec(this.config);
-    if (this.notMatch) {
-      success = !this.expect.exec(result);
-    } else {
-      success = !!this.expect.exec(result);
-    }
+    const result = await this.conn.safeExec(this.config);
+
+    const failed = this.expects.filter((expect) => {
+      /** 重置 lastIndex，避免带 /g、/y 标志的正则在多次 test 时状态残留 */
+      expect.lastIndex = 0;
+      const hit = expect.test(result);
+      return this.notMatch ? hit : !hit;
+    });
+
+    const success = failed.length === 0;
 
     if (!success) {
+      const detail = this.expects
+        .map(
+          (expect) =>
+            `    ${failed.includes(expect) ? "[FAIL]" : "[ OK ]"} ${
+              this.notMatch ? "must not match" : "must match"
+            }: ${expect}`,
+        )
+        .join("\n");
       console.error(
-        `ExecRetMatch failed:\n  Command: ${this.config}\n  Expected: ${this.expect}\n  Output: ${result}\n  IsNotMatch: ${this.notMatch}`,
+        `ExecRetMatch failed:\n  Command: ${this.config}\n  IsNotMatch: ${this.notMatch}\n  Expect:\n${detail}\n  Output: ${result}`,
       );
     }
 

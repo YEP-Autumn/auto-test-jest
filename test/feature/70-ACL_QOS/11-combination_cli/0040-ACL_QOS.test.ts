@@ -28,12 +28,16 @@ test("组合：time-range + UDF/ip ACL 引用（04-acl-time-range-udf）", async
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "time-range TC_C_TR",
-    "periodic 08:00 daily to 18:00",
-    "ip access-list TC_C_TRACL",
-    "user-define access-list TC_C_UDF",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "time-range TC_C_TR",
+      "periodic 08:00 daily to 18:00",
+      "ip access-list TC_C_TRACL",
+      "user-define access-list TC_C_UDF",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

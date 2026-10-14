@@ -25,11 +25,15 @@ test("全局 ACL 相关应用（http server acl / snmp-server access-group / acl
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "http server acl TC_ACL_G",
-    "snmp-server access-group TC_ACL_G in",
-    "acl-statistics exclude-drop enable",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "http server acl TC_ACL_G",
+      "snmp-server access-group TC_ACL_G in",
+      "acl-statistics exclude-drop enable",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

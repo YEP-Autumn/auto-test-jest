@@ -24,10 +24,11 @@ test("class-map match-all/any 传统形式（04-cm-match-all）", async () => {
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "class-map match-all TC_CM_LEGACY",
-    "match access-group TC_ACL_L",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    ["class-map match-all TC_CM_LEGACY", "match access-group TC_ACL_L"],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

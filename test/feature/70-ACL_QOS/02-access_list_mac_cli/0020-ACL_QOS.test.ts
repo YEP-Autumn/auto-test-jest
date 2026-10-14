@@ -27,13 +27,17 @@ test("MAC ACL basic 满参数 rule 组合（02-mac-acl-basic）", async () => {
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "mac access-list TC_MAC_BASIC basic",
-    "1 permit src-mac host 0011.2233.4455 dest-mac 0011.2233.0000 0000.0000.ffff vlan 100 cos 5 protocol arp time-range TC_TR_MAX",
-    "2 deny src-mac any dest-mac any untag-vlan protocol rarp time-range TC_TR_MAX",
-    "4 deny src-mac any dest-mac any vlan 10 cos 3 time-range TC_TR_MAX",
-    "3 permit src-mac any dest-mac any protocol arp time-range TC_TR_MAX",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "mac access-list TC_MAC_BASIC basic",
+      "1 permit src-mac host 0011.2233.4455 dest-mac 0011.2233.0000 0000.0000.ffff vlan 100 cos 5 protocol arp time-range TC_TR_MAX",
+      "2 deny src-mac any dest-mac any untag-vlan protocol rarp time-range TC_TR_MAX",
+      "4 deny src-mac any dest-mac any vlan 10 cos 3 time-range TC_TR_MAX",
+      "3 permit src-mac any dest-mac any protocol arp time-range TC_TR_MAX",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

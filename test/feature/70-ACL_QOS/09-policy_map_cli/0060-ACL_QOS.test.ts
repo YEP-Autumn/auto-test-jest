@@ -24,7 +24,11 @@ test("policy-map type performance-monitor 创建与 class（06-performance-monit
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", "policy-map type performance-monitor TC_PM_PERF", false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    "policy-map type performance-monitor TC_PM_PERF",
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

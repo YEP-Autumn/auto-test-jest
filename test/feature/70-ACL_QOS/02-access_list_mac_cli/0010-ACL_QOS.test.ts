@@ -30,16 +30,20 @@ test("MAC ACL 满参数 rule 组合（01-mac-acl-plain）", async () => {
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "mac access-list TC_MAC",
-    "10 permit src-mac host 0011.2233.4455 dest-mac 0011.2233.0000 0000.0000.ffff vlan 100 cos 5 inner-vlan 200 inner-cos 6 protocol arp arp-op-code 1 time-range TC_TR_MAX",
-    "30 permit src-mac any dest-mac any untag-vlan protocol arp time-range TC_TR_MAX",
-    "50 deny src-mac any dest-mac any vlan 200 cos 2",
-    "20 deny src-mac 0011.2233.0000 0000.0000.ffff dest-mac any vlan 100 cos 5 inner-vlan 200 inner-cos 6 protocol rarp time-range TC_TR_MAX",
-    "40 permit src-mac any dest-mac any vlan 100 cos 5 inner-vlan 200 inner-cos 6",
-    "60 permit src-mac any dest-mac any inner-vlan 200 inner-cos 6",
-    "70 deny src-mac any dest-mac any",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "mac access-list TC_MAC",
+      "10 permit src-mac host 0011.2233.4455 dest-mac 0011.2233.0000 0000.0000.ffff vlan 100 cos 5 inner-vlan 200 inner-cos 6 protocol arp arp-op-code 1 time-range TC_TR_MAX",
+      "30 permit src-mac any dest-mac any untag-vlan protocol arp time-range TC_TR_MAX",
+      "50 deny src-mac any dest-mac any vlan 200 cos 2",
+      "20 deny src-mac 0011.2233.0000 0000.0000.ffff dest-mac any vlan 100 cos 5 inner-vlan 200 inner-cos 6 protocol rarp time-range TC_TR_MAX",
+      "40 permit src-mac any dest-mac any vlan 100 cos 5 inner-vlan 200 inner-cos 6",
+      "60 permit src-mac any dest-mac any inner-vlan 200 inner-cos 6",
+      "70 deny src-mac any dest-mac any",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

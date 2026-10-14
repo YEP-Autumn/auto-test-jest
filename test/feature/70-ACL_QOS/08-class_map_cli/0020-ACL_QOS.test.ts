@@ -24,12 +24,16 @@ test("class-map type traffic-class 匹配（02-cm-traffic-class）", async () =>
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "class-map type traffic-class TC_CM_TC",
-    "match traffic-class 1",
-    "class-map type traffic-class TC_CM_TCALL",
-    "match traffic-class 3",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "class-map type traffic-class TC_CM_TC",
+      "match traffic-class 1",
+      "class-map type traffic-class TC_CM_TCALL",
+      "match traffic-class 3",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

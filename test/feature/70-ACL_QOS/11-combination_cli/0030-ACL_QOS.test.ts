@@ -31,13 +31,17 @@ test("组合：control-plane ACL + class-map type control-plane + policy-map typ
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "control-plane access-list TC_C_CPACL",
-    "class-map type control-plane TC_C_CM_CP",
-    "match access-group TC_C_CPACL",
-    "policy-map type control-plane TC_C_PM_CP",
-    "policer cir 100",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "control-plane access-list TC_C_CPACL",
+      "class-map type control-plane TC_C_CM_CP",
+      "match access-group TC_C_CPACL",
+      "policy-map type control-plane TC_C_PM_CP",
+      "policer cir 100",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

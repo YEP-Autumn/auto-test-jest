@@ -32,11 +32,15 @@ test("policy-map type control-plane 动作（04-pm-control-plane）", async () =
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "policy-map type control-plane TC_PM_CP",
-    "policer cir 100",
-    "statistics enable",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "policy-map type control-plane TC_PM_CP",
+      "policer cir 100",
+      "statistics enable",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

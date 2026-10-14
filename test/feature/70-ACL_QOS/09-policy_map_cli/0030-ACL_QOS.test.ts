@@ -75,15 +75,19 @@ test("policy-map type traffic-class 全部队列/调度动作（03-pm-traffic-cl
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "policy-map type traffic-class TC_PM_TC",
-    "priority level 1",
-    "bandwidth percentage 10",
-    "queue-limit 100",
-    "queue-limit maximum",
-    "queue-limit dynamic 1",
-    "random-detect maximum-threshold 100",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "policy-map type traffic-class TC_PM_TC",
+      "priority level 1",
+      "bandwidth percentage 10",
+      "queue-limit 100",
+      "queue-limit maximum",
+      "queue-limit dynamic 1",
+      "random-detect maximum-threshold 100",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

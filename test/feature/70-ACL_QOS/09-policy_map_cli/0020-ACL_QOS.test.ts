@@ -42,14 +42,18 @@ test("policy-map type qos policer 全参数 + aggregate-policer（02-pm-qos-poli
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "qos aggregate-policer TC_AGG",
-    "policy-map type qos TC_PM_AGG",
-    "class type qos TC_CM_AGG",
-    "aggregate-policer TC_AGG",
-    "class type qos TC_CM_POL",
-    "policer color-aware cir 1000",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "qos aggregate-policer TC_AGG",
+      "policy-map type qos TC_PM_AGG",
+      "class type qos TC_CM_AGG",
+      "aggregate-policer TC_AGG",
+      "class type qos TC_CM_POL",
+      "policer color-aware cir 1000",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

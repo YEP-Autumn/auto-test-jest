@@ -36,16 +36,20 @@ test("class-map type qos 多种 match 组合（01-cm-qos）", async () => {
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "class-map type qos TC_CM_QOS_ACL",
-    "match access-group TC_ACL_CM",
-    "class-map type qos TC_CM_QOS_COS",
-    "match cos 3",
-    "class-map type qos TC_CM_QOS_COS_IN",
-    "match cos inner 5",
-    "class-map type qos TC_CM_QOS_DSCP",
-    "match dscp af11",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "class-map type qos TC_CM_QOS_ACL",
+      "match access-group TC_ACL_CM",
+      "class-map type qos TC_CM_QOS_COS",
+      "match cos 3",
+      "class-map type qos TC_CM_QOS_COS_IN",
+      "match cos inner 5",
+      "class-map type qos TC_CM_QOS_DSCP",
+      "match dscp af11",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

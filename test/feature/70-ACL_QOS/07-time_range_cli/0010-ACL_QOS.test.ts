@@ -36,14 +36,18 @@ test("time-range 绝对/周期时间范围（01-time-range）", async () => {
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "time-range TC_TR_ABS",
-    "absolute start 00:00:00 Jan 01 2024 end 23:59:59 Dec 31 2030",
-    "time-range TC_TR_DAILY",
-    "periodic 08:00 daily to 18:00",
-    "time-range TC_TR_WEEK",
-    "periodic 08:00 Mon to 18:00 Fri",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "time-range TC_TR_ABS",
+      "absolute start 00:00:00 Jan 01 2024 end 23:59:59 Dec 31 2030",
+      "time-range TC_TR_DAILY",
+      "periodic 08:00 daily to 18:00",
+      "time-range TC_TR_WEEK",
+      "periodic 08:00 Mon to 18:00 Fri",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

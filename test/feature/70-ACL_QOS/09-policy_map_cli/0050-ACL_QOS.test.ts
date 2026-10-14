@@ -32,16 +32,20 @@ test("table-map 映射表参数（05-table-map）", async () => {
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "table-map TC_TM",
-    "map from 1 to 2",
-    "map from 3 to 9",
-    "default copy",
-    "table-map TC_TM2",
-    "default 7",
-    "table-map TC_TM3",
-    "default ignore",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "table-map TC_TM",
+      "map from 1 to 2",
+      "map from 3 to 9",
+      "default copy",
+      "table-map TC_TM2",
+      "default 7",
+      "table-map TC_TM3",
+      "default ignore",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

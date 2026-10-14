@@ -27,13 +27,17 @@ test("MPLS ACL 满参数 rule 组合（01-mpls-acl）", async () => {
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "mpls access-list TC_MPLS",
-    "10 permit topmost-label 100 exp 5 ttl 10 next-label 200 exp 3 ttl 8 next-label 300 exp 2 ttl 4 stack-bottom time-range TC_TR_MAX",
-    "20 deny topmost-label any exp 0 ttl 255",
-    "40 deny topmost-label any stack-bottom",
-    "30 permit topmost-label 500 exp 1 ttl 20",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "mpls access-list TC_MPLS",
+      "10 permit topmost-label 100 exp 5 ttl 10 next-label 200 exp 3 ttl 8 next-label 300 exp 2 ttl 4 stack-bottom time-range TC_TR_MAX",
+      "20 deny topmost-label any exp 0 ttl 255",
+      "40 deny topmost-label any stack-bottom",
+      "30 permit topmost-label 500 exp 1 ttl 20",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

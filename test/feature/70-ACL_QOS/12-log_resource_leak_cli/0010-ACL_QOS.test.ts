@@ -71,7 +71,10 @@ test.failing(
         await dut.safeExec(`no ip access-list ${name}`);
         await dut.safeExec("end");
 
-        if (/acl log entry is full/i.test(out) || /(?:^|\r?\n)\s*%\s/.test(out)) {
+        if (
+          /acl log entry is full/i.test(out) ||
+          /(?:^|\r?\n)\s*%\s/.test(out)
+        ) {
           failedAt = i;
           console.error(
             `[ACL-LOG] 第 ${i} 次创建 log 规则失败：${out.trim().split("\n").slice(-1)[0]}`,

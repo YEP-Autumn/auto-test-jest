@@ -24,12 +24,16 @@ test("组合：MAC ACL 用于 class-map match access-group（02-mac-acl-in-class
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "mac access-list TC_C_MAC",
-    "10 permit src-mac any dest-mac any vlan 10",
-    "class-map type qos TC_C_CM_MAC",
-    "match access-group TC_C_MAC",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "mac access-list TC_C_MAC",
+      "10 permit src-mac any dest-mac any vlan 10",
+      "class-map type qos TC_C_CM_MAC",
+      "match access-group TC_C_MAC",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

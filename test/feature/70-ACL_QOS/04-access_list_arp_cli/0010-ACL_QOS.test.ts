@@ -23,13 +23,17 @@ test("ARP ACL 满参数 rule 组合（01-arp-acl）", async () => {
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "arp access-list TC_ARP",
-    "10 permit request ip host 192.168.1.1 mac 0011.2233.4455 0000.0000.ffff",
-    "20 deny response ip 10.0.0.0 0.0.0.255 mac any",
-    "40 deny ip 10.9.0.0 0.0.0.255 mac host 0011.2233.4466",
-    "30 permit ip any mac any",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "arp access-list TC_ARP",
+      "10 permit request ip host 192.168.1.1 mac 0011.2233.4455 0000.0000.ffff",
+      "20 deny response ip 10.0.0.0 0.0.0.255 mac any",
+      "40 deny ip 10.9.0.0 0.0.0.255 mac host 0011.2233.4466",
+      "30 permit ip any mac any",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

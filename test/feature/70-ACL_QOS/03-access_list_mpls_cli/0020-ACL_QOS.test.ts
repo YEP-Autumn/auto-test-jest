@@ -26,12 +26,16 @@ test("MPLS ACL extend 满参数 rule 组合（02-mpls-acl-extend）", async () =
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "mpls access-list TC_MPLS_EXT extend",
-    "10 permit topmost-label 100 exp 5 ttl 10 next-label 200 exp 3 ttl 8 next-label 300 exp 2 ttl 4 stack-bottom time-range TC_TR_MAX",
-    "20 permit src-mac host 0011.2233.4455 dest-mac host 0011.2233.4466 vlan 10 cos 3 inner-vlan 20 inner-cos 4 time-range TC_TR_MAX",
-    "30 deny src-mac any dest-mac any vlan 10 cos 3",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "mpls access-list TC_MPLS_EXT extend",
+      "10 permit topmost-label 100 exp 5 ttl 10 next-label 200 exp 3 ttl 8 next-label 300 exp 2 ttl 4 stack-bottom time-range TC_TR_MAX",
+      "20 permit src-mac host 0011.2233.4455 dest-mac host 0011.2233.4466 vlan 10 cos 3 inner-vlan 20 inner-cos 4 time-range TC_TR_MAX",
+      "30 deny src-mac any dest-mac any vlan 10 cos 3",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

@@ -24,10 +24,11 @@ test("class-map type control-plane 匹配（03-cm-control-plane）", async () =>
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "class-map type control-plane TC_CM_CP",
-    "match access-group TC_ACL_CP2",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    ["class-map type control-plane TC_CM_CP", "match access-group TC_ACL_CP2"],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

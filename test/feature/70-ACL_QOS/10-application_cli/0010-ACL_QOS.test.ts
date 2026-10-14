@@ -1,3 +1,4 @@
+import { Port } from "@/utils";
 import { TestHelper } from "@/utils/test-helper";
 
 jest.setTimeout(1000 * 60 * 20);
@@ -20,20 +21,21 @@ test("ACL 绑定到接口（access-group input/output）（01-interface-access-g
     "20 deny udp any any",
     "end",
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "access-group input TC_ACL_IF",
     "access-group output TC_ACL_IF",
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "access-group input TC_ACL_IF",
-    "access-group output TC_ACL_IF",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    ["access-group input TC_ACL_IF", "access-group output TC_ACL_IF"],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no access-group input",
     "no access-group output",
     "end",

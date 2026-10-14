@@ -1,3 +1,4 @@
+import { Port } from "@/utils";
 import { TestHelper } from "@/utils/test-helper";
 
 jest.setTimeout(1000 * 60 * 20);
@@ -29,16 +30,20 @@ test("policy-map 绑定到接口（service-policy type qos input）（02-interfa
     "quit",
     "end",
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "service-policy type qos input TC_PM_SP",
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", "service-policy type qos input TC_PM_SP", false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    "service-policy type qos input TC_PM_SP",
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no service-policy type qos input",
     "end",
     "configure terminal",

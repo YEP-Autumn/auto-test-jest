@@ -1,3 +1,4 @@
+import { Port } from "@/utils";
 import { TestHelper } from "@/utils/test-helper";
 
 jest.setTimeout(1000 * 60 * 20);
@@ -20,8 +21,8 @@ test("port-group / vlan-group 上引用 ACL（06-portgroup-vlangroup）", async 
     "end",
     "configure terminal",
     "port-group TC_PG",
-    "member interface eth-0-1",
-    "member interface eth-0-2",
+    `member interface ${Port.A}`,
+    `member interface ${Port.B}`,
     "access-group input TC_G_ACL",
     "end",
     "configure terminal",
@@ -34,13 +35,17 @@ test("port-group / vlan-group 上引用 ACL（06-portgroup-vlangroup）", async 
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "port-group TC_PG",
-    "member interface eth-0-1",
-    "vlan-group TC_VG",
-    "member vlan 100",
-    "access-group input TC_G_ACL",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "port-group TC_PG",
+      `member interface ${Port.A}`,
+      "vlan-group TC_VG",
+      "member vlan 100",
+      "access-group input TC_G_ACL",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",

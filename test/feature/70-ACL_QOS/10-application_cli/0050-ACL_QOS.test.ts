@@ -1,3 +1,4 @@
+import { Port } from "@/utils";
 import { TestHelper } from "@/utils/test-helper";
 
 jest.setTimeout(1000 * 60 * 20);
@@ -25,19 +26,19 @@ test("接口 trust / qos shape rate / service-policy type traffic-class（05-int
     "quit",
     "end",
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "trust dscp",
     "end",
     "configure terminal",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "trust cos stag-cos",
     "end",
     "configure terminal",
-    "interface eth-0-3",
+    `interface ${Port.C}`,
     "trust cos ctag-cos",
     "end",
     "configure terminal",
-    "interface eth-0-4",
+    `interface ${Port.D}`,
     "trust port",
     "end",
     "configure terminal",
@@ -62,31 +63,35 @@ test("接口 trust / qos shape rate / service-policy type traffic-class（05-int
     "end",
   ]);
 
-  testHelper.ExecRetMatchDutA("show running-config", [
-    "trust dscp",
-    "trust cos stag-cos",
-    "trust cos ctag-cos",
-    "trust port",
-    "qos shape rate pir 1000",
-    "qos shape rate pir 1000 ecn-percentage 60",
-    "service-policy type traffic-class TC_IF_PM",
-  ], false);
+  testHelper.ExecRetMatchDutA(
+    "show running-config",
+    [
+      "trust dscp",
+      "trust cos stag-cos",
+      "trust cos ctag-cos",
+      "trust port",
+      "qos shape rate pir 1000",
+      "qos shape rate pir 1000 ecn-percentage 60",
+      "service-policy type traffic-class TC_IF_PM",
+    ],
+    false,
+  );
 
   testHelper.CleanConfigDutA([
     "configure terminal",
-    "interface eth-0-1",
+    `interface ${Port.A}`,
     "no trust",
     "end",
     "configure terminal",
-    "interface eth-0-2",
+    `interface ${Port.B}`,
     "no trust",
     "end",
     "configure terminal",
-    "interface eth-0-3",
+    `interface ${Port.C}`,
     "no trust",
     "end",
     "configure terminal",
-    "interface eth-0-4",
+    `interface ${Port.D}`,
     "no trust",
     "end",
     "configure terminal",

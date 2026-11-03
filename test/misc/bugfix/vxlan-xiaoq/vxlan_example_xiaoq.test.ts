@@ -42,7 +42,7 @@ afterAll(async () => {
  *  +----------------------------------------+                  +--------+
  *
  */
-test("", async () => {
+test("EVPN VXLAN 分布式网关 + MLAG 六设备拓扑配置下发成功", async () => {
   testHelper.ExecConfigDutD([
     "configure terminal",
     "vlan database",

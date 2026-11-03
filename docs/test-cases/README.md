@@ -21,3 +21,4 @@
 | 用例编号 | 特性 | 描述 | 对应脚本 |
 | --- | --- | --- | --- |
 | 0010 | `10-BGP_EVPN_VXLAN` | [0010-BGP_EVPN_VXLAN.md](10-BGP_EVPN_VXLAN/0010-BGP_EVPN_VXLAN.md) | `test/feature/10-BGP_EVPN_VXLAN/0010-BGP_EVPN_VXLAN.test.ts` |
+| 0010 | `misc/stack/70-acl-qos` | [0010-ACL_QOS.md](misc/stack/70-acl-qos/0010-ACL_QOS.md)<br>（合集，34 条用例 0010~0340） | `test/misc/stack/70-acl-qos/{01-…,11-…}/*-ACL_QOS.test.ts` |

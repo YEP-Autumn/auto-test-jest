@@ -299,7 +299,7 @@ export class LinkConstraint {
    *        |                            |                            |
    *      PortD                        PortD                        PortD
    *        |                            |                            |
-   *     RenixA                       RenixB                      *RenixC
+   *     RenixA                       RenixB                       RenixC
    *
    */
   static get four_devices_topo_links_type_2(): TopoLinks {
@@ -310,9 +310,9 @@ export class LinkConstraint {
         link(dut("A", "C"), dut("D", "C")),
         link(dut("A", "D"), renix("A")),
         link(dut("B", "D"), renix("B")),
+        link(dut("C", "D"), renix("C")),
         link(dut("B", "C"), dut("D", "B")),
         link(dut("C", "A"), dut("D", "A")),
-        // 历史实现中 stream_id: 8（DutC.portD -> Renix.portC）被注释掉，此处保持一致。
       ),
     );
   }
@@ -348,6 +348,54 @@ export class LinkConstraint {
         link(dut("C", "B"), dut("E", "B")),
         link(dut("D", "B"), dut("F", "B")),
         link(dut("E", "A"), dut("F", "A")),
+      ),
+    );
+  }
+
+  
+
+  /**
+   *
+   *                                  +--------+
+   *         +-----------------PortC--|  DUTD  |--PortA-----------------+
+   *         |                        +--------+                       |
+   *         |                            |                            |
+   *         |                          PortB                          |
+   *         |                            |                            |
+   *       PortC                        PortC                        PortA
+   *         |                            |                            |
+   *    +--------+                   +--------+                   +--------+
+   *    |        |                   |        |                   |        |
+   *    |  DUTA  |--PortA <=> PortA--|  DUTB  |                   |  DUTC  |
+   *    |        |                   |        |                   |        |
+   *    +--------+                   +--------+                   +--------+
+   *     |      |                     |      |                     |      |
+   *   PortB  PortD                 PortB  PortD                 PortC  PortD
+   *     |      |                     |      |                     |      |
+   *   PortA  PortB                 PortC  PortD                 PortA  PortB
+   *     |      |                     |      |                     |      |
+   *  +----------------------------------------+                  +--------+
+   *  |                                        |                  |        |
+   *  |                  DutE                  |                  |  DUTF  |
+   *  |                                        |                  |        |
+   *  +----------------------------------------+                  +--------+
+   *
+   */
+  static get six_devices_topo_links_type_2(): TopoLinks {
+    return cached("six_devices_topo_links_type_2", () =>
+      topo(
+        link(dut("A", "C"), dut("D", "C")),
+        link(dut("B", "C"), dut("D", "B")),
+        link(dut("C", "A"), dut("D", "A")),
+        link(dut("A", "A"), dut("B", "A")),
+
+        link(dut("A", "B"), dut("E", "A")),
+        link(dut("A", "D"), dut("E", "B")),
+        link(dut("B", "B"), dut("E", "C")),
+        link(dut("B", "D"), dut("E", "D")),
+
+        link(dut("C", "C"), dut("F", "A")),
+        link(dut("C", "D"), dut("F", "B")),
       ),
     );
   }

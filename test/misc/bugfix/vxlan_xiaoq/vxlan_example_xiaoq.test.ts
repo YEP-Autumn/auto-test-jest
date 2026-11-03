@@ -1,5 +1,5 @@
 import { Port } from "@/utils";
-import { TestHelper } from "@/utils/test-helper";
+import { DutIdx, TestHelper } from "@/utils/test-helper";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 import { exit } from "node:process";
 
@@ -7,7 +7,7 @@ let testHelper: TestHelper;
 
 beforeAll(async () => {
   testHelper = await new TestHelper(
-    LinkConstraint.four_devices_topo_links_type_2_form_1,
+    LinkConstraint.six_devices_topo_links_type_2,
   ).init();
 });
 
@@ -30,10 +30,16 @@ afterAll(async () => {
  *    |  DUTA  |--PortA <=> PortA--|  DUTB  |                   |  DUTC  |
  *    |        |                   |        |                   |        |
  *    +--------+                   +--------+                   +--------+
- *        |                            |                            |
- *      PortD                        PortD                        PortD
- *        |                            |                            |
- *     RenixA                       RenixB                      *RenixC
+ *     |      |                     |      |                     |      |
+ *   PortB  PortD                 PortB  PortD                 PortC  PortD
+ *     |      |                     |      |                     |      |
+ *   PortA  PortB                 PortC  PortD                 PortA  PortB
+ *     |      |                     |      |                     |      |
+ *  +----------------------------------------+                  +--------+
+ *  |                                        |                  |        |
+ *  |                  DutE                  |                  |  DUTF  |
+ *  |                                        |                  |        |
+ *  +----------------------------------------+                  +--------+
  *
  */
 test("", async () => {
@@ -627,6 +633,102 @@ test("", async () => {
     "end",
   ]);
 
+  testHelper.ExecConfigDut(DutIdx.E, [
+    "configure terminal",
+    "ip vrf vpn1",
+    "exit",
+    "ip vrf vpn2",
+    "exit",
+    `interface ${Port.A}`,
+    "no switchport",
+    "channel-group 1 mode active",
+    "exit",
+    `interface ${Port.B}`,
+    "no switchport",
+    "channel-group 1 mode active",
+    "exit",
+    `interface ${Port.C}`,
+    "no switchport",
+    "channel-group 2 mode active",
+    "exit",
+    `interface ${Port.D}`,
+    "no switchport",
+    "channel-group 2 mode active",
+    "exit",
+    "interface agg1.101",
+    "dot1q termination vid 101",
+    "ip vrf forwarding vpn1",
+    "ip address 10.1.1.11/24",
+    "exit",
+    "interface agg1.102",
+    "dot1q termination vid 102",
+    "ip vrf forwarding vpn1",
+    "ip address 10.1.2.11/24",
+    "exit",
+    "interface agg1.201",
+    "dot1q termination vid 201",
+    "ip vrf forwarding vpn1",
+    "ip address 10.2.1.11/24",
+    "exit",
+    "interface agg1.202",
+    "dot1q termination vid 202",
+    "ip vrf forwarding vpn1",
+    "ip address 10.2.2.11/24",
+    "exit",
+    "interface agg2.101",
+    "dot1q termination vid 101",
+    "ip vrf forwarding vpn2",
+    "ip address 10.1.1.12/24",
+    "exit",
+    "interface agg2.102",
+    "dot1q termination vid 102",
+    "ip vrf forwarding vpn2",
+    "ip address 10.1.2.12/24",
+    "exit",
+    "interface agg2.201",
+    "dot1q termination vid 201",
+    "ip vrf forwarding vpn2",
+    "ip address 10.2.1.12/24",
+    "exit",
+    "interface agg2.202",
+    "dot1q termination vid 202",
+    "ip vrf forwarding vpn2",
+    "ip address 10.2.2.12/24",
+    "exit",
+    "end",
+  ]);
+
+  testHelper.ExecConfigDut(DutIdx.F, [
+    "configure terminal",
+    `interface ${Port.A}`,
+    "no switchport",
+    "channel-group 1 mode active",
+    "exit",
+    `interface ${Port.B}`,
+    "no switchport",
+    "channel-group 1 mode active",
+    "exit",
+    "interface agg1.101",
+    "dot1q termination vid 101",
+    "ip address 10.1.1.21/24",
+    "exit",
+    "interface agg1.102",
+    "dot1q termination vid 102",
+    "ip address 10.1.2.21/24",
+    "exit",
+    "interface agg1.201",
+    "dot1q termination vid 201",
+    "ip address 10.2.1.21/24",
+    "exit",
+    "interface agg1.202",
+    "dot1q termination vid 202",
+    "ip address 10.2.2.21/24",
+    "exit",
+    "end",
+  ]);
+
+  testHelper.sleep(1000 * 120);
+
   testHelper.CleanConfigDutD([
     "configure terminal",
     "vlan database",
@@ -648,6 +750,175 @@ test("", async () => {
     "end",
   ]);
 
+  testHelper.CleanConfigDutA([
+    "configure terminal",
+    "no mlag configuration",
+    "no lacp mlag system-id",
+    "no lacp system-priority",
+    "no ip vrf vpn1",
+    "no ip vrf vpn2",
+    `interface ${Port.C}`,
+    "vxlan uplink disable",
+    "switchport",
+    "exit",
+    `interface ${Port.A}`,
+    "switchport mode access",
+    "exit",
+    `interface ${Port.B}`,
+    "no channel-group",
+    "switchport mode access",
+    "exit",
+    `interface ${Port.D}`,
+    "no channel-group",
+    "switchport mode access",
+    "exit",
+    "no interface loopback1",
+    "no interface loopback2",
+    "no interface nve1",
+    "no evpn",
+    "overlay",
+    "no vlan 101 vni",
+    "no vlan 102 vni",
+    "no vlan 201 vni",
+    "no vlan 202 vni",
+    "exit",
+    "evpn virtual-mac disable",
+    "no ip virtual-router mac",
+    "no router ospf 1",
+    "no router bgp 65001",
+    "vlan database",
+    "no vlan 101,102,201,202,4094",
+    "exit",
+    "end",
+  ]);
+
+  testHelper.CleanConfigDutB([
+    "configure terminal",
+    `no mlag configuration`,
+    "no lacp mlag system-id",
+    "no lacp system-priority",
+    "no ip vrf vpn1",
+    "no ip vrf vpn2",
+    `interface ${Port.C}`,
+    "vxlan uplink disable",
+    "switchport",
+    "exit",
+    `interface ${Port.A}`,
+    "switchport mode access",
+    "exit",
+    `interface ${Port.B}`,
+    `no channel-group`,
+    `switchport mode access`,
+    `exit`,
+    `interface ${Port.D}`,
+    `no channel-group`,
+    `switchport mode access`,
+    `exit`,
+    "no interface loopback1",
+    "no interface loopback2",
+    "no interface nve1",
+    "no evpn",
+    "overlay",
+    "no vlan 101 vni",
+    "no vlan 102 vni",
+    "no vlan 201 vni",
+    "no vlan 202 vni",
+    "exit",
+    "evpn virtual-mac disable",
+    "no ip virtual-router mac",
+    "no router ospf 1",
+    "no router bgp 65001",
+    "vlan database",
+    "no vlan 101,102,201,202,4094",
+    "exit",
+    "end",
+  ]);
+
+  testHelper.CleanConfigDutC([
+    "configure terminal",
+    "no lacp mlag system-id",
+    "no lacp system-priority",
+    "no ip vrf vpn1",
+    "no ip vrf vpn2",
+    `interface ${Port.A}`,
+    "switchport",
+    "vxlan uplink disable",
+    "exit",
+    `interface ${Port.C}`,
+    "no channel-group",
+    "switchport mode access",
+    "exit",
+    `interface ${Port.D}`,
+    "no channel-group",
+    "switchport mode access",
+    "exit",
+    "no interface loopback1",
+    "no interface loopback2",
+    "no interface nve1",
+    "no evpn",
+    "overlay",
+    "no vlan 101 vni",
+    "no vlan 102 vni",
+    "no vlan 201 vni",
+    "no vlan 202 vni",
+    "exit",
+    "evpn virtual-mac disable",
+    "no ip virtual-router mac",
+    "no router ospf 1",
+    "no router bgp 65001",
+    "vlan database",
+    "no vlan 101,102,201,202",
+    "exit",
+    "end",
+  ]);
+
+  testHelper.CleanConfigDut(DutIdx.E, [
+    "configure terminal",
+    "no ip vrf vpn1",
+    "no ip vrf vpn2",
+    "no interface agg1.101",
+    "no interface agg1.102",
+    "no interface agg1.201",
+    "no interface agg1.202",
+    "no interface agg2.101",
+    "no interface agg2.102",
+    "no interface agg2.201",
+    "no interface agg2.202",
+    `interface ${Port.A}`,
+    "no channel-group",
+    "switchport",
+    "exit",
+    `interface ${Port.B}`,
+    "no channel-group",
+    "switchport",
+    "exit",
+    `interface ${Port.C}`,
+    "no channel-group",
+    "switchport",
+    "exit",
+    `interface ${Port.D}`,
+    "no channel-group",
+    "switchport",
+    "exit",
+    "end",
+  ]);
+
+  testHelper.CleanConfigDut(DutIdx.F, [
+    "configure terminal",
+    "no interface agg1.101",
+    "no interface agg1.102",
+    "no interface agg1.201",
+    "no interface agg1.202",
+    `interface ${Port.A}`,
+    "no channel-group",
+    "switchport",
+    "exit",
+    `interface ${Port.B}`,
+    "no channel-group",
+    "switchport",
+    "exit",
+    "end",
+  ]);
   await testHelper.startTest();
 
   expect(testHelper.result()).toBeTruthy();

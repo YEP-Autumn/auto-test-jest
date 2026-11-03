@@ -65,14 +65,24 @@ workflow 中按事件类型取区间，避免漏检或误检：
 提交前可先本地跑一遍，与 CI 保持一致：
 
 ```bash
-npm run check:commit-msg        # 校验最近一条提交
+npm run check                   # 一条命令跑完命名规范 + 类型检查
 npm run check:test-names        # 测试用例命名规范
 npm run typecheck               # tsc --noEmit
-npm run hooks:install           # 安装 commit-msg hook（npm install 时也会自动装）
+npm run check:commit-msg        # 校验最近一条提交
+npm run hooks:install           # 安装 commit-msg / pre-commit hook（npm install 时也会自动装）
 ```
 
-`npm install` 后 `prepare` 会自动执行 `hooks:install`，之后 `git commit`
-即由 hook 拦截不合规消息，无需等 CI。
+`npm install` 后 `prepare` 会自动执行 `hooks:install`，之后 `git commit` 会依次经过：
+
+| hook | 校验内容 | 对应 CI |
+|---|---|---|
+| `pre-commit` | `script/check-test-names.js`；`tsc --noEmit`（`utils/rpc/gen-nodejs` 缺失时提示并跳过） | `static-checks` |
+| `commit-msg` | `script/check-commit-msg.js` | `commit-msg` |
+
+即提交前就能拦住命名/类型问题，无需等 CI 失败。**新增的 CI 离线检查项应同步加进
+`script/git-hooks/pre-commit`**，保持本地与 CI 一致。
+
+跳过方式：`git commit --no-verify`（全部跳过）或 `SKIP_TYPECHECK=1 git commit ...`（只跳过类型检查）。
 
 ## 5. 扩展：把设备用例接入自托管 runner
 

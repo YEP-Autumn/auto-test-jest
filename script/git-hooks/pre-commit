@@ -1,0 +1,29 @@
+#!/bin/sh
+# git pre-commit hook：提交前跑一遍与 CI「static-checks」等价的离线检查，
+# 避免把不合规的用例目录/文件或类型错误推到远端后在 CI 上失败。
+#
+# 校验项（与 .github/workflows/ci.yml 的 static-checks 对齐）：
+#   1. 测试用例命名规范（script/check-test-names.js）
+#   2. TypeScript 类型检查（tsc --noEmit）
+#   3. thrift 生成物存在性（utils/rpc/gen-nodejs/packet_types.js，缺失时提示并跳过类型检查）
+#
+# 由 script/install-git-hooks.js 安装（core.hooksPath 指向本目录）。
+# 需要跳过时用 `git commit --no-verify`，或只跳过类型检查：SKIP_TYPECHECK=1 git commit ...
+
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+echo "[pre-commit] 测试用例命名规范"
+node script/check-test-names.js
+
+if [ "$SKIP_TYPECHECK" = "1" ]; then
+  echo "[pre-commit] SKIP_TYPECHECK=1，跳过 TypeScript 类型检查"
+else
+  if [ ! -f utils/rpc/gen-nodejs/packet_types.js ]; then
+    echo "[pre-commit] utils/rpc/gen-nodejs 未生成，请先执行 npm run gen（本次先跳过类型检查）" >&2
+  else
+    echo "[pre-commit] TypeScript 类型检查"
+    npx tsc --noEmit
+  fi
+fi

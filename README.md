@@ -62,8 +62,9 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── check-commit-msg.js     # 提交信息规范校验
 │   ├── generate-jest-failed-config.js
 │   ├── jest.sequencer.js       # 按文件名序号排序执行
-│   ├── install-git-hooks.js    # 安装 commit-msg hook
+│   ├── install-git-hooks.js    # 安装 commit-msg / pre-commit hook
 │   ├── git-hooks/commit-msg
+│   ├── git-hooks/pre-commit
 │   └── setup/jest.setup.ts     # 加载 .env 到 process.env
 ├── test/
 │   ├── demo.test.ts            # 最小可运行示例
@@ -302,11 +303,12 @@ npm run failed       # 按该配置复跑
 | `npm run example` | 跑教程用例；⚠️ 脚本指向 `config/jest-example.config.ts`，实际文件为 `.cjs`，请用 `npx jest -i --config=config/jest-example.config.cjs` |
 | `npm run gen` | 强制重新生成 Thrift 代码 |
 | `npm run test -- -i -t "..."` | 透传参数给 Jest（按标题过滤等） |
+| `npm run check` | 提交前自检：命名规范 + 类型检查（与 CI static-checks 一致） |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run check:test-names` | 校验 `test/` 目录与文件命名 |
 | `npm run check:commit-msg` | 校验最近一条提交信息 |
 | `npm run format` | Prettier 格式化 `test` 与 `utils` |
-| `npm run hooks:install` | 安装 `commit-msg` git hook |
+| `npm run hooks:install` | 安装 `commit-msg` / `pre-commit` git hook |
 
 注意：设备用例有先后依赖，所有配置都设置 `maxWorkers: "1"`，并由
 `script/jest.sequencer.js` 按文件序号排序，请勿并行执行。

@@ -12,6 +12,7 @@
     "failed": "jest -i --config=config/jest-failed.config.cjs --verbose",
     "gen-failed": "node script/generate-jest-failed-config.js",
     "format": "npx prettier --write test utils",
+    "check": "npm run check:test-names && npm run typecheck",
     "check:test-names": "node script/check-test-names.js",
     "check:commit-msg": "node script/check-commit-msg.js",
     "typecheck": "tsc --noEmit",

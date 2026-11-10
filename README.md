@@ -14,6 +14,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 - [目录结构](#目录结构)
 - [环境要求](#环境要求)
 - [快速开始](#快速开始)
+- [Jest 配置组织](#jest-配置组织)
 - [配置](#配置)
 - [编写测试用例](#编写测试用例)
 - [测试报告](#测试报告)
@@ -38,20 +39,24 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 - **自动生成 Thrift 代码**：报文的线格式由 `utils/rpc/thrift/packet.thrift` 定义，
   `postinstall` / `pretest` 自动生成，无需手动维护生成物。
 - **失败重跑**：`npm run gen-failed` 从最新 HTML 报告提取失败用例，生成
-  `config/jest-failed.config.cjs` 后一键复跑。
+  `config/jest.failed.config.cjs` 后一键复跑。
 - **规范与门禁**：用例命名、提交信息均有脚本自动校验，并接入 GitHub Actions。
 
 ## 目录结构
 
 ```
 .
-├── config/                     # 多套 Jest 配置
-│   ├── jest.config.cjs         # 默认：跑 test/feature 下登记的全部用例
-│   ├── jest-failed.config.cjs  # 由 gen-failed 生成，只跑上次失败的用例
-│   ├── jest-example.config.cjs # 跑 docs/test_script_tutorials 教程用例
-│   └── stm_profile/
-│       ├── jest.ipv6.config.cjs    # IPv6 场景集合
-│       └── jest.mpls.config.cjs    # MPLS 场景集合
+├── config/                     # Jest 配置：profile（设备能力）× suite（用例范围）
+│   ├── jest.base.cjs           # 唯一公共配置：setup / 别名 / 超时 / 报告器 / 串行执行
+│   ├── profiles/               # 设备 profile：default / extended-buffer / ipv6 / layer3 / mpls
+│   ├── suites/                 # 套件范围：regression / stack / example
+│   ├── jest.default-regression.config.cjs
+│   ├── jest.ipv6-regression.config.cjs
+│   ├── jest.mpls-regression.config.cjs
+│   ├── jest.default-stack.config.cjs   # 堆叠场景，用例在 test/misc/stack/
+│   ├── jest.default-example.config.cjs # 教程用例（docs/test_script_tutorials）
+│   ├── jest.failed.config.cjs  # 由 gen-failed 生成（gitignore），只跑上次失败的用例
+│   └── test-module-map.json    # 模块树唯一事实来源
 ├── docs/
 │   ├── local-setup.md          # 本地使用技巧（skip-worktree）
 │   ├── spec/                   # 用例命名、提交信息、CI 规范
@@ -60,11 +65,10 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── gen-thrift.js           # 生成 utils/rpc/gen-nodejs
 │   ├── check-test-names.js     # 用例命名规范校验
 │   ├── scaffold-test-modules.js # 按 test-module-map.json 生成模块目录
-│   ├── migrate-test-modules.js # 旧路径 -> UG 小节
-│   ├── split-test-submodules.js # UG 小节 -> 子功能（第三层）
+│   ├── jest-suite.js           # profile × suite 清单：--table / --list / --check
 │   ├── check-commit-msg.js     # 提交信息规范校验
 │   ├── generate-jest-failed-config.js
-│   ├── jest.sequencer.js       # 按文件名序号排序执行
+│   ├── jest.sequencer.js       # 按模块树路径 + 文件序号排序执行
 │   ├── install-git-hooks.js    # 安装 commit-msg / pre-commit hook
 │   ├── git-hooks/commit-msg
 │   ├── git-hooks/pre-commit
@@ -73,10 +77,6 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── demo.test.ts            # 最小可运行示例
 │   ├── feature/                # 特性用例：<NN-模块>/<NN-UG小节>[/<NN-子功能>[_类型]]/NNNN-<模块>[-<子功能>].test.ts
 │   └── misc/bugfix/<缺陷号>/   # 缺陷回归用例
-├── config/
-│   ├── test-module-map.json    # 19 个 UG 模块 / 149 个小节 / 子功能，唯一事实来源
-│   ├── test-migration-map.json # 旧路径 -> UG 小节（第一步迁移）
-│   └── test-split-map.json     # UG 小节 -> 子功能（第二步下沉）
 ├── utils/
 │   ├── test-helper.ts          # TestHelper / DutIdx / 报文 MAC 等
 │   ├── index.ts                # sleep、Port 占位符、日志前缀
@@ -134,21 +134,79 @@ TOPO_BACKEND_HOST=172.16.9.1
 STREAM_BACKEND_HOST=172.16.9.1
 EOF
 
-# 2) 跑默认用例集合（config/jest.config.cjs）
-npm run default
+# 2) 按设备 profile 跑功能回归
+npm run default   # profile=default
+npm run ipv6      # profile=ipv6（IPv6 规格与 default 不同）
+npm run mpls      # profile=mpls（MPLS 用例只在此 profile 生效）
 
-# 3) 只跑单个用例
-npx jest -i --config=config/jest.config.cjs -t "BGP 实例"
+# 3) 其它套件
+npm run stack     # 堆叠场景（test/misc/stack）
+npm run example   # 教程示例（docs/test_script_tutorials）
 
-# 4) 跑教程示例（docs/test_script_tutorials）
-npx jest -i --config=config/jest-example.config.cjs --verbose
+# 4) 只跑单个用例 / 某个子模块
+npx jest -i --config=config/jest.default-regression.config.cjs -t "BGP 实例"
+npx jest -i --config=config/jest.mpls-regression.config.cjs test/feature/19-MPLS/02-mpls/01-mpls_basic
 
-# 5) 复跑上次失败的用例
+# 5) 打印某个场景的精确用例清单（复制 / 调试用）
+npm run list:suite -- mpls regression
+
+# 6) 复跑上次失败的用例
 npm run gen-failed && npm run failed
 ```
 
 > `npm test` 会以根目录 `jest.config.cjs` 运行，该配置只匹配 `test/demo.test.ts`，
 > 用于冒烟验证。执行设备用例请使用 `npm run default`。
+
+## Jest 配置组织
+
+交换机的特性与规格由设备 profile 决定（CLI：`show stm prefer`）。同一批用例在不同
+profile 下的可用性与规格不同——MPLS 只在 `mpls` 下生效，IPv6 在 `default` / `ipv6` 下
+都生效但规格不同——因此配置按 **profile × suite** 组合：
+
+| 轴 | 位置 | 内容 |
+|---|---|---|
+| profile | `config/profiles/<profile>.json` | 设备能力：描述、可跑范围、`capacity` 规格 |
+| suite | `config/suites/<suite>.json` | 用例范围：`include` / `exclude` glob |
+| 组合 | `config/jest.<profile>-<suite>.config.cjs` | 一个具体配置，正文只有一条 `createJestConfig` |
+
+profile 全集（`show stm prefer`）：`default`（基线）、`extended-buffer`、`ipv6`、
+`layer3`、`mpls`。
+
+现有配置：
+
+| 配置 | profile | suite | 用例数 |
+|---|---|---|---|
+| `jest.default-regression.config.cjs` | default | regression | 140 |
+| `jest.ipv6-regression.config.cjs` | ipv6 | regression | 140 |
+| `jest.mpls-regression.config.cjs` | mpls | regression | 203 |
+| `jest.default-stack.config.cjs` | default | stack | 34 |
+| `jest.default-example.config.cjs` | default | example | 2 |
+
+`regression` = `test/feature/**/*.test.ts`；非 `mpls` profile 通过 `exclude` 排除
+`test/feature/19-MPLS/**`。因此新增用例只要落在 `test/feature` 下就会自动进入对应
+profile 的回归，不需要手工登记。
+
+`jest.base.cjs` 是唯一公共配置：setup、`@/` 别名、串行执行、超时、HTML 报告器，并把
+`PROFILE` / `SUITE` / `PROFILE_INFO`（含 `capacity`）注入 `globals`，供用例按场景取规格：
+
+```js
+const { createJestConfig } = require("./jest.base.cjs");
+
+module.exports = createJestConfig({ profile: "mpls", suite: "regression" });
+```
+
+- 新增组合：加一个上述 4 行文件，并在 `package.json` 补 npm 脚本（可选）；
+- 新增设备模式：加 `config/profiles/<name>.json`（`default` 为基线）；
+- 查看 / 校验清单：
+
+```bash
+node script/jest-suite.js --table                 # profile × suite 用例数矩阵
+node script/jest-suite.js --list mpls regression  # 精确文件列表（可复制）
+node script/jest-suite.js --check                 # 配置与覆盖自检（已接入 npm run check）
+```
+
+已知限制：`stack` 套件暂用 `default` profile（堆叠设备实际 profile 待确认）；
+`extended-buffer` 与 `layer3` 暂无专属用例，仅保留 profile 定义。
 
 ## 配置
 
@@ -289,48 +347,57 @@ new TestHelper(
 
 ## 测试报告
 
-`config/jest*.cjs` 使用 `jest-html-reporter`，每次运行在 `test-report/` 下生成带时间戳的
-HTML 报告（含失败信息）。根 `jest.config.cjs` 未启用报告器。
+`config/jest.*.config.cjs` 使用 `jest-html-reporter`，每次运行在 `test-report/` 下生成
+`test-report-<profile>-<suite>-<时间戳>.html`（标题形如 `Test Report - mpls / regression`）。
+根 `jest.config.cjs` 未启用报告器。
 
 复跑失败用例：
 
 ```bash
-npm run gen-failed   # 解析 test-report/ 最新报告，重写 config/jest-failed.config.cjs
-npm run failed       # 按该配置复跑
+npm run gen-failed   # 解析 test-report/ 最新报告，生成 config/jest.failed.config.cjs
+npm run failed       # 按该配置复跑（报告名带 -failed）
 ```
+
+生成器会沿用原报告的 profile / suite，所以失败重跑的 `PROFILE`、`SUITE` 与首次运行一致；
+报告中已不存在的路径会被跳过并警告。
 
 ## npm 脚本
 
 | 脚本 | 作用 |
 |---|---|
 | `npm test` | `jest -i`，使用根配置（仅 `test/demo.test.ts`） |
-| `npm run default` | 跑 `test/feature` 登记的全部用例（`config/jest.config.cjs`） |
-| `npm run failed` | 跑上次失败的用例（`config/jest-failed.config.cjs`） |
+| `npm run default` | 跑 default profile 的功能回归（`config/jest.default-regression.config.cjs`） |
+| `npm run ipv6` | 跑 ipv6 profile 的功能回归 |
+| `npm run mpls` | 跑 mpls profile 的功能回归（含 MPLS 用例） |
+| `npm run stack` | 跑堆叠场景套件（`config/jest.default-stack.config.cjs`） |
+| `npm run example` | 跑教程用例（`config/jest.default-example.config.cjs`） |
+| `npm run failed` | 跑上次失败的用例（`config/jest.failed.config.cjs`） |
 | `npm run gen-failed` | 从最新 HTML 报告生成失败用例配置 |
-| `npm run example` | 跑教程用例；⚠️ 脚本指向 `config/jest-example.config.ts`，实际文件为 `.cjs`，请用 `npx jest -i --config=config/jest-example.config.cjs` |
+| `npm run list:suite -- <profile> <suite>` | 打印精确用例清单（等价 `node script/jest-suite.js --list`） |
 | `npm run gen` | 强制重新生成 Thrift 代码 |
 | `npm run test -- -i -t "..."` | 透传参数给 Jest（按标题过滤等） |
-| `npm run check` | 提交前自检：命名规范 + 模块树一致性 + 类型检查（与 CI static-checks 一致） |
+| `npm run check` | 提交前自检：命名 + 模块树 + 套件清单与覆盖 + 类型检查 |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run check:test-names` | 校验 `test/` 目录与文件命名 |
 | `npm run check:test-modules` | 校验 `test/feature` 目录树与 `config/test-module-map.json` 一致 |
+| `npm run check:jest-suites` | 校验 `profiles/`、`suites/`、各配置能展开用例，并检查 `test/feature` 覆盖 |
 | `npm run scaffold:test-modules` | 按 map 创建缺失的模块/子模块目录（`.gitkeep` 占位） |
-| `npm run migrate:test-modules` | 按迁移映射 dry-run 旧用例路径（`-- --write` 执行 `git mv`） |
-| `npm run split:test-submodules` | 把小节下的扁平用例下沉到子功能层（dry-run；`-- --write` 执行） |
 | `npm run check:commit-msg` | 校验最近一条提交信息 |
 | `npm run format` | Prettier 格式化 `test` 与 `utils` |
 | `npm run hooks:install` | 安装 `commit-msg` / `pre-commit` git hook |
 
 注意：设备用例有先后依赖，所有配置都设置 `maxWorkers: "1"`，并由
-`script/jest.sequencer.js` 按文件序号排序，请勿并行执行。
+`script/jest.sequencer.js` 按模块树路径排序（模块号 → UG 小节 → 子功能 → 用例序号），
+同目录内序号递增、目录之间不交错，请勿并行执行。
 
 ## 代码生成（Thrift）
 
 - IDL：`utils/rpc/thrift/packet.thrift`；生成物：`utils/rpc/gen-nodejs/packet_types.js`。
 - 生成物被 `utils/rpc/.gitignore`（`gen-*`）忽略，因此**全新 clone 上不存在**，
   缺少它会导致 `tsc` 与 Jest 报 `Cannot find module '../rpc/gen-nodejs/packet_types'`。
-- 触发时机：`postinstall`、`pretest`、`predefault`、`prefailed` 均会自动执行
-  `node script/gen-thrift.js`（仅在缺失时生成）；`npm run gen` 使用 `--force` 强制重生成。
+- 触发时机：`postinstall`、`pretest`、`predefault`、`preipv6`、`prempls`、`prestack`、
+  `preexample`、`prefailed` 均会自动执行 `node script/gen-thrift.js`（仅在缺失时生成）；
+  `npm run gen` 使用 `--force` 强制重生成。
 - 手动生成：`cd utils/rpc && ./gen.sh`（等价于 `thrift --gen js:node thrift/packet.thrift`）。
 
 ## 规范

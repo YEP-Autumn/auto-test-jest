@@ -136,12 +136,12 @@ scope 表示改动落在哪一块，用小写、可带连字符（如 `test-help
 ## 8. 完整示例
 
 ```
-fix(script): 修复 testRegex 中的教程用例路径
+fix(config): 修正 example 套件的用例路径
 
-教程文件实际位于 docs/test_script_tutorials/，
-此前 config 中误写成 test/test_script_tutorials/，导致 example 配置匹配不到用例。
+教程文件实际位于 docs/test_script_tutorials/，此前 suites/example.json
+误写成 test/test_script_tutorials/，导致 npm run example 匹配不到用例。
 
-- 修正 config/jest-example.config.ts 的 testRegex
+- 修正 config/suites/example.json 的 include
 - 本地执行 npm run example 验证可正常发现用例
 
 Refs: docs/spec/naming-convention.md

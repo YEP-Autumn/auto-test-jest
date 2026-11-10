@@ -1,0 +1,6 @@
+{
+  "profile": "default",
+  "description": "Balance on all kinds of tables size（基线 profile）",
+  "exclude": ["test/feature/19-MPLS/**"],
+  "capacity": {}
+}

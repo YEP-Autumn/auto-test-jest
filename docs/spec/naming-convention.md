@@ -3,7 +3,7 @@
 本文约定 `test/` 目录下目录与文件的命名规则。目标：
 
 - 从路径即可定位「哪个特性 / 哪个子特性 / 第几条用例」；
-- 便于 Jest 按路径精确配置（`config/jest*.cjs` 的 `testRegex`）；
+- 便于 Jest 按路径组织套件（`config/jest.<profile>-<suite>.config.cjs`，范围由 glob 驱动）；
 - 便于 CI 用脚本自动校验，避免风格漂移。
 
 校验脚本：[`script/check-test-names.js`](../../script/check-test-names.js)
@@ -131,7 +131,8 @@ test/feature/05-IP_ROUTE/07-bgp/0010-BGP-Multiple-Instance.test.ts
 2. 类型变体用**后缀**表达（`_cli` 等），加在叶子目录上（§3）；
 3. 文件 `NNNN-<模块>[-<子功能>].test.ts`，序号在所属目录内递增；
 4. 标题非空且能说明「测什么、期望什么」；
-5. 若该用例要被 `config/jest*.cjs` 的 `testRegex` 精确引用，记得同步新增路径；
+5. 用例落在 `test/feature` 下即自动进入 regression 套件；若只允许特定 profile 运行，在
+   `config/profiles/<profile>.json` 的 `include` / `exclude` 中表达；
 6. 运行 `npm run check:test-names` 确认无违规（层级、基号、空目录只提示）。
 
 ## 7. 模块树生成

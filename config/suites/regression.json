@@ -1,0 +1,6 @@
+{
+  "suite": "regression",
+  "description": "功能回归：test/feature 下全部功能用例（具体范围由 profile 的 include/exclude 决定）",
+  "include": ["test/feature/**/*.test.ts"],
+  "exclude": []
+}

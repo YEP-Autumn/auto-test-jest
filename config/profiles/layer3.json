@@ -1,0 +1,6 @@
+{
+  "profile": "layer3",
+  "description": "Layer 3 bias, with more Host Route/Indirect Route entries（当前无专属用例，沿用 default 的用例范围）",
+  "exclude": ["test/feature/19-MPLS/**"],
+  "capacity": {}
+}

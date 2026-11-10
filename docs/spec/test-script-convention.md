@@ -430,5 +430,6 @@ test("DUTA 配置 VXLAN 后，DUTB/DUTC 间 loopback 可达", async () => {
 7. 等待优先 `ReadyCheck`，`sleep` 有明确依据；
 8. 打流用例：`PacketBuilder` 分层清晰，`expected_count` 不留误判空间（0% 不能把 100% 判通过）；
 9. 标题非空、中文陈述句、无装饰字符；
-10. 若该用例需被 `config/jest*.cjs` 的 `testRegex` 引用，同步新增路径；
+10. 用例落在 `test/feature` 下即自动被 regression 套件收录，无需手工登记路径
+    （profile 限制见 `config/profiles/<profile>.json`）；
 11. 运行 `npm run check:test-names`、`npm run typecheck`、`npx prettier --write test`（或 `npm run format`）。

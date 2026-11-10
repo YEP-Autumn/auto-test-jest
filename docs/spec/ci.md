@@ -6,8 +6,8 @@
 ## 1. 为什么 CI 不跑设备用例
 
 本仓库的 `test/feature/**` 用例通过 `TestHelper` 连接真实 DUT / 拓扑后端
-（`utils/test-helper.ts`、`config/jest.config.cjs` 里的 `testRegex` 指向具体设备场景），
-在 GitHub 托管 runner 上无法满足网络与设备条件。
+（`utils/test-helper.ts`；具体跑哪些用例由 `config/jest.<profile>-<suite>.config.cjs`
+对应的 `profiles/`、`suites/` JSON 决定），在 GitHub 托管 runner 上无法满足网络与设备条件。
 
 因此 GitHub Actions 只承载两类**离线可判定**的检查：
 
@@ -65,12 +65,17 @@ workflow 中按事件类型取区间，避免漏检或误检：
 提交前可先本地跑一遍，与 CI 保持一致：
 
 ```bash
-npm run check                   # 一条命令跑完命名规范 + 类型检查
+npm run check                   # 本地全量：命名 + 模块树 + 套件清单/覆盖 + 类型检查
 npm run check:test-names        # 测试用例命名规范
+npm run check:test-modules      # test/feature 目录树与 test-module-map.json 一致
+npm run check:jest-suites       # profiles/suites 可展开、test/feature 全覆盖
 npm run typecheck               # tsc --noEmit
 npm run check:commit-msg        # 校验最近一条提交
 npm run hooks:install           # 安装 commit-msg / pre-commit hook（npm install 时也会自动装）
 ```
+
+> CI 的 `static-checks` 目前只跑命名规范与 `tsc`；`npm run check` 是它的超集，
+> 额外包含模块树与套件清单校验。这两项暂未接入 CI。
 
 `npm install` 后 `prepare` 会自动执行 `hooks:install`，之后 `git commit` 会依次经过：
 
@@ -110,7 +115,7 @@ npm run hooks:install           # 安装 commit-msg / pre-commit hook（npm inst
         run: npm run gen
 
       - name: 执行用例
-        run: npm test
+        run: npm run default   # 按设备实际 profile 换成 npm run ipv6 / npm run mpls
 
       - name: 上传测试报告
         if: always()

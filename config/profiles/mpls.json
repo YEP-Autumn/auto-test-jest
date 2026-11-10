@@ -1,0 +1,6 @@
+{
+  "profile": "mpls",
+  "description": "VPWS/VPLS with more MPLS/MAC entries（MPLS 特性仅在本 profile 生效）",
+  "exclude": [],
+  "capacity": {}
+}

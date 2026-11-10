@@ -1,0 +1,6 @@
+{
+  "profile": "ipv6",
+  "description": "Unicast bias, supporting more IPv6 Ucast Routes（IPv6 特性在 default / ipv6 下均生效，规格不同）",
+  "exclude": ["test/feature/19-MPLS/**"],
+  "capacity": {}
+}

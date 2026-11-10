@@ -1,0 +1,6 @@
+{
+  "profile": "extended-buffer",
+  "description": "Extended-buffer bias, with more packet buffer（当前无专属用例，沿用 default 的用例范围）",
+  "exclude": ["test/feature/19-MPLS/**"],
+  "capacity": {}
+}

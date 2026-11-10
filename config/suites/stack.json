@@ -1,0 +1,6 @@
+{
+  "suite": "stack",
+  "description": "堆叠场景：test/misc/stack 下的 ACL/QoS CLI 用例（用例内额外执行 stack connect slot 2 / exit）。profile 暂按 default，实际取决于堆叠设备的 show stm prefer",
+  "include": ["test/misc/stack/**/*.test.ts"],
+  "exclude": []
+}

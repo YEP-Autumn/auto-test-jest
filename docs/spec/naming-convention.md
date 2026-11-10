@@ -18,12 +18,15 @@ node script/check-test-names.js   # 或 npm run check:test-names
 test/
 ├── demo.test.ts                          # 根级示例（允许）
 ├── feature/                              # 特性用例
-│   └── <NN-FEATURE>/                     # 一级：特性
-│       ├── <NNNN>-<FEATURE>.test.ts      # 直接挂在特性下的用例
-│       ├── <NN-sub_feature>/             # 二级：子特性（无后缀＝功能用例）
-│       │   └── <NNNN>-<FEATURE>.test.ts
-│       └── <NN-sub_feature>_<type>/      # 二级：同一子特性的类型变体（如 _cli，见 §3）
-│           └── <NNNN>-<FEATURE>.test.ts
+│   └── <NN-MODULE>/                      # 一级：UG 章节（如 05-IP_ROUTE）
+│       ├── <NN-section>/                 # 二级：UG 小节（如 07-bgp）
+│       │   ├── <NNNN>-<MODULE>.test.ts   #   小节直属用例（无子功能时）
+│       │   ├── <NN-sub_function>/        #   三级：子功能（如 01-bgp_multiple_instance）
+│       │   │   └── <NNNN>-<MODULE>.test.ts
+│       │   └── <NN-sub_function>_<type>/ #   三级：同一子功能的类型变体（如 _cli）
+│       │       └── <NNNN>-<MODULE>.test.ts
+│       └── <NN-section>_<type>/          # 小节无子功能时的类型变体（如 03-ospf_cli）
+│           └── <NNNN>-<MODULE>.test.ts
 └── misc/                                 # 非特性用例
     ├── bugfix/<缺陷号>/                  # 缺陷回归
     └── stack/<模块>/                     # 其它归类
@@ -32,16 +35,18 @@ test/
 约束：
 
 - `test/` 下只允许 `feature/`、`misc/` 两类目录（外加根级 `demo.test.ts`）。
-- `feature/` 最多两级子目录，**禁止三级目录**。
-- 用例的「**类型**」（功能 / 仅 CLI / 规格 …）用二级子特性目录名的**后缀**表达（见 §3），**不得**再开三级目录。
-- 目录不得为空；暂无用例时用 `.gitkeep` 占位（`.gitignore` 已为该文件名放行）。
+- `feature/` **建议最多三层**：模块 → UG 小节 → 子功能；脚本对更深层级只提示、不报错。
+- **容器不放用例**：有子目录的目录只做分组（如 `07-bgp/`），用例放在叶子目录。
+- **类型后缀加在叶子上**：`_cli` / `_neg` / `_spec` / `_perf` 与其功能主体同级、共用基号（见 §3）。
+- 空目录建议用 `.gitkeep` 占位（`.gitignore` 已放行）；脚本仅提示，不阻断。
 
 ## 2. 命名规则
 
 | 对象 | 规则 | 正则 | 示例 |
 |---|---|---|---|
-| 一级特性目录 | `NN-UPPER_SNAKE` | `^\d{2}-[A-Z][A-Z0-9_]*$` | `10-BGP_EVPN_VXLAN`、`30-MPLS` |
-| 二级子特性目录 | `NN-lower_snake[_type]` | `^\d{2}-[a-z0-9]+(_[a-z0-9]+)*$` | `01-mpls_basic`、`05-mpls_bpdu_ac_cli` |
+| 一级特性目录 | `NN-UPPER_SNAKE` | `^\d{2}-[A-Z][A-Z0-9_]*$` | `03-ETHERNET`、`19-MPLS` |
+| 二级小节目录 | `NN-lower_snake[_type]` | `^\d{2}-[a-z0-9]+(_[a-z0-9]+)*$` | `07-bgp`、`03-ospf_cli` |
+| 三级子功能目录 | `NN-lower_snake[_type]` | 同上 | `01-bgp_multiple_instance`、`05-mpls_bpdu_ac_spec` |
 | misc 目录 | 小写单词（可连字符）或缺陷号 | `^(\d+\|[a-z0-9]+(-[a-z0-9]+)*)$` | `bugfix`、`class-map`、`3162` |
 | feature 用例文件 | `NNNN-<顶层特性>.test.ts` | `^(\d{4})-([A-Z][A-Z0-9_]*)\.test\.ts$` | `0010-MPLS.test.ts` |
 | bugfix 用例文件 | `bug_<缺陷号>[_<序号>].test.ts` | — | `bug_3162_1.test.ts` |
@@ -50,19 +55,19 @@ test/
 要点：
 
 1. **序号为 4 位、步长 10**：`0010`、`0020`…；插入用例可用区间补号（如 `0051`），同目录内唯一即可，允许留空档。
-2. **文件后缀统一等于「顶层特性名」**，不把子特性写进文件名：
-   - ✅ `test/feature/60-BGP/01-bgp_multiple_instance/0010-BGP.test.ts`
-   - ❌ `.../0010-BGP-Multiple-Instance.test.ts`（子特性已由目录表达）
-3. **不用千位数字编码子目录**：早期 `1xxx/2xxx` 方案已废弃，统一从 `0010` 起编。
-4. 顶层特性编号沿用现有分组，`40-VLAN_MAPPING` 与 `41-VLAN_DOT1Q_TUNNEL` 视为同一 VLAN 特性族（40 为主号、41 为子号），不强制改为 10 的整数倍。
-5. **子特性目录可用「类型后缀」**区分功能 / 仅 CLI / 规格等，同一子特性的各类型共用基号；详见 §3。
+2. **文件后缀统一等于「顶层特性名」**，不把子功能写进文件名：
+   - ✅ `test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE.test.ts`
+   - ❌ `.../0010-BGP-Multiple-Instance.test.ts`（子功能已由目录表达）
+3. **编号沿用《E530 配置指导》**：一级模块号 = UG 章号（`02`…`20`），二级小节目号 = UG 小节号（如 `5.7` → `07-bgp`）；三级子功能在小节内重新从 `01` 编号。
+4. 一级模块的 **19 个有效章节**与全部二级子模块以 [`config/test-module-map.json`](../../config/test-module-map.json) 为唯一事实来源，目录由 `script/scaffold-test-modules.js` 生成，不要手工新开模块。
+5. **类型后缀加在叶子目录上**：功能 / 仅 CLI / 规格等用后缀区分，层级由“模块 → 小节 → 子功能”决定；详见 §3。
 
 ## 3. 子特性类型后缀（功能 / 仅 CLI / 规格 …）
 
 同一个被测对象往往有多种「测法」：打流验证功能、只下发并校验 CLI 回显、跑规格/容量、跑反向异常等。
 「类型」与「被测对象」是**正交**的两个维度，不应各占一级目录（否则目录组合爆炸）。因此约定：
 
-- **被测对象**由二级子特性目录名的主体表达；
+- **被测对象**由叶子目录（二级小节或三级子功能）名的主体表达；
 - **类型**由主体之后的**后缀**表达，后缀取自下表固定词表。
 
 | 后缀 | 含义 | 是否打流 |
@@ -78,14 +83,15 @@ test/
 1. **同一子特性的各类型变体共用同一个基号**，在目录列表中相邻，一眼可见是「同一个东西的不同测法」：
 
    ```
-   30-MPLS/
+   19-MPLS/02-mpls/
    ├── 05-mpls_bpdu_ac/        # 功能（打流）
    ├── 05-mpls_bpdu_ac_cli/    # 仅 CLI（同基号 05）
-   └── 05-mpls_bpdu_ac_neg/    # 反向（同基号 05）
+   └── 05-mpls_bpdu_ac_spec/   # 规格（同基号 05）
    ```
 
 2. 后缀必须来自上表词表，**不要自造**；需要新增类型时先在本文登记。
-3. 类型后缀的目的是「**按类型批量筛选**」，而不是手工翻目录。CI / Jest 可用 glob（如 `test/feature/.*_cli/.*\.test\.ts$`）或独立 config 一次筛出，因此**不要**用三级目录表达类型。
+3. 类型后缀的目的是「**按类型批量筛选**」，而不是手工翻目录。CI / Jest 可用 glob（如 `**/*_cli/**/*.test.ts`）或独立 config 一次筛出。
+4. **同一被测对象的类型变体建议共用基号**，只是为了目录排序时相邻；脚本不再强制校验这一点。
 
 ## 4. 用例标题
 
@@ -101,24 +107,43 @@ test/
 
 ```
 # ✅
-test/feature/20-IP_ROUTE/01-ip_route_basic/0010-IP_ROUTE.test.ts
-test/feature/30-MPLS/05-mpls_bpdu_ac/0010-MPLS.test.ts       # 功能（打流）
-test/feature/30-MPLS/05-mpls_bpdu_ac_cli/0010-MPLS.test.ts   # 仅 CLI（与主体共用基号 05）
-test/feature/30-MPLS/06-mpls_spec/0010-MPLS.test.ts          # 规格
-test/feature/80-STORM_CONTROL/01-action_shutdown/0010-STORM_CONTROL.test.ts
+test/feature/05-IP_ROUTE/01-ip_unicast_route/02-ip_route_rnh/0010-IP_ROUTE.test.ts
+test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE.test.ts
+test/feature/19-MPLS/02-mpls/01-mpls_basic/0010-MPLS.test.ts          # 功能（打流）
+test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac_cli/0010-MPLS.test.ts    # 仅 CLI（同基号 05）
+test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac_spec/0010-MPLS.test.ts   # 规格（同基号 05）
+test/feature/03-ETHERNET/12-storm_control/02-action_trap/0010-ETHERNET.test.ts
 test/misc/bugfix/3162/bug_3162_1.test.ts
 
 # ❌
-test/feature/30-MPLS/01-mpls-baisc/1010-MPLS.test.ts         # 拼写错误 + 千位前缀
-test/feature/30-MPLS/05-mpls_bpdu_ac/cli/0010-MPLS.test.ts   # 类型用三级目录表达
-test/feature/30-MPLS/07-mpls_bpdu_ac_cli/0010-MPLS.test.ts   # 类型变体未与主体共用基号（应为 05-）
-test/feature/60-BGP/01-bgp_multiple_instance/0010-BGP-Multiple-Instance.test.ts
+test/feature/19-MPLS/02-mpls/0010-MPLS.test.ts                # 小节下已有子功能，容器不放直属用例
+test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac/cli/0010-MPLS.test.ts   # 类型再开一层，应为 _cli 后缀
+test/feature/19-MPLS/01-mpls-baisc/1010-MPLS.test.ts          # 拼写错误 + 千位前缀
+test/feature/05-IP_ROUTE/07-bgp/0010-BGP-Multiple-Instance.test.ts
 ```
 
 ## 6. 新增用例检查清单
 
-1. 目录按上表命名，`feature/` 不超过两级；类型变体用**后缀**表达，且与主体**共用基号**（§3）；
-2. 文件 `NNNN-<顶层特性>.test.ts`，序号在所属目录内递增；
-3. 标题非空且能说明「测什么、期望什么」；
-4. 若该用例要被 `config/jest*.cjs` 的 `testRegex` 精确引用，记得同步新增路径；
-5. 运行 `npm run check:test-names` 确认无违规。
+1. 目录按上表命名：模块 → UG 小节 → 子功能（可选）；有子目录的容器不放直属用例（§1）；
+2. 类型变体用**后缀**表达（`_cli` 等），加在叶子目录上（§3）；
+3. 文件 `NNNN-<顶层特性>.test.ts`，序号在所属目录内递增；
+4. 标题非空且能说明「测什么、期望什么」；
+5. 若该用例要被 `config/jest*.cjs` 的 `testRegex` 精确引用，记得同步新增路径；
+6. 运行 `npm run check:test-names` 确认无违规（层级、基号、空目录只提示）。
+
+## 7. 模块树生成与迁移
+
+- 模块/子模块清单：[`config/test-module-map.json`](../../config/test-module-map.json)（19 个 UG 章节 + 149 个二级小节；小节可用 `children` 定义三级子功能，`types` 决定要生成哪些类型变体）。
+- 生成目录：
+  ```shell
+  node script/scaffold-test-modules.js           # dry-run
+  node script/scaffold-test-modules.js --write   # 创建容器/叶子目录与 .gitkeep
+  node script/scaffold-test-modules.js --check   # CI：目录与 map 不一致则退出 1
+  ```
+- 旧路径迁移（两步，均已执行，保留作追溯）：
+  1. [`config/test-migration-map.json`](../../config/test-migration-map.json) → `script/migrate-test-modules.js`：旧目录归入 UG 小节；
+  2. [`config/test-split-map.json`](../../config/test-split-map.json) → `script/split-test-submodules.js`：小节按子功能下沉一层。
+- 新增子模块时：先改 `test-module-map.json` → `scaffold --write` → 再写用例。
+
+> 校验脚本只强校验「目录/文件命名、文件后缀、misc 命名」等关键规则；
+> 层级深度、类型基号、空目录属于最佳实践提示，不作为 CI 失败项。

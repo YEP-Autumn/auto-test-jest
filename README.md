@@ -59,6 +59,9 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 ├── script/
 │   ├── gen-thrift.js           # 生成 utils/rpc/gen-nodejs
 │   ├── check-test-names.js     # 用例命名规范校验
+│   ├── scaffold-test-modules.js # 按 test-module-map.json 生成模块目录
+│   ├── migrate-test-modules.js # 旧路径 -> UG 小节
+│   ├── split-test-submodules.js # UG 小节 -> 子功能（第三层）
 │   ├── check-commit-msg.js     # 提交信息规范校验
 │   ├── generate-jest-failed-config.js
 │   ├── jest.sequencer.js       # 按文件名序号排序执行
@@ -68,8 +71,12 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   └── setup/jest.setup.ts     # 加载 .env 到 process.env
 ├── test/
 │   ├── demo.test.ts            # 最小可运行示例
-│   ├── feature/                # 特性用例：<NN-FEATURE>[/<NN-sub_feature>]/NNNN-FEATURE.test.ts
+│   ├── feature/                # 特性用例：<NN-模块>/<NN-UG小节>[/<NN-子功能>[_类型]]/NNNN-<模块>.test.ts
 │   └── misc/bugfix/<缺陷号>/   # 缺陷回归用例
+├── config/
+│   ├── test-module-map.json    # 19 个 UG 模块 / 149 个小节 / 子功能，唯一事实来源
+│   ├── test-migration-map.json # 旧路径 -> UG 小节（第一步迁移）
+│   └── test-split-map.json     # UG 小节 -> 子功能（第二步下沉）
 ├── utils/
 │   ├── test-helper.ts          # TestHelper / DutIdx / 报文 MAC 等
 │   ├── index.ts                # sleep、Port 占位符、日志前缀
@@ -303,9 +310,13 @@ npm run failed       # 按该配置复跑
 | `npm run example` | 跑教程用例；⚠️ 脚本指向 `config/jest-example.config.ts`，实际文件为 `.cjs`，请用 `npx jest -i --config=config/jest-example.config.cjs` |
 | `npm run gen` | 强制重新生成 Thrift 代码 |
 | `npm run test -- -i -t "..."` | 透传参数给 Jest（按标题过滤等） |
-| `npm run check` | 提交前自检：命名规范 + 类型检查（与 CI static-checks 一致） |
+| `npm run check` | 提交前自检：命名规范 + 模块树一致性 + 类型检查（与 CI static-checks 一致） |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run check:test-names` | 校验 `test/` 目录与文件命名 |
+| `npm run check:test-modules` | 校验 `test/feature` 目录树与 `config/test-module-map.json` 一致 |
+| `npm run scaffold:test-modules` | 按 map 创建缺失的模块/子模块目录（`.gitkeep` 占位） |
+| `npm run migrate:test-modules` | 按迁移映射 dry-run 旧用例路径（`-- --write` 执行 `git mv`） |
+| `npm run split:test-submodules` | 把小节下的扁平用例下沉到子功能层（dry-run；`-- --write` 执行） |
 | `npm run check:commit-msg` | 校验最近一条提交信息 |
 | `npm run format` | Prettier 格式化 `test` 与 `utils` |
 | `npm run hooks:install` | 安装 `commit-msg` / `pre-commit` git hook |

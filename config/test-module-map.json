@@ -1,0 +1,327 @@
+{
+  "version": 1,
+  "description": "测试模块/子模块的唯一事实来源。一级模块取自《E530 配置指导》(V7.5.1) 的 19 个有效章节，二级子模块取其二级小节；小节可用 children 定义三级子功能，types 决定生成哪些类型变体（func/cli/neg/spec/perf）。新增/调整模块时先改本文件，再运行 script/scaffold-test-modules.js。",
+  "source": {
+    "primary": "/home/kali/Documents/doc/E530_UG_md (V7.5.1)",
+    "coverage": "/home/kali/Documents/doc/E530_commands_md (V7.4.8，仅作命令覆盖矩阵)"
+  },
+  "typeSuffixes": {
+    "func": "",
+    "cli": "_cli",
+    "neg": "_neg",
+    "spec": "_spec",
+    "perf": "_perf"
+  },
+  "modules": [
+    {
+      "id": "02-BASIC",
+      "ug": "02_基础配置指导",
+      "title": "基础配置",
+      "submodules": [
+        { "id": "01-system_management", "ug": "2.1", "title": "系统管理配置", "types": ["func"] },
+        { "id": "02-user_management", "ug": "2.2", "title": "用户管理配置", "types": ["func"] },
+        { "id": "03-ftp", "ug": "2.3", "title": "FTP配置", "types": ["func"] },
+        { "id": "04-ftp_server", "ug": "2.4", "title": "FTP服务器配置", "types": ["func"] },
+        { "id": "05-tftp", "ug": "2.5", "title": "TFTP配置", "types": ["func"] },
+        { "id": "06-scp", "ug": "2.6", "title": "SCP配置", "types": ["func"] },
+        { "id": "07-telnet", "ug": "2.7", "title": "Telnet配置", "types": ["func"] },
+        { "id": "08-ssh", "ug": "2.8", "title": "SSH配置", "types": ["func"] },
+        { "id": "09-time_timezone", "ug": "2.9", "title": "时间与时区配置", "types": ["func"] },
+        { "id": "10-certificate", "ug": "2.10", "title": "证书配置", "types": ["func"] },
+        { "id": "11-rpc_api", "ug": "2.11", "title": "RPC API配置", "types": ["func"] },
+        { "id": "12-http", "ug": "2.12", "title": "HTTP配置", "types": ["func"] },
+        { "id": "13-diagnostic_info", "ug": "2.13", "title": "诊断信息配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "03-ETHERNET",
+      "ug": "03_以太网配置指导",
+      "title": "以太网",
+      "submodules": [
+        { "id": "01-interface", "ug": "3.1", "title": "接口配置", "types": ["func"] },
+        { "id": "02-interface_group_rate", "ug": "3.2", "title": "接口组速率配置", "types": ["func"] },
+        { "id": "03-l3_interface", "ug": "3.3", "title": "三层接口配置", "children": [
+          { "id": "01-vlan_subif", "title": "VLAN子接口", "types": ["func"] }
+        ] },
+        { "id": "04-interface_errdisable", "ug": "3.4", "title": "接口Errdisable配置", "types": ["func"] },
+        { "id": "05-mac_table", "ug": "3.5", "title": "MAC表配置", "types": ["func"] },
+        { "id": "06-vlan", "ug": "3.6", "title": "VLAN配置", "types": ["func"] },
+        { "id": "07-voice_vlan", "ug": "3.7", "title": "Voice VLAN配置", "types": ["func"] },
+        { "id": "08-vlan_assignment", "ug": "3.8", "title": "VLAN划分配置", "types": ["func"] },
+        { "id": "09-vlan_mapping", "ug": "3.9", "title": "VLAN映射配置", "children": [
+          { "id": "01-vlan_mapping", "title": "VLAN转换", "types": ["func"] },
+          { "id": "02-dot1q_tunnel", "title": "802.1Q Tunneling / QinQ", "types": ["func"] }
+        ] },
+        { "id": "10-link_aggregation", "ug": "3.10", "title": "链路聚合配置", "types": ["func"] },
+        { "id": "11-flow_control", "ug": "3.11", "title": "流量控制配置", "types": ["func"] },
+        { "id": "12-storm_control", "ug": "3.12", "title": "风暴控制配置", "children": [
+          { "id": "01-action_shutdown", "title": "shutdown 动作", "types": ["func"] },
+          { "id": "02-action_trap", "title": "trap 动作", "types": ["func"] },
+          { "id": "03-recovery_errdisable", "title": "Errdisable 恢复", "types": ["func"] }
+        ] },
+        { "id": "13-loop_detection", "ug": "3.13", "title": "环路检测配置", "types": ["func"] },
+        { "id": "14-l2_protocol_tunnel", "ug": "3.14", "title": "二层协议隧道配置", "types": ["func"] },
+        { "id": "15-mstp", "ug": "3.15", "title": "MSTP配置", "types": ["func"] },
+        { "id": "16-mlag", "ug": "3.16", "title": "MLAG配置", "types": ["func"] },
+        { "id": "17-hash_load_balance", "ug": "3.17", "title": "HASH负载均衡配置", "types": ["func"] },
+        { "id": "18-port_xconnect", "ug": "3.18", "title": "PORT-XCONNECT配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "04-IP_SERVICE",
+      "ug": "04_IP_业务配置指导",
+      "title": "IP业务",
+      "submodules": [
+        { "id": "01-arp", "ug": "4.1", "title": "ARP配置", "types": ["func"] },
+        { "id": "02-arp_proxy", "ug": "4.2", "title": "ARP代理配置", "types": ["func"] },
+        { "id": "03-arp_host_route", "ug": "4.3", "title": "ARP主机路由配置", "types": ["func"] },
+        { "id": "04-dhcp_client", "ug": "4.4", "title": "DHCP Client配置", "types": ["func"] },
+        { "id": "05-dhcp_relay", "ug": "4.5", "title": "DHCP Relay配置", "types": ["func"] },
+        { "id": "06-dhcp_server", "ug": "4.6", "title": "DHCP Server配置", "types": ["func"] },
+        { "id": "07-dns", "ug": "4.7", "title": "DNS配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "05-IP_ROUTE",
+      "ug": "05_IP_路由配置指导",
+      "title": "IP路由",
+      "submodules": [
+        { "id": "01-ip_unicast_route", "ug": "5.1", "title": "IP单播路由配置", "children": [
+          { "id": "01-ip_route_basic", "title": "IP路由基础", "types": ["func"] },
+          { "id": "02-ip_route_rnh", "title": "递归下一跳", "types": ["func"] }
+        ] },
+        { "id": "02-rip", "ug": "5.2", "title": "RIP配置", "types": ["func"] },
+        { "id": "03-ospf", "ug": "5.3", "title": "OSPF配置", "children": [
+          { "id": "01-ospf_basic", "title": "OSPF基础", "types": ["func", "cli"] },
+          { "id": "02-ospf_lfa", "title": "OSPF LFA", "types": ["func", "cli"] }
+        ] },
+        { "id": "04-prefix_list", "ug": "5.4", "title": "Prefix List配置", "types": ["func"] },
+        { "id": "05-route_map", "ug": "5.5", "title": "Route Map配置", "types": ["func"] },
+        { "id": "06-pbr", "ug": "5.6", "title": "策略路由(PBR)配置", "types": ["func"] },
+        { "id": "07-bgp", "ug": "5.7", "title": "BGP配置", "children": [
+          { "id": "01-bgp_multiple_instance", "title": "BGP多实例", "types": ["func", "cli"] }
+        ] },
+        { "id": "08-isis", "ug": "5.8", "title": "ISIS配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "06-MULTICAST",
+      "ug": "06_组播配置指导",
+      "title": "组播",
+      "submodules": [
+        { "id": "01-ip_multicast_route", "ug": "6.1", "title": "IP组播路由配置", "types": ["func"] },
+        { "id": "02-igmp", "ug": "6.2", "title": "IGMP配置", "types": ["func"] },
+        { "id": "03-pim_sm", "ug": "6.3", "title": "PIM-SM配置", "types": ["func"] },
+        { "id": "04-pim_dm", "ug": "6.4", "title": "PIM-DM配置", "types": ["func"] },
+        { "id": "05-igmp_snooping", "ug": "6.5", "title": "IGMP Snooping配置", "types": ["func"] },
+        { "id": "06-mvr", "ug": "6.6", "title": "MVR配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "07-SECURITY",
+      "ug": "07_安全性配置指导",
+      "title": "安全性",
+      "submodules": [
+        { "id": "01-port_security", "ug": "7.1", "title": "端口安全配置", "types": ["func"] },
+        { "id": "02-vlan_security", "ug": "7.2", "title": "VLAN安全配置", "types": ["func"] },
+        { "id": "03-time_range", "ug": "7.3", "title": "时间段配置", "types": ["func", "cli"] },
+        { "id": "04-access_control_list", "ug": "7.4", "title": "访问控制列表配置", "types": ["func", "cli"] },
+        { "id": "05-extended_access_control_list", "ug": "7.5", "title": "扩展访问控制列表配置", "types": ["func", "cli"] },
+        { "id": "06-ipv6_access_control_list", "ug": "7.6", "title": "IPv6访问控制列表配置", "types": ["func", "cli"] },
+        { "id": "07-port_group", "ug": "7.7", "title": "Port-Group配置", "types": ["func"] },
+        { "id": "08-vlan_group", "ug": "7.8", "title": "VLAN-Group配置", "types": ["func"] },
+        { "id": "09-copp", "ug": "7.9", "title": "COPP控制面策略配置", "types": ["func"] },
+        { "id": "10-dot1x", "ug": "7.10", "title": "Dot1x配置", "types": ["func"] },
+        { "id": "11-guest_vlan", "ug": "7.11", "title": "Guest VLAN配置", "types": ["func"] },
+        { "id": "12-arp_inspection", "ug": "7.12", "title": "ARP Inspection配置", "types": ["func"] },
+        { "id": "13-dhcp_snooping", "ug": "7.13", "title": "DHCP Snooping配置", "types": ["func"] },
+        { "id": "14-ip_source_guard", "ug": "7.14", "title": "IP Source Guard配置", "types": ["func"] },
+        { "id": "15-private_vlan", "ug": "7.15", "title": "私有VLAN配置", "types": ["func"] },
+        { "id": "16-aaa", "ug": "7.16", "title": "AAA配置", "types": ["func"] },
+        { "id": "17-port_isolation", "ug": "7.17", "title": "端口隔离配置", "types": ["func"] },
+        { "id": "18-ddos", "ug": "7.18", "title": "DDoS配置", "types": ["func"] },
+        { "id": "19-key_chain", "ug": "7.19", "title": "Key Chain配置", "types": ["func"] },
+        { "id": "20-port_block", "ug": "7.20", "title": "Port-Block配置", "types": ["func"] },
+        { "id": "21-macsec", "ug": "7.21", "title": "MACSec配置", "types": ["func"] },
+        { "id": "22-global_acl", "ug": "7.22", "title": "全局ACL配置", "types": ["func", "cli"] }
+      ]
+    },
+    {
+      "id": "08-DEVICE_MANAGEMENT",
+      "ug": "08_设备管理配置指导",
+      "title": "设备管理",
+      "submodules": [
+        { "id": "01-stm", "ug": "8.1", "title": "STM配置", "types": ["func"] },
+        { "id": "02-system_log", "ug": "8.2", "title": "系统日志配置", "types": ["func"] },
+        { "id": "03-mirror", "ug": "8.3", "title": "镜像配置", "types": ["func"] },
+        { "id": "04-device_management", "ug": "8.4", "title": "设备管理配置", "types": ["func"] },
+        { "id": "05-bootrom", "ug": "8.5", "title": "Bootrom配置", "types": ["func"] },
+        { "id": "06-startup_diagnostic", "ug": "8.6", "title": "启动诊断配置", "types": ["func"] },
+        { "id": "07-smart_config", "ug": "8.7", "title": "Smart Config配置", "types": ["func"] },
+        { "id": "08-reboot_record", "ug": "8.8", "title": "重启记录配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "09-NETWORK_MANAGEMENT",
+      "ug": "09_网络管理配置指导",
+      "title": "网络管理",
+      "submodules": [
+        { "id": "01-network_diagnostic", "ug": "9.1", "title": "网络诊断配置", "types": ["func"] },
+        { "id": "02-ntp", "ug": "9.2", "title": "NTP配置", "types": ["func"] },
+        { "id": "03-ptp", "ug": "9.3", "title": "PTP配置", "types": ["func"] },
+        { "id": "04-loopback", "ug": "9.4", "title": "Loopback配置", "types": ["func"] },
+        { "id": "05-l2_ping", "ug": "9.5", "title": "L2 Ping配置", "types": ["func"] },
+        { "id": "06-rmon", "ug": "9.6", "title": "RMON配置", "types": ["func"] },
+        { "id": "07-snmp", "ug": "9.7", "title": "SNMP网络管理配置", "types": ["func"] },
+        { "id": "08-sflow", "ug": "9.8", "title": "Sflow配置", "types": ["func"] },
+        { "id": "09-lldp", "ug": "9.9", "title": "LLDP配置", "types": ["func"] },
+        { "id": "10-ipfix", "ug": "9.10", "title": "IPFIX配置", "types": ["func"] },
+        { "id": "11-hardware_monitor", "ug": "9.11", "title": "Hardware Monitor配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "10-TRAFFIC_MANAGEMENT",
+      "ug": "10_流量管理配置指导",
+      "title": "流量管理",
+      "submodules": [
+        { "id": "01-qos", "ug": "10.1", "title": "QoS配置", "children": [
+          { "id": "01-class_map", "title": "class-map", "types": ["func", "cli"] },
+          { "id": "02-policy_map", "title": "policy-map", "types": ["func", "cli"] },
+          { "id": "03-application", "title": "QoS 应用", "types": ["func", "cli"] },
+          { "id": "04-combination", "title": "组合场景", "types": ["func", "cli"] }
+        ] }
+      ]
+    },
+    {
+      "id": "11-IPV6_SERVICE",
+      "ug": "11_IPv6_业务配置指导",
+      "title": "IPv6业务",
+      "submodules": [
+        { "id": "01-ipv6_over_ipv4_tunnel", "ug": "11.1", "title": "IPv6 over IPv4隧道配置", "types": ["func"] },
+        { "id": "02-ndp", "ug": "11.2", "title": "NDP配置", "types": ["func"] },
+        { "id": "03-dhcpv6_relay", "ug": "11.3", "title": "DHCPv6 Relay配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "12-IPV6_SECURITY",
+      "ug": "12_IPv6_安全配置指导",
+      "title": "IPv6安全",
+      "submodules": [
+        { "id": "01-dhcpv6_snooping", "ug": "12.1", "title": "DHCPv6 Snooping配置", "types": ["func"] },
+        { "id": "02-nd_ra_guard", "ug": "12.2", "title": "IPv6 ND RA Guard配置", "types": ["func"] },
+        { "id": "03-nd_snooping", "ug": "12.3", "title": "ND Snooping配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "13-IPV6_ROUTE",
+      "ug": "13_IPv6_路由配置指导",
+      "title": "IPv6路由",
+      "submodules": [
+        { "id": "01-ipv6_unicast_route", "ug": "13.1", "title": "IPv6单播路由配置", "types": ["func"] },
+        { "id": "02-ospfv3", "ug": "13.2", "title": "OSPFv3配置", "types": ["func"] },
+        { "id": "03-ripng", "ug": "13.3", "title": "RIPng配置", "types": ["func"] },
+        { "id": "04-ipv6_prefix_list", "ug": "13.4", "title": "IPv6 Prefix-list配置", "types": ["func"] },
+        { "id": "05-ipv6_pbr", "ug": "13.5", "title": "IPv6 PBR配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "14-IPV6_MULTICAST",
+      "ug": "14_IPv6_组播配置指导",
+      "title": "IPv6组播",
+      "submodules": [
+        { "id": "01-ipv6_multicast_route", "ug": "14.1", "title": "IPv6组播路由配置", "types": ["func"] },
+        { "id": "02-mld", "ug": "14.2", "title": "MLD配置", "types": ["func"] },
+        { "id": "03-pimv6_sm", "ug": "14.3", "title": "PIMv6-SM配置", "types": ["func"] },
+        { "id": "04-mld_snooping", "ug": "14.4", "title": "MLD Snooping配置", "types": ["func"] },
+        { "id": "05-mvr6", "ug": "14.5", "title": "MVR6配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "15-VPN",
+      "ug": "15_VPN配置指导",
+      "title": "VPN",
+      "submodules": [
+        { "id": "01-vrf", "ug": "15.1", "title": "VRF配置", "types": ["func"] },
+        { "id": "02-ipv4_over_ipv4_gre_tunnel", "ug": "15.2", "title": "IPv4 over IPv4 GRE隧道配置", "types": ["func"] },
+        { "id": "03-ipv4_erspan_tunnel", "ug": "15.3", "title": "IPv4 ERSPAN隧道配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "16-RELIABILITY",
+      "ug": "16_可靠性配置指导",
+      "title": "可靠性",
+      "submodules": [
+        { "id": "01-bhm", "ug": "16.1", "title": "BHM配置", "types": ["func"] },
+        { "id": "02-efm_oam", "ug": "16.2", "title": "EFM OAM配置", "types": ["func"] },
+        { "id": "03-cfm", "ug": "16.3", "title": "CFM配置", "types": ["func"] },
+        { "id": "04-cpu_traffic", "ug": "16.4", "title": "CPU Traffic配置", "types": ["func"] },
+        { "id": "05-g_8031", "ug": "16.5", "title": "G.8031配置", "types": ["func"] },
+        { "id": "06-g_8032", "ug": "16.6", "title": "G.8032配置", "types": ["func"] },
+        { "id": "07-udld", "ug": "16.7", "title": "UDLD配置", "types": ["func"] },
+        { "id": "08-erps", "ug": "16.8", "title": "ERPS配置", "types": ["func"] },
+        { "id": "09-smart_link", "ug": "16.9", "title": "Smart-Link配置", "types": ["func"] },
+        { "id": "10-multi_link", "ug": "16.10", "title": "Multi-Link配置", "types": ["func"] },
+        { "id": "11-monitor_link", "ug": "16.11", "title": "Monitor-Link配置", "types": ["func"] },
+        { "id": "12-vrrp", "ug": "16.12", "title": "VRRP配置", "types": ["func"] },
+        { "id": "13-ip_sla", "ug": "16.13", "title": "IP-SLA配置", "types": ["func"] },
+        { "id": "14-ip_bfd", "ug": "16.14", "title": "IP BFD配置", "types": ["func"] },
+        { "id": "15-track", "ug": "16.15", "title": "Track配置", "types": ["func"] },
+        { "id": "16-varp", "ug": "16.16", "title": "VARP配置", "types": ["func"] },
+        { "id": "17-udp_helper", "ug": "16.17", "title": "UDP Helper配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "17-NETWORK_VIRTUALIZATION",
+      "ug": "17_网络虚拟化配置指导",
+      "title": "网络虚拟化",
+      "submodules": [
+        { "id": "01-vxlan", "ug": "17.1", "title": "VXLAN配置", "types": ["func"] },
+        { "id": "02-nvgre", "ug": "17.2", "title": "NVGRE配置", "types": ["func"] },
+        { "id": "03-geneve", "ug": "17.3", "title": "GENEVE配置", "types": ["func"] },
+        { "id": "04-overlay", "ug": "17.4", "title": "Overlay配置", "types": ["func"] },
+        { "id": "05-ovsdb", "ug": "17.5", "title": "OVSDB配置", "types": ["func"] },
+        { "id": "06-evpn", "ug": "17.6", "title": "EVPN配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "18-INTELLIGENT_LOSSLESS",
+      "ug": "18_智能无损网络配置指导",
+      "title": "智能无损网络",
+      "submodules": [
+        { "id": "01-pfc", "ug": "18.1", "title": "基于优先级的流量控制配置", "types": ["func"] },
+        { "id": "02-efd", "ug": "18.2", "title": "EFD配置", "types": ["func"] },
+        { "id": "03-ecn", "ug": "18.3", "title": "ECN配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "19-MPLS",
+      "ug": "19_MPLS配置指导",
+      "title": "MPLS",
+      "submodules": [
+        { "id": "01-ldp", "ug": "19.1", "title": "LDP配置", "types": ["func"] },
+        { "id": "02-mpls", "ug": "19.2", "title": "MPLS配置", "children": [
+          { "id": "01-mpls_basic", "title": "MPLS 基础", "types": ["func"] },
+          { "id": "02-mpls_vlan_mapping", "title": "MPLS 与 VLAN 映射", "types": ["func"] },
+          { "id": "03-mpls_load_balance", "title": "MPLS 负载分担", "types": ["func"] },
+          { "id": "04-mpls_ac_vlan_range", "title": "AC VLAN 范围", "types": ["func"] },
+          { "id": "05-mpls_bpdu_ac", "title": "BPDU AC", "types": ["func", "cli", "spec"] }
+        ] },
+        { "id": "03-vpls", "ug": "19.3", "title": "VPLS配置", "types": ["func"] },
+        { "id": "04-vpws", "ug": "19.4", "title": "VPWS配置", "types": ["func"] },
+        { "id": "05-mpls_qos", "ug": "19.5", "title": "MPLS QoS配置", "types": ["func"] },
+        { "id": "06-l3vpn", "ug": "19.6", "title": "L3VPN配置", "types": ["func"] },
+        { "id": "07-mpls_sr", "ug": "19.7", "title": "MPLS SR配置", "types": ["func"] }
+      ]
+    },
+    {
+      "id": "20-STACKING",
+      "ug": "20_堆叠配置指导",
+      "title": "堆叠",
+      "submodules": [
+        { "id": "01-stacking_boot", "ug": "20.1", "title": "Stacking启动配置", "types": ["func"] },
+        { "id": "02-line_card_removal", "ug": "20.2", "title": "删除线卡配置", "types": ["func"] },
+        { "id": "03-stacking_dual_master_detection", "ug": "20.3", "title": "Stacking双主检测配置", "types": ["func"] }
+      ]
+    }
+  ]
+}

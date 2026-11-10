@@ -2,7 +2,7 @@
 
 存放「文本化测试用例」，与 `test/` 下的脚本一一对应：
 
-- 目录结构与 `test/feature/` 保持一致：`<NN-FEATURE>[/<NN-sub_feature>]/<NNNN>-<FEATURE>.md`
+- 目录结构与 `test/feature/` 保持一致：`<NN-模块>[/<NN-UG小节>[/<NN-子功能>]]/<NNNN>-<模块>.md`
 - 模板：[`docs/spec/test-case-template.md`](../spec/test-case-template.md)
 - 命名规则参见 [`docs/spec/naming-convention.md`](../spec/naming-convention.md)
 
@@ -20,5 +20,5 @@
 
 | 用例编号 | 特性 | 描述 | 对应脚本 |
 | --- | --- | --- | --- |
-| 0010 | `10-BGP_EVPN_VXLAN` | [0010-BGP_EVPN_VXLAN.md](10-BGP_EVPN_VXLAN/0010-BGP_EVPN_VXLAN.md) | `test/feature/10-BGP_EVPN_VXLAN/0010-BGP_EVPN_VXLAN.test.ts` |
+| 0010 | `17-NETWORK_VIRTUALIZATION/06-evpn` | [0010-NETWORK_VIRTUALIZATION.md](17-NETWORK_VIRTUALIZATION/06-evpn/0010-NETWORK_VIRTUALIZATION.md) | `test/feature/17-NETWORK_VIRTUALIZATION/06-evpn/0010-NETWORK_VIRTUALIZATION.test.ts` |
 | 0010 | `misc/stack/70-acl-qos` | [0010-ACL_QOS.md](misc/stack/70-acl-qos/0010-ACL_QOS.md)<br>（合集，34 条用例 0010~0340） | `test/misc/stack/70-acl-qos/{01-…,11-…}/*-ACL_QOS.test.ts` |

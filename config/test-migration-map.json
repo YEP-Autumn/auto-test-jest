@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "第一步迁移记录（已执行）：旧测试路径 -> UG 小节。第三步的「小节 -> 子功能」下沉见 config/test-split-map.json。groups 顺序即同一目标目录内的编号顺序；脚本按 start/step 重新编号，文件名统一为 <NNNN>-<MODULE_TOKEN>.test.ts。",
+  "description": "第一步迁移记录（已执行）：旧测试路径 -> UG 小节。后续命名规则已改为 <NNNN>-<模块>[-<子功能>].test.ts，本文件保留作历史追溯；「小节 -> 子功能」下沉见 config/test-split-map.json。",
   "renumber": { "start": 10, "step": 10, "width": 4 },
   "groups": [
     {

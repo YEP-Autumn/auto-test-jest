@@ -8,7 +8,7 @@
 - 级别 / 类型：P0 / 功能
 - 执行方式：手工 / 自动化
 - 预估耗时：约 3 分钟
-- 关联：自动化脚本 `test/feature/17-NETWORK_VIRTUALIZATION/06-evpn/0010-NETWORK_VIRTUALIZATION.test.ts`（仅追溯）
+- 关联：自动化脚本 `test/feature/17-NETWORK_VIRTUALIZATION/06-evpn/0010-NETWORK_VIRTUALIZATION-EVPN.test.ts`（仅追溯）
 
 ## 2. 组网与拓扑
 

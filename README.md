@@ -71,7 +71,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   └── setup/jest.setup.ts     # 加载 .env 到 process.env
 ├── test/
 │   ├── demo.test.ts            # 最小可运行示例
-│   ├── feature/                # 特性用例：<NN-模块>/<NN-UG小节>[/<NN-子功能>[_类型]]/NNNN-<模块>.test.ts
+│   ├── feature/                # 特性用例：<NN-模块>/<NN-UG小节>[/<NN-子功能>[_类型]]/NNNN-<模块>[-<子功能>].test.ts
 │   └── misc/bugfix/<缺陷号>/   # 缺陷回归用例
 ├── config/
 │   ├── test-module-map.json    # 19 个 UG 模块 / 149 个小节 / 子功能，唯一事实来源
@@ -336,7 +336,7 @@ npm run failed       # 按该配置复跑
 ## 规范
 
 - [测试用例命名规范](docs/spec/naming-convention.md)：目录 `NN-FEATURE[/NN-sub_feature]`、
-  文件 `NNNN-<顶层特性>.test.ts`、标题必须非空且为中文陈述句。
+  文件 `NNNN-<模块>[-<子功能>].test.ts`、标题必须非空且为中文陈述句。
 - [测试用例脚本编写规范](docs/spec/test-script-convention.md)：文件骨架、TestHelper 动作顺序、
   `expect` 语义、打流/抓包、清理与反例，落地脚本时对照本文。
 - [测试用例描述规范与模板](docs/spec/test-case-template.md)：面向人的用例描述模板，

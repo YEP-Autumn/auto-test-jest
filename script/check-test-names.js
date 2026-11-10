@@ -10,7 +10,7 @@
  *   1. test/ 下只允许 feature/、misc/；
  *   2. 一级特性目录 NN-UPPER_SNAKE；
  *   3. feature 下各级子目录 NN-lower_snake[_type]；
- *   4. 用例文件名 NNNN-<顶层特性>.test.ts，且后缀与顶层特性一致；
+ *   4. 用例文件名 NNNN-<模块>[-<子功能>].test.ts，且以顶层模块名开头；
  *   5. misc 目录/文件命名。
  *
  * 层级深度、类型变体基号、空目录只作为提示（warning），不影响退出码。
@@ -31,8 +31,8 @@ const RE_FEATURE_DIR = /^\d{2}-[A-Z][A-Z0-9_]*$/;
 const RE_SUBFEATURE_DIR = /^\d{2}-[a-z0-9]+(_[a-z0-9]+)*$/;
 // misc 目录：小写单词（可含连字符）或纯数字缺陷号
 const RE_MISC_DIR = /^(\d+|[a-z0-9]+(-[a-z0-9]+)*)$/;
-// feature 用例文件：NNNN-FEATURE.test.ts
-const RE_FEATURE_FILE = /^(\d{4})-([A-Z][A-Z0-9_]*)\.test\.ts$/;
+// feature 用例文件：NNNN-MODULE[-SUBJECT].test.ts
+const RE_FEATURE_FILE = /^(\d{4})-([A-Z][A-Z0-9_-]*)\.test\.ts$/;
 // misc 用例文件：可带 NNNN- 前缀，词由 _ 或 - 连接
 const RE_MISC_FILE = /^(\d{4}-)?[A-Za-z0-9]+([_-][A-Za-z0-9]+)*\.test\.ts$/;
 // 根级用例文件
@@ -85,12 +85,15 @@ if (fs.existsSync(featureDir)) {
 }
 
 function validateFeatureTree(dir, featureToken, depth) {
-  // 当前目录直属用例：NNNN-<顶层特性>.test.ts
+  // 当前目录直属用例：NNNN-<模块>[-<子功能>].test.ts
   for (const file of listTestFiles(dir)) {
     const m = file.match(RE_FEATURE_FILE);
-    if (!m) bad(path.join(dir, file), "用例文件应为 NNNN-UPPER_SNAKE.test.ts");
-    else if (m[2] !== featureToken)
-      bad(path.join(dir, file), `文件后缀应等于顶层特性名 ${featureToken}`);
+    if (!m) bad(path.join(dir, file), "用例文件应为 NNNN-MODULE[-SUBJECT].test.ts");
+    else if (m[2] !== featureToken && !m[2].startsWith(`${featureToken}-`))
+      bad(
+        path.join(dir, file),
+        `文件后缀应以特性名 ${featureToken} 开头（如 ${featureToken}-OSPF_LFA）`,
+      );
   }
 
   // 子目录：NN-lower_snake[_type]，允许继续嵌套（仅提示层级）

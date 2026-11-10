@@ -22,9 +22,9 @@ test/
 │       ├── <NN-section>/                 # 二级：UG 小节（如 07-bgp）
 │       │   ├── <NNNN>-<MODULE>.test.ts   #   小节直属用例（无子功能时）
 │       │   ├── <NN-sub_function>/        #   三级：子功能（如 01-bgp_multiple_instance）
-│       │   │   └── <NNNN>-<MODULE>.test.ts
+│       │   │   └── <NNNN>-<MODULE>-<SUBJECT>.test.ts
 │       │   └── <NN-sub_function>_<type>/ #   三级：同一子功能的类型变体（如 _cli）
-│       │       └── <NNNN>-<MODULE>.test.ts
+│       │       └── <NNNN>-<MODULE>-<SUBJECT>.test.ts
 │       └── <NN-section>_<type>/          # 小节无子功能时的类型变体（如 03-ospf_cli）
 │           └── <NNNN>-<MODULE>.test.ts
 └── misc/                                 # 非特性用例
@@ -48,16 +48,18 @@ test/
 | 二级小节目录 | `NN-lower_snake[_type]` | `^\d{2}-[a-z0-9]+(_[a-z0-9]+)*$` | `07-bgp`、`03-ospf_cli` |
 | 三级子功能目录 | `NN-lower_snake[_type]` | 同上 | `01-bgp_multiple_instance`、`05-mpls_bpdu_ac_spec` |
 | misc 目录 | 小写单词（可连字符）或缺陷号 | `^(\d+\|[a-z0-9]+(-[a-z0-9]+)*)$` | `bugfix`、`class-map`、`3162` |
-| feature 用例文件 | `NNNN-<顶层特性>.test.ts` | `^(\d{4})-([A-Z][A-Z0-9_]*)\.test\.ts$` | `0010-MPLS.test.ts` |
+| feature 用例文件 | `NNNN-<模块>[-<子功能>].test.ts` | `^(\d{4})-([A-Z][A-Z0-9_-]*)\.test\.ts$` | `0010-IP_ROUTE-OSPF_LFA.test.ts` |
 | bugfix 用例文件 | `bug_<缺陷号>[_<序号>].test.ts` | — | `bug_3162_1.test.ts` |
 | misc 其它用例文件 | `[NNNN-]lower/hyphen.test.ts` | `^(\d{4}-)?[A-Za-z0-9]+([_-][A-Za-z0-9]+)*\.test\.ts$` | `0010-STACK_STANDBY_SYNC_ACL.test.ts` |
 
 要点：
 
 1. **序号为 4 位、步长 10**：`0010`、`0020`…；插入用例可用区间补号（如 `0051`），同目录内唯一即可，允许留空档。
-2. **文件后缀统一等于「顶层特性名」**，不把子功能写进文件名：
-   - ✅ `test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE.test.ts`
-   - ❌ `.../0010-BGP-Multiple-Instance.test.ts`（子功能已由目录表达）
+2. **文件名 = `NNNN-<模块>[-<子功能>]`**，用 `-` 分隔，不用 `.`：
+   - ✅ `test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE-BGP_MULTIPLE_INSTANCE.test.ts`
+   - ✅ `test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac/0010-MPLS-BPDU_AC.test.ts`（子功能名与模块重名时去掉模块前缀）
+   - ❌ `.../0010-BGP-Multiple-Instance.test.ts`（大小写/分隔符不规范）
+   - 模块名保证可读，子功能名让日志与报告能脱离路径看懂。
 3. **编号沿用《E530 配置指导》**：一级模块号 = UG 章号（`02`…`20`），二级小节目号 = UG 小节号（如 `5.7` → `07-bgp`）；三级子功能在小节内重新从 `01` 编号。
 4. 一级模块的 **19 个有效章节**与全部二级子模块以 [`config/test-module-map.json`](../../config/test-module-map.json) 为唯一事实来源，目录由 `script/scaffold-test-modules.js` 生成，不要手工新开模块。
 5. **类型后缀加在叶子目录上**：功能 / 仅 CLI / 规格等用后缀区分，层级由“模块 → 小节 → 子功能”决定；详见 §3。
@@ -107,18 +109,19 @@ test/
 
 ```
 # ✅
-test/feature/05-IP_ROUTE/01-ip_unicast_route/02-ip_route_rnh/0010-IP_ROUTE.test.ts
-test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE.test.ts
-test/feature/19-MPLS/02-mpls/01-mpls_basic/0010-MPLS.test.ts          # 功能（打流）
-test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac_cli/0010-MPLS.test.ts    # 仅 CLI（同基号 05）
-test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac_spec/0010-MPLS.test.ts   # 规格（同基号 05）
-test/feature/03-ETHERNET/12-storm_control/02-action_trap/0010-ETHERNET.test.ts
+test/feature/05-IP_ROUTE/01-ip_unicast_route/02-ip_route_rnh/0010-IP_ROUTE-RNH.test.ts
+test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE-BGP_MULTIPLE_INSTANCE.test.ts
+test/feature/19-MPLS/02-mpls/01-mpls_basic/0010-MPLS-BASIC.test.ts          # 功能（打流）
+test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac_cli/0010-MPLS-BPDU_AC.test.ts  # 仅 CLI
+test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac_spec/0010-MPLS-BPDU_AC.test.ts # 规格
+test/feature/03-ETHERNET/12-storm_control/02-action_trap/0010-ETHERNET-ACTION_TRAP.test.ts
 test/misc/bugfix/3162/bug_3162_1.test.ts
 
 # ❌
+test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE.test.ts   # 缺少子功能名
 test/feature/19-MPLS/02-mpls/0010-MPLS.test.ts                # 小节下已有子功能，容器不放直属用例
-test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac/cli/0010-MPLS.test.ts   # 类型再开一层，应为 _cli 后缀
-test/feature/19-MPLS/01-mpls-baisc/1010-MPLS.test.ts          # 拼写错误 + 千位前缀
+test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac/cli/0010-MPLS-BPDU_AC.test.ts  # 类型再开一层，应为 _cli 后缀
+test/feature/19-MPLS/01-mpls-baisc/1010-MPLS-BASIC.test.ts    # 拼写错误 + 千位前缀
 test/feature/05-IP_ROUTE/07-bgp/0010-BGP-Multiple-Instance.test.ts
 ```
 
@@ -126,7 +129,7 @@ test/feature/05-IP_ROUTE/07-bgp/0010-BGP-Multiple-Instance.test.ts
 
 1. 目录按上表命名：模块 → UG 小节 → 子功能（可选）；有子目录的容器不放直属用例（§1）；
 2. 类型变体用**后缀**表达（`_cli` 等），加在叶子目录上（§3）；
-3. 文件 `NNNN-<顶层特性>.test.ts`，序号在所属目录内递增；
+3. 文件 `NNNN-<模块>[-<子功能>].test.ts`，序号在所属目录内递增；
 4. 标题非空且能说明「测什么、期望什么」；
 5. 若该用例要被 `config/jest*.cjs` 的 `testRegex` 精确引用，记得同步新增路径；
 6. 运行 `npm run check:test-names` 确认无违规（层级、基号、空目录只提示）。

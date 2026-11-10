@@ -134,19 +134,19 @@ test/feature/05-IP_ROUTE/07-bgp/0010-BGP-Multiple-Instance.test.ts
 5. 若该用例要被 `config/jest*.cjs` 的 `testRegex` 精确引用，记得同步新增路径；
 6. 运行 `npm run check:test-names` 确认无违规（层级、基号、空目录只提示）。
 
-## 7. 模块树生成与迁移
+## 7. 模块树生成
 
-- 模块/子模块清单：[`config/test-module-map.json`](../../config/test-module-map.json)（19 个 UG 章节 + 149 个二级小节；小节可用 `children` 定义三级子功能，`types` 决定要生成哪些类型变体）。
+- 模块/子模块清单：[`config/test-module-map.json`](../../config/test-module-map.json)（19 个 UG 章节 + 149 个二级小节；小节可用 `children` 定义三级子功能，`types` 决定要生成哪些类型变体），这是**唯一事实来源**。
 - 生成目录：
   ```shell
   node script/scaffold-test-modules.js           # dry-run
   node script/scaffold-test-modules.js --write   # 创建容器/叶子目录与 .gitkeep
-  node script/scaffold-test-modules.js --check   # CI：目录与 map 不一致则退出 1
+  node script/scaffold-test-modules.js --check   # 目录与 map 不一致则退出 1
   ```
-- 旧路径迁移（两步，均已执行，保留作追溯）：
-  1. [`config/test-migration-map.json`](../../config/test-migration-map.json) → `script/migrate-test-modules.js`：旧目录归入 UG 小节；
-  2. [`config/test-split-map.json`](../../config/test-split-map.json) → `script/split-test-submodules.js`：小节按子功能下沉一层。
 - 新增子模块时：先改 `test-module-map.json` → `scaffold --write` → 再写用例。
+- 从旧目录迁移到当前模块树已于 2026-11 完成（202 个用例归入 UG 小节，185 个再下沉到子功能）；
+  一次性脚本与映射表已删除，需要追溯单个文件的来源时用
+  `git log --follow --name-status -- <文件>`。
 
 > 校验脚本只强校验「目录/文件命名、文件后缀、misc 命名」等关键规则；
 > 层级深度、类型基号、空目录属于最佳实践提示，不作为 CI 失败项。

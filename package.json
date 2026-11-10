@@ -16,8 +16,6 @@
     "check:test-names": "node script/check-test-names.js",
     "check:test-modules": "node script/scaffold-test-modules.js --check",
     "scaffold:test-modules": "node script/scaffold-test-modules.js --write",
-    "migrate:test-modules": "node script/migrate-test-modules.js",
-    "split:test-submodules": "node script/split-test-submodules.js",
     "check:commit-msg": "node script/check-commit-msg.js",
     "typecheck": "tsc --noEmit",
     "hooks:install": "node script/install-git-hooks.js",

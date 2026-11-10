@@ -352,8 +352,6 @@ export class LinkConstraint {
     );
   }
 
-  
-
   /**
    *
    *                                  +--------+

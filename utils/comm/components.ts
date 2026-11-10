@@ -76,12 +76,7 @@ export class ExecRetMatch implements Actuator {
    * @param expect 期望的正则列表：命令只执行一次，输出对每条期望做 AND 校验。
    *               归一化（string / 单条 / 数组 -> RegExp[]）由 TestHelper 完成。
    */
-  constructor(
-    conn: Dut,
-    config: string,
-    expect: RegExp[],
-    notMatch: boolean,
-  ) {
+  constructor(conn: Dut, config: string, expect: RegExp[], notMatch: boolean) {
     this.conn = conn;
     this.config = config;
     this.expects = expect;

@@ -15,9 +15,9 @@
 | `03-time_range/` | [`03-time_range/README.md`](03-time_range/README.md) | 0 | 0 |
 | `03-time_range_cli/` | [`03-time_range_cli/README.md`](03-time_range_cli/README.md) | 1 | 0 |
 | `04-access_control_list/` | [`04-access_control_list/README.md`](04-access_control_list/README.md) | 0 | 0 |
-| `04-access_control_list_cli/` | [`04-access_control_list_cli/README.md`](04-access_control_list_cli/README.md) | 11 | 0 |
+| `04-access_control_list_cli/` | [`04-access_control_list_cli/README.md`](04-access_control_list_cli/README.md) | 10 | 0 |
 | `05-extended_access_control_list/` | [`05-extended_access_control_list/README.md`](05-extended_access_control_list/README.md) | 0 | 0 |
-| `05-extended_access_control_list_cli/` | [`05-extended_access_control_list_cli/README.md`](05-extended_access_control_list_cli/README.md) | 0 | 0 |
+| `05-extended_access_control_list_cli/` | [`05-extended_access_control_list_cli/README.md`](05-extended_access_control_list_cli/README.md) | 1 | 0 |
 | `06-ipv6_access_control_list/` | [`06-ipv6_access_control_list/README.md`](06-ipv6_access_control_list/README.md) | 0 | 0 |
 | `06-ipv6_access_control_list_cli/` | [`06-ipv6_access_control_list_cli/README.md`](06-ipv6_access_control_list_cli/README.md) | 0 | 0 |
 | `07-port_group/` | [`07-port_group/README.md`](07-port_group/README.md) | 0 | 0 |

@@ -1,11 +1,11 @@
 # auto-test-jest
 
 基于 [Jest](https://jestjs.io/) + TypeScript 的**交换机（DUT）自动化测试框架**。用例通过
-Telnet / SSH 登录真实设备下发配置并校验回显，通过**打流后端（stream backend）**使用
+Telnet / SSH 登录真实设备下发配置并校验回显，通过**流量收发后端（stream backend）**使用
 Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo backend）**动态创建与销毁
 设备间的连线拓扑，最终由 Jest 断言并生成 HTML 测试报告。
 
-> 目标：把「组网 → 配置 DUT → 打流/抓包 → 校验结果 → 清理现场」这套人工流程，
+> 目标：把「组网 → 配置 DUT → 流量发送/抓包 → 校验结果 → 清理现场」这套人工流程，
 > 固化成可重复执行、可 CI 门禁的测试脚本。
 
 ## 目录
@@ -26,7 +26,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 
 ## 特性
 
-- **TestHelper 测试 DSL**：以链式调用组装「配置 / 校验 / 睡眠 / 打流 / 抓包」等动作，
+- **TestHelper 测试 DSL**：以链式调用组装「配置 / 校验 / 等待 / 流量发送 / 抓包」等动作，
   一次性 `startTest()` 顺序执行并汇总结果。
 - **多设备支持**：`DutIdx.A` ~ `DutIdx.H` 对应 `Config.dut_list`，`ExecConfigDutA/B/C/D` 等
   便捷方法覆盖常见场景。
@@ -37,9 +37,9 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 - **报文构造与校验**：`PacketBuilder` 逐步拼装 Ethernet / VLAN / IPv4 / IPv6 / ARP /
   TCP / UDP / ICMP / LLC / SNMP / RAW，配合 `PacketSender`、`PacketChecker` 完成收发校验。
 - **自动生成 Thrift 代码**：报文的线格式由 `utils/rpc/thrift/packet.thrift` 定义，
-  `postinstall` / `pretest` 自动生成，无需手动维护生成物。
-- **失败重跑**：`npm run gen-failed` 从最新 HTML 报告提取失败用例，生成
-  `config/jest.failed.config.cjs` 后一键复跑。
+  `postinstall` / `pretest` 自动生成，生成物由脚本自动维护。
+- **失败用例重试**：`npm run gen-failed` 从最新 HTML 报告提取失败用例，生成
+  `config/jest.failed.config.cjs` 后重新执行。
 - **规范与门禁**：用例命名、提交信息均有脚本自动校验，并接入 GitHub Actions。
 
 ## 目录结构
@@ -55,7 +55,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── jest.mpls-regression.config.cjs
 │   ├── jest.default-stack.config.cjs   # 堆叠场景，用例在 test/misc/stack/
 │   ├── jest.default-example.config.cjs # 教程用例（docs/test_script_tutorials）
-│   ├── jest.failed.config.cjs  # 由 gen-failed 生成（gitignore），只跑上次失败的用例
+│   ├── jest.failed.config.cjs  # 由 gen-failed 生成（gitignore），仅执行上次失败的用例
 │   └── test-module-map.json    # 模块树唯一事实来源
 ├── docs/
 │   ├── local-setup.md          # 本地使用技巧（skip-worktree）
@@ -84,8 +84,8 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   │   ├── config.ts           # Config：DUT 列表、后端地址、默认会话参数
 │   │   ├── dut.ts              # Dut：登录 / exec，自动抛出 % 错误
 │   │   ├── transport.ts        # Telnet / SSH 传输实现
-│   │   └── components.ts       # Actuator：配置、校验、抓包、打流等动作
-│   ├── stream/                 # 打流后端
+│   │   └── components.ts       # Actuator：配置、校验、抓包、流量发送等动作
+│   ├── stream/                 # 流量收发后端
 │   │   ├── stream-backend-api.ts   # 端口预约/释放、发包、抓包 HTTP API
 │   │   ├── thrift-packet.ts        # PacketBuilder / PacketListParser
 │   │   └── thrift-protocol.factory.ts
@@ -96,7 +96,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   │   └── types.ts
 │   └── rpc/                    # Thrift IDL 与生成物（gen-* 被忽略）
 ├── test-report/                # jest-html-reporter 产物
-├── jest.config.cjs             # 根配置（默认只匹配 test/demo.test.ts）
+├── jest.config.cjs             # 根配置（默认仅匹配 test/demo.test.ts）
 ├── babel.config.js             # babel-jest 的 TS 转译配置
 └── tsconfig.json               # 路径别名 @/* -> 仓库根
 ```
@@ -108,7 +108,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 | Node.js | 22.x（CI 使用 Node 22） |
 | npm | 随 Node 安装 |
 | Thrift 编译器 | 必需，`apt-get install -y thrift-compiler`（用于生成报文类型代码） |
-| 网络 | 能访问 DUT（Telnet/SSH）、拓扑后端、打流后端 |
+| 网络 | 能访问 DUT（Telnet/SSH）、拓扑后端、流量收发后端 |
 
 安装：
 
@@ -134,40 +134,40 @@ TOPO_BACKEND_HOST=172.16.9.1
 STREAM_BACKEND_HOST=172.16.9.1
 EOF
 
-# 2) 按设备 profile 跑功能回归
+# 2) 按设备 profile 执行功能回归
 npm run default   # profile=default
 npm run ipv6      # profile=ipv6（IPv6 规格与 default 不同）
-npm run mpls      # profile=mpls（MPLS 用例只在此 profile 生效）
+npm run mpls      # profile=mpls（MPLS 用例仅在此 profile 生效）
 
 # 3) 其它套件
 npm run stack     # 堆叠场景（test/misc/stack）
 npm run example   # 教程示例（docs/test_script_tutorials）
 
-# 4) 只跑单个用例 / 某个子模块
+# 4) 仅执行单个用例 / 某个子模块
 npx jest -i --config=config/jest.default-regression.config.cjs -t "BGP 实例"
 npx jest -i --config=config/jest.mpls-regression.config.cjs test/feature/19-MPLS/02-mpls/01-mpls_basic
 
 # 5) 打印某个场景的精确用例清单（复制 / 调试用）
 npm run list:suite -- mpls regression
 
-# 6) 复跑上次失败的用例
+# 6) 重新执行上次失败的用例
 npm run gen-failed && npm run failed
 ```
 
-> `npm test` 会以根目录 `jest.config.cjs` 运行，该配置只匹配 `test/demo.test.ts`，
-> 用于冒烟验证。执行设备用例请使用 `npm run default`。
+> `npm test` 会以根目录 `jest.config.cjs` 运行，该配置仅匹配 `test/demo.test.ts`，
+> 用于冒烟验证。执行设备用例时使用 `npm run default`。
 
 ## Jest 配置组织
 
 交换机的特性与规格由设备 profile 决定（CLI：`show stm prefer`）。同一批用例在不同
-profile 下的可用性与规格不同——MPLS 只在 `mpls` 下生效，IPv6 在 `default` / `ipv6` 下
+profile 下的可用性与规格不同——MPLS 仅在 `mpls` 下生效，IPv6 在 `default` / `ipv6` 下
 都生效但规格不同——因此配置按 **profile × suite** 组合：
 
 | 轴 | 位置 | 内容 |
 |---|---|---|
-| profile | `config/profiles/<profile>.json` | 设备能力：描述、可跑范围、`capacity` 规格 |
+| profile | `config/profiles/<profile>.json` | 设备能力：描述、可执行范围、`capacity` 规格 |
 | suite | `config/suites/<suite>.json` | 用例范围：`include` / `exclude` glob |
-| 组合 | `config/jest.<profile>-<suite>.config.cjs` | 一个具体配置，正文只有一条 `createJestConfig` |
+| 组合 | `config/jest.<profile>-<suite>.config.cjs` | 一个具体配置，正文仅包含一条 `createJestConfig` |
 
 profile 全集（`show stm prefer`）：`default`（基线）、`extended-buffer`、`ipv6`、
 `layer3`、`mpls`。
@@ -183,7 +183,7 @@ profile 全集（`show stm prefer`）：`default`（基线）、`extended-buffer
 | `jest.default-example.config.cjs` | default | example | 2 |
 
 `regression` = `test/feature/**/*.test.ts`；非 `mpls` profile 通过 `exclude` 排除
-`test/feature/19-MPLS/**`。因此新增用例只要落在 `test/feature` 下就会自动进入对应
+`test/feature/19-MPLS/**`。因此新增用例落在 `test/feature` 下即可自动进入对应
 profile 的回归，不需要手工登记。
 
 `jest.base.cjs` 是唯一公共配置：setup、`@/` 别名、串行执行、超时、HTML 报告器，并把
@@ -223,23 +223,23 @@ node script/jest-suite.js --check                 # 配置与覆盖自检（已�
 | `TOPO_BACKEND_PORT` | `8000` | 拓扑后端端口 |
 | `TOPO_BACKEND_USERNAME` | `test` | 拓扑后端账号 |
 | `TOPO_BACKEND_PASSWORD` | `autotest` | 拓扑后端密码 |
-| `STREAM_BACKEND_HOST` | `172.16.9.1` | 打流后端地址 |
-| `STREAM_BACKEND_PORT` | `8001` | 打流后端端口 |
-| `STREAM_BACKEND_USERNAME` | `test` | 打流后端账号 |
-| `STREAM_BACKEND_PASSWORD` | `autotest` | 打流后端密码 |
+| `STREAM_BACKEND_HOST` | `172.16.9.1` | 流量收发后端地址 |
+| `STREAM_BACKEND_PORT` | `8001` | 流量收发后端端口 |
+| `STREAM_BACKEND_USERNAME` | `test` | 流量收发后端账号 |
+| `STREAM_BACKEND_PASSWORD` | `autotest` | 流量收发后端密码 |
 
 ### DUT 与端口映射（`utils/comm/config.ts`）
 
 - `Config.dut_list` 决定被测设备清单，下标与 `DutIdx.A`(0) ~ `DutIdx.H`(7) 一一对应。
 - 每台 DUT 通过 `portList`（如 `eth-0-1 ~ eth-0-4`）和 `portMapping`
-  （`{ device, if_index }`，指向拓扑/打流后端里的真实端口）描述物理连接。
-- `Config.Renix.portList` 定义打流仪/Scapy 端口，`RenixPort.A/B/C/D` 是常用端口的快捷方式。
+  （`{ device, if_index }`，指向拓扑/流量收发后端里的真实端口）描述物理连接。
+- `Config.Renix.portList` 定义测试仪/Scapy 端口，`RenixPort.A/B/C/D` 是常用端口的快捷方式。
 - `Config.defaultTopoName`（默认 `auto-test-topo`）：`TestHelper.init()` 会先删除同名旧拓扑再重建。
 - `Config.default_cfg` 是 Telnet/SSH 会话默认参数（超时、分页、缓冲区、终端宽高等）。
 
 ## 编写测试用例
 
-一个用例的骨架：
+一个用例的结构：
 
 ```ts
 import { RenixPort } from "@/utils/comm/config";
@@ -253,7 +253,7 @@ jest.setTimeout(1000 * 60 * 10);
 let t: TestHelper;
 
 beforeAll(async () => {
-  // 传入拓扑则自动创建/启用后端拓扑；不传则只连设备
+  // 传入拓扑则自动创建/启用后端拓扑；不传则仅连接设备
   t = await new TestHelper(LinkConstraint.two_devices_topo_links_type_1).init();
 });
 
@@ -294,14 +294,14 @@ test("DUTA 配置 VLAN 100 后，DUTB 能收到带 VLAN 100 的报文", async ()
 | 分类 | 方法 | 说明 |
 |---|---|---|
 | 生命周期 | `init()` | 登录拓扑后端、连接全部 DUT、按需重建拓扑 |
-| | `destroy()` | 断开 DUT、释放打流端口、删除拓扑 |
+| | `destroy()` | 断开 DUT、释放流量收发端口、删除拓扑 |
 | | `startTest()` / `result()` | 执行全部动作 / 取值 |
 | 配置 | `ExecConfigDut(idx, cmds)`、`ExecConfigDutA..D` | 下发配置命令 |
 | 清理 | `CleanConfigDut(idx, cmds)`、`CleanConfigDutA..D` | 清理配置（失败也继续执行） |
 | 回显校验 | `ExecRetMatchDut(idx, cmd, expect, notMatch?)`、`..A..D` | 执行命令并校验回显 |
 | 就绪等待 | `ReadyCheckDut(idx, cmd, expect, timeout?, notMatch?)`、`..A..D` | 轮询直到匹配或超时 |
 | 自定义 | `ExecCustomDut(idx, cb, exec_clean?)`、`..A..D` | 回调内通过 `DutHandle` 安全执行 |
-| 打流/抓包 | `addPktSender(...)`、`startCapture(port)`、`stopStream(port)`、`addPktChecker(...)` | 见 `components.ts` |
+| 流量发送/抓包 | `addPktSender(...)`、`startCapture(port)`、`stopStream(port)`、`addPktChecker(...)` | 见 `components.ts` |
 | 延时 | `sleep(ms)` | 固定等待 |
 
 **端口占位符**：命令字符串中的 `<PortA>`、`<PortB>` 等（`Port` 枚举）会在执行前按当前
@@ -351,14 +351,14 @@ new TestHelper(
 `test-report-<profile>-<suite>-<时间戳>.html`（标题形如 `Test Report - mpls / regression`）。
 根 `jest.config.cjs` 未启用报告器。
 
-复跑失败用例：
+重新执行失败用例：
 
 ```bash
 npm run gen-failed   # 解析 test-report/ 最新报告，生成 config/jest.failed.config.cjs
-npm run failed       # 按该配置复跑（报告名带 -failed）
+npm run failed       # 按该配置重新执行（报告名带 -failed）
 ```
 
-生成器会沿用原报告的 profile / suite，所以失败重跑的 `PROFILE`、`SUITE` 与首次运行一致；
+生成器会沿用原报告的 profile / suite，所以失败用例重试的 `PROFILE`、`SUITE` 与首次运行一致；
 报告中已不存在的路径会被跳过并警告。
 
 ## npm 脚本
@@ -366,12 +366,12 @@ npm run failed       # 按该配置复跑（报告名带 -failed）
 | 脚本 | 作用 |
 |---|---|
 | `npm test` | `jest -i`，使用根配置（仅 `test/demo.test.ts`） |
-| `npm run default` | 跑 default profile 的功能回归（`config/jest.default-regression.config.cjs`） |
-| `npm run ipv6` | 跑 ipv6 profile 的功能回归 |
-| `npm run mpls` | 跑 mpls profile 的功能回归（含 MPLS 用例） |
-| `npm run stack` | 跑堆叠场景套件（`config/jest.default-stack.config.cjs`） |
-| `npm run example` | 跑教程用例（`config/jest.default-example.config.cjs`） |
-| `npm run failed` | 跑上次失败的用例（`config/jest.failed.config.cjs`） |
+| `npm run default` | 执行 default profile 的功能回归（`config/jest.default-regression.config.cjs`） |
+| `npm run ipv6` | 执行 ipv6 profile 的功能回归 |
+| `npm run mpls` | 执行 mpls profile 的功能回归（含 MPLS 用例） |
+| `npm run stack` | 执行堆叠场景套件（`config/jest.default-stack.config.cjs`） |
+| `npm run example` | 执行教程用例（`config/jest.default-example.config.cjs`） |
+| `npm run failed` | 执行上次失败的用例（`config/jest.failed.config.cjs`） |
 | `npm run gen-failed` | 从最新 HTML 报告生成失败用例配置 |
 | `npm run list:suite -- <profile> <suite>` | 打印精确用例清单（等价 `node script/jest-suite.js --list`） |
 | `npm run gen` | 强制重新生成 Thrift 代码 |
@@ -386,9 +386,9 @@ npm run failed       # 按该配置复跑（报告名带 -failed）
 | `npm run format` | Prettier 格式化 `test` 与 `utils` |
 | `npm run hooks:install` | 安装 `commit-msg` / `pre-commit` git hook |
 
-注意：设备用例有先后依赖，所有配置都设置 `maxWorkers: "1"`，并由
+说明：设备用例存在先后依赖，所有配置均设置 `maxWorkers: "1"`，并由
 `script/jest.sequencer.js` 按模块树路径排序（模块号 → UG 小节 → 子功能 → 用例序号），
-同目录内序号递增、目录之间不交错，请勿并行执行。
+同目录内序号递增、目录之间不交错，设备用例应串行执行。
 
 ## 代码生成（Thrift）
 
@@ -402,12 +402,13 @@ npm run failed       # 按该配置复跑（报告名带 -failed）
 
 ## 规范
 
+- [文档编写规范](docs/spec/documentation-convention.md)：书面语、陈述句、术语统一、结构要求与评审清单。
 - [测试用例命名规范](docs/spec/naming-convention.md)：目录 `NN-FEATURE[/NN-sub_feature]`、
   文件 `NNNN-<模块>[-<子功能>].test.ts`、标题必须非空且为中文陈述句。
-- [测试用例脚本编写规范](docs/spec/test-script-convention.md)：文件骨架、TestHelper 动作顺序、
-  `expect` 语义、打流/抓包、清理与反例，落地脚本时对照本文。
-- [测试用例描述规范与模板](docs/spec/test-case-template.md)：面向人的用例描述模板，
-  只依据它即可手工复现。
+- [测试用例脚本编写规范](docs/spec/test-script-convention.md)：文件结构、TestHelper 动作顺序、
+  `expect` 语义、流量发送/抓包、清理与反例，编写脚本时对照本文。
+- [测试用例设计模板](docs/spec/test-case-template.md)：脚本编写前的用例设计模板，
+  含标准依据、能力前提、协议基线参数、观测面与判定标准；独立于测试框架，支持任意手段复测。
 - [提交信息规范](docs/spec/commit-convention.md)：Conventional Commits，格式
   `<type>(<scope>): <中文标题>`，由 `script/check-commit-msg.js` 校验。
 - [CI 集成说明](docs/spec/ci.md)：门禁范围、自托管 runner 接入方式。
@@ -442,4 +443,4 @@ runner** 上（`workflow_dispatch` 或 nightly 触发），详见 [docs/spec/ci.
 
 ## License
 
-本仓库未声明开源许可证，默认保留所有权利。如需对外使用请先与维护者确认。
+本仓库未声明开源许可证，默认保留所有权利。如需对外使用，应先与维护者确认。

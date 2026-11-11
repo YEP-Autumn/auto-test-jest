@@ -2,9 +2,9 @@
 
 本文约定 `test/` 目录下目录与文件的命名规则。目标：
 
-- 从路径即可定位「哪个特性 / 哪个子特性 / 第几条用例」；
+- 从路径即可定位特性、子特性和用例序号；
 - 便于 Jest 按路径组织套件（`config/jest.<profile>-<suite>.config.cjs`，范围由 glob 驱动）；
-- 便于 CI 用脚本自动校验，避免风格漂移。
+- 便于 CI 脚本自动校验，保持命名风格一致。
 
 校验脚本：[`script/check-test-names.js`](../../script/check-test-names.js)
 
@@ -34,11 +34,11 @@ test/
 
 约束：
 
-- `test/` 下只允许 `feature/`、`misc/` 两类目录（外加根级 `demo.test.ts`）。
-- `feature/` **建议最多三层**：模块 → UG 小节 → 子功能；脚本对更深层级只提示、不报错。
-- **容器不放用例**：有子目录的目录只做分组（如 `07-bgp/`），用例放在叶子目录。
-- **类型后缀加在叶子上**：`_cli` / `_neg` / `_spec` / `_perf` 与其功能主体同级、共用基号（见 §3）。
-- 空目录建议用 `.gitkeep` 占位（`.gitignore` 已放行）；脚本仅提示，不阻断。
+- `test/` 下仅允许 `feature/`、`misc/` 两类目录（外加根级 `demo.test.ts`）。
+- `feature/` **建议最多三层**：模块 → UG 小节 → 子功能；脚本对更深层级给出提示，不中断校验。
+- **容器目录仅用于分组**：包含子目录的目录（如 `07-bgp/`）承担分组职责，用例放置在叶子目录。
+- **类型后缀添加在叶子目录上**：`_cli` / `_neg` / `_spec` / `_perf` 与其功能主体同级、共用基号（见 §3）。
+- 空目录建议用 `.gitkeep` 占位（`.gitignore` 已放行）；脚本给出提示，不中断校验。
 
 ## 2. 命名规则
 
@@ -55,24 +55,24 @@ test/
 要点：
 
 1. **序号为 4 位、步长 10**：`0010`、`0020`…；插入用例可用区间补号（如 `0051`），同目录内唯一即可，允许留空档。
-2. **文件名 = `NNNN-<模块>[-<子功能>]`**，用 `-` 分隔，不用 `.`：
+2. **文件名 = `NNNN-<模块>[-<子功能>]`**，使用 `-` 分隔，`.` 不作为分隔符：
    - ✅ `test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE-BGP_MULTIPLE_INSTANCE.test.ts`
    - ✅ `test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac/0010-MPLS-BPDU_AC.test.ts`（子功能名与模块重名时去掉模块前缀）
    - ❌ `.../0010-BGP-Multiple-Instance.test.ts`（大小写/分隔符不规范）
    - 模块名保证可读，子功能名让日志与报告能脱离路径看懂。
 3. **编号沿用《E530 配置指导》**：一级模块号 = UG 章号（`02`…`20`），二级小节目号 = UG 小节号（如 `5.7` → `07-bgp`）；三级子功能在小节内重新从 `01` 编号。
-4. 一级模块的 **19 个有效章节**与全部二级子模块以 [`config/test-module-map.json`](../../config/test-module-map.json) 为唯一事实来源，目录由 `script/scaffold-test-modules.js` 生成，不要手工新开模块。
-5. **类型后缀加在叶子目录上**：功能 / 仅 CLI / 规格等用后缀区分，层级由“模块 → 小节 → 子功能”决定；详见 §3。
+4. 一级模块的 **19 个有效章节**与全部二级子模块以 [`config/test-module-map.json`](../../config/test-module-map.json) 为唯一事实来源，目录由 `script/scaffold-test-modules.js` 生成。
+5. **类型后缀添加在叶子目录上**：功能 / 仅 CLI / 规格等类型通过后缀区分，层级由“模块 → 小节 → 子功能”决定；详见 §3。
 
 ## 3. 子特性类型后缀（功能 / 仅 CLI / 规格 …）
 
-同一个被测对象往往有多种「测法」：打流验证功能、只下发并校验 CLI 回显、跑规格/容量、跑反向异常等。
-「类型」与「被测对象」是**正交**的两个维度，不应各占一级目录（否则目录组合爆炸）。因此约定：
+同一被测对象通常包含多种测试类型：流量验证功能、CLI 回显校验、规格/容量测试、反向异常测试等。
+「类型」与「被测对象」是**正交**的两个维度，由同一叶子目录的后缀区分，控制目录层级规模。因此约定：
 
 - **被测对象**由叶子目录（二级小节或三级子功能）名的主体表达；
 - **类型**由主体之后的**后缀**表达，后缀取自下表固定词表。
 
-| 后缀 | 含义 | 是否打流 |
+| 后缀 | 含义 | 是否发送流量 |
 |---|---|---|
 | （无） | 功能 / 行为验证 | 是 |
 | `_cli` | 仅 CLI：下发配置并校验回显 / 返回值 | 否 |
@@ -82,28 +82,28 @@ test/
 
 约定：
 
-1. **同一子特性的各类型变体共用同一个基号**，在目录列表中相邻，一眼可见是「同一个东西的不同测法」：
+1. **同一子特性的各类型变体共用同一个基号**，在目录列表中相邻，便于识别同一被测对象的不同测试类型：
 
    ```
    19-MPLS/02-mpls/
-   ├── 05-mpls_bpdu_ac/        # 功能（打流）
+   ├── 05-mpls_bpdu_ac/        # 功能（流量发送）
    ├── 05-mpls_bpdu_ac_cli/    # 仅 CLI（同基号 05）
    └── 05-mpls_bpdu_ac_spec/   # 规格（同基号 05）
    ```
 
-2. 后缀必须来自上表词表，**不要自造**；需要新增类型时先在本文登记。
-3. 类型后缀的目的是「**按类型批量筛选**」，而不是手工翻目录。CI / Jest 可用 glob（如 `**/*_cli/**/*.test.ts`）或独立 config 一次筛出。
-4. **同一被测对象的类型变体建议共用基号**，只是为了目录排序时相邻；脚本不再强制校验这一点。
+2. 后缀取自上表词表；需要新增类型时，先在本文登记。
+3. 类型后缀用于**按类型批量筛选**。CI / Jest 可通过 glob（如 `**/*_cli/**/*.test.ts`）或独立 config 一次筛出。
+4. **同一被测对象的类型变体建议共用基号**，用于目录排序时保持相邻；脚本不强制校验这一点。
 
 ## 4. 用例标题
 
-`test()` / `it()` 的标题是报告里的可读信息，必须遵守：
+`test()` / `it()` 的标题是报告中的可读信息，应遵循以下规则：
 
-- **禁止空标题**：`test("", ...)` 不允许。
+- **标题必须非空**；`test("", ...)` 不符合规范。
 - 使用中文陈述句，建议格式：`被测对象 + 条件/动作 + 预期`。
   - ✅ `"接口配置 Storm Control trap action 后，unicast level 到达限速将触发 Rising Trap"`
   - ✅ `"设备支持创建和删除多个BGP实例"`
-- 不加 `******`、`一、` 等装饰字符；分组用 `describe("VLAN trunk translate")`。
+- 标题使用纯文本，不使用 `******`、`一、` 等装饰字符；分组使用 `describe("VLAN trunk translate")`。
 
 ## 5. 正反例
 
@@ -111,7 +111,7 @@ test/
 # ✅
 test/feature/05-IP_ROUTE/01-ip_unicast_route/02-ip_route_rnh/0010-IP_ROUTE-RNH.test.ts
 test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE-BGP_MULTIPLE_INSTANCE.test.ts
-test/feature/19-MPLS/02-mpls/01-mpls_basic/0010-MPLS-BASIC.test.ts          # 功能（打流）
+test/feature/19-MPLS/02-mpls/01-mpls_basic/0010-MPLS-BASIC.test.ts          # 功能（流量发送）
 test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac_cli/0010-MPLS-BPDU_AC.test.ts  # 仅 CLI
 test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac_spec/0010-MPLS-BPDU_AC.test.ts # 规格
 test/feature/03-ETHERNET/12-storm_control/02-action_trap/0010-ETHERNET-ACTION_TRAP.test.ts
@@ -119,7 +119,7 @@ test/misc/bugfix/3162/bug_3162_1.test.ts
 
 # ❌
 test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE.test.ts   # 缺少子功能名
-test/feature/19-MPLS/02-mpls/0010-MPLS.test.ts                # 小节下已有子功能，容器不放直属用例
+test/feature/19-MPLS/02-mpls/0010-MPLS.test.ts                # 小节下已有子功能，用例放置在叶子目录
 test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac/cli/0010-MPLS-BPDU_AC.test.ts  # 类型再开一层，应为 _cli 后缀
 test/feature/19-MPLS/01-mpls-baisc/1010-MPLS-BASIC.test.ts    # 拼写错误 + 千位前缀
 test/feature/05-IP_ROUTE/07-bgp/0010-BGP-Multiple-Instance.test.ts
@@ -127,17 +127,17 @@ test/feature/05-IP_ROUTE/07-bgp/0010-BGP-Multiple-Instance.test.ts
 
 ## 6. 新增用例检查清单
 
-1. 目录按上表命名：模块 → UG 小节 → 子功能（可选）；有子目录的容器不放直属用例（§1）；
+1. 目录按上表命名：模块 → UG 小节 → 子功能（可选）；包含子目录的容器目录仅用于分组，用例放置在叶子目录（§1）；
 2. 类型变体用**后缀**表达（`_cli` 等），加在叶子目录上（§3）；
 3. 文件 `NNNN-<模块>[-<子功能>].test.ts`，序号在所属目录内递增；
-4. 标题非空且能说明「测什么、期望什么」；
-5. 用例落在 `test/feature` 下即自动进入 regression 套件；若只允许特定 profile 运行，在
+4. 标题非空，并写明测试对象、条件与预期结果；
+5. 用例落在 `test/feature` 下即自动进入 regression 套件；若需限定特定 profile 运行，在
    `config/profiles/<profile>.json` 的 `include` / `exclude` 中表达；
-6. 运行 `npm run check:test-names` 确认无违规（层级、基号、空目录只提示）。
+6. 运行 `npm run check:test-names` 确认无违规（层级、基号、空目录给出提示）。
 
 ## 7. 模块树生成
 
-- 模块/子模块清单：[`config/test-module-map.json`](../../config/test-module-map.json)（19 个 UG 章节 + 149 个二级小节；小节可用 `children` 定义三级子功能，`types` 决定要生成哪些类型变体），这是**唯一事实来源**。
+- 模块/子模块清单：[`config/test-module-map.json`](../../config/test-module-map.json)（19 个 UG 章节 + 149 个二级小节；小节可用 `children` 定义三级子功能，`types` 决定生成类型变体），这是**唯一事实来源**。
 - 生成目录：
   ```shell
   node script/scaffold-test-modules.js           # dry-run
@@ -149,5 +149,5 @@ test/feature/05-IP_ROUTE/07-bgp/0010-BGP-Multiple-Instance.test.ts
   一次性脚本与映射表已删除，需要追溯单个文件的来源时用
   `git log --follow --name-status -- <文件>`。
 
-> 校验脚本只强校验「目录/文件命名、文件后缀、misc 命名」等关键规则；
+> 校验脚本重点校验「目录/文件命名、文件后缀、misc 命名」等关键规则；
 > 层级深度、类型基号、空目录属于最佳实践提示，不作为 CI 失败项。

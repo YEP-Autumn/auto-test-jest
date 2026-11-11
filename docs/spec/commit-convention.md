@@ -2,9 +2,9 @@
 
 本文约定本仓库 commit message 的写法。目标：
 
-- 一眼看出「改了什么类型 / 动了哪块 / 影响面多大」，便于 review 与回溯；
+- 清晰呈现改动类型、影响范围与影响程度，便于评审与回溯；
 - 支持 `git log --oneline`、changelog、`git blame` 等按类型/scope 过滤；
-- 保持与现有历史一致，避免出现 `update some file` 这类无信息量的提交。
+- 保持与现有历史一致，提交信息包含有效信息。
 
 本规范基于 [Conventional Commits 1.0.0](https://www.conventionalcommits.org/zh-hans/v1.0.0/)，并结合本仓库实际使用的类型与 scope。
 
@@ -16,7 +16,7 @@ npm run check:commit-msg                   # 同上
 npm run hooks:install                      # 安装 git hook（npm install 时自动执行）
 ```
 
-安装后 `git commit` 会经 commit-msg hook 自动校验，违规直接拒绝提交。
+安装后，`git commit` 由 commit-msg hook 自动校验；不符合规范的提交将被拒绝。
 
 ## 1. 基本格式
 
@@ -56,7 +56,7 @@ refactor(config): topo 后端地址与 auto-test-topo 名称统一抽到 config.
 | type | 含义 | 典型场景 |
 |---|---|---|
 | `feat` | 新增功能 | 新用例、新脚本、新的可复用能力 |
-| `fix` | 修复缺陷 | 用例断言错误、脚本 bug、配置写错导致跑不起来 |
+| `fix` | 修复缺陷 | 用例断言错误、脚本缺陷、配置错误导致执行失败 |
 | `refactor` | 重构 | 行为不变的结构调整：目录/文件重命名、抽配置、消除重复 |
 | `docs` | 仅文档变更 | `README.md`、`docs/**`、注释文档 |
 | `chore` | 杂项维护 | 构建/依赖/配置/占位文件等不影响功能的改动 |
@@ -67,14 +67,14 @@ refactor(config): topo 后端地址与 auto-test-topo 名称统一抽到 config.
 
 选择原则：
 
-- **优先按「意图」而非「文件类型」选**：改了测试用例但目的是修 bug，用 `fix`，不是 `test`。
-- 一次提交只做一类事。功能改动 + 顺手格式化，应拆成两个提交。
+- **优先按改动意图选择类型，文件类型作为辅助判断**：修改测试用例且目标为修复缺陷时，使用 `fix`。
+- 一次提交仅包含一类改动。功能改动与格式化操作应拆分为两个提交。
 - 有破坏性变更时，在 type 后加 `!`，如 `refactor(config)!: 重命名 config 导出`，并在 footer 写 `BREAKING CHANGE: ...`。
-- **禁止**使用 `update`、`update some file`、`修改`、`.`、`wip` 作为提交信息。
+- 提交信息应包含有效信息；`update`、`update some file`、`修改`、`.`、`wip` 等无信息量写法不作为提交信息。
 
 ## 3. scope（影响范围）
 
-scope 表示改动落在哪一块，用小写、可带连字符（如 `test-helper`）。本仓库常用 scope：
+scope 表示改动所在的模块或范围，用小写、可带连字符（如 `test-helper`）。本仓库常用 scope：
 
 | scope | 覆盖范围 |
 |---|---|
@@ -91,24 +91,24 @@ scope 表示改动落在哪一块，用小写、可带连字符（如 `test-help
 
 规则：
 
-- 能用具体 scope 就不要写 `chore: ...`（无 scope）。
-- 改动横跨多块时，选**主要影响面**作为 scope；若确实无法归类，可省略 scope，但应尽量避免。
-- 新增 scope 时，同步在本文表格中登记，防止各写各的。
+- 优先使用具体 scope；仅当改动无法归类时，使用无 scope 的 `chore: ...`。
+- 改动横跨多个模块时，选择**主要影响面**作为 scope；若无法明确归类，可省略 scope，并在正文说明原因。
+- 新增 scope 时，同步登记到本文表格，保持 scope 命名一致。
 
 ## 4. subject（标题行）
 
-- 一句话说明**做了什么**，不写「怎么做的」（细节放 body）。
-- 用**中文陈述句**，动宾/主谓结构，例如：`统一 VLAN DOT1Q TUNNEL 用例文件名`、`为空目录添加 .gitkeep 占位`。
-- 结尾**不加句号**；避免空洞词汇（`优化`、`调整一下`、`若干修改`）。
+- 标题行概括**改动内容**；实现细节写入 body。
+- 采用**中文陈述句**，使用动宾或主谓结构，例如：`统一 VLAN DOT1Q TUNNEL 用例文件名`、`为空目录添加 .gitkeep 占位`。
+- 标题行末尾不使用句号；选择具体、有信息量的词汇。
   - ✅ `补充 STORM_CONTROL trap action 用例`
-  - ❌ `优化代码`、`修改了一些东西`
-- 长度建议 ≤ 50 个字符（中文按 1 计），保证 `git log --oneline` 不折行。
-- 需要范围限定时写清对象，如「MPLS 用例文件名」而不是「用例文件名」。
+  - 信息量不足的示例：`优化代码`、`修改了一些东西`
+- 长度建议 ≤ 50 个字符（中文按 1 计），确保 `git log --oneline` 输出不折行。
+- 需要限定范围时写明对象，例如「MPLS 用例文件名」。
 
 ## 5. body（正文）
 
-- 标题不足以说明「为什么」时必填；纯机械改动可省略。
-- 每行以 `-` 开头列点，一行一条，写清**动机 + 影响**，而非罗列文件。
+- 标题不足以说明改动原因时，body 必填；纯机械改动可省略。
+- 每行以 `-` 开头列点，一行一条，写明**改动动机与影响范围**，文件清单作为辅助信息。
 - 涉及批量改动时给出量化信息与边界，例如：
 
 ```
@@ -116,7 +116,7 @@ scope 表示改动落在哪一块，用小写、可带连字符（如 `test-help
 - 修复因目录层级变化而失效的 18 处 import
 ```
 
-- 说明「为什么这么改」，便于后来者判断能否复原或扩展。
+- 说明改动原因，便于后续维护人员判断可复原性与可扩展性。
 - 引用 issue / 用例编号时用 `#` 或路径，如 `#3162`、`docs/spec/naming-convention.md`。
 
 ## 6. footer（页脚）
@@ -127,11 +127,11 @@ scope 表示改动落在哪一块，用小写、可带连字符（如 `test-help
 
 ## 7. 提交粒度与拆分
 
-1. **一次提交只解决一个问题**，可独立回滚、独立 review。
-2. 批量重命名与批量内容修改分开提交：先重命名（`refactor`），再改内容（`fix/feat`），历史更好读。
+1. **一次提交解决一个问题**，可独立回滚、独立评审。
+2. 批量重命名与批量内容修改分开提交：先执行重命名（`refactor`），再修改内容（`fix/feat`），便于阅读历史记录。
 3. 生成代码与生成脚本一起提交（如 thrift 生成物），确保可复现。
-4. 不提交本地临时改动（见 `docs/local-setup.md` 的 `skip-worktree` 用法）。
-5. 提交前确保不破坏已有用例；CI 相关改动（如 `check:test-names`）应能通过。
+4. 本地临时改动保留在工作区，不纳入提交（见 `docs/local-setup.md` 的 `skip-worktree` 用法）。
+5. 提交前确认已有用例保持通过；CI 相关改动（如 `check:test-names`）应能通过。
 
 ## 8. 完整示例
 
@@ -139,7 +139,7 @@ scope 表示改动落在哪一块，用小写、可带连字符（如 `test-help
 fix(config): 修正 example 套件的用例路径
 
 教程文件实际位于 docs/test_script_tutorials/，此前 suites/example.json
-误写成 test/test_script_tutorials/，导致 npm run example 匹配不到用例。
+误写成 test/test_script_tutorials/，导致 npm run example 无法匹配用例。
 
 - 修正 config/suites/example.json 的 include
 - 本地执行 npm run example 验证可正常发现用例
@@ -159,11 +159,11 @@ feat(test): 新增 thrift 代码生成脚本与 static route recursive-lookup �
 
 1. `<type>(<scope>): <中文标题>` 格式正确，type 属于 §2 表格；
 2. scope 可归类，新增 scope 已登记到 §3；
-3. 标题说清「做了什么」，无句号、无空洞词；
-4. 只做一件事，可独立回滚；
-5. 涉及为什么/批量的改动，body 已列点说明；
+3. 标题写明改动内容，标题行末尾不使用句号，词汇具体且有信息量；
+4. 仅包含一类改动，可独立回滚；
+5. 涉及改动原因或批量改动时，body 已列点说明；
 6. 有破坏性变更时已加 `!` 与 `BREAKING CHANGE`；
-7. 未使用 `update some file`、`wip` 等无信息量消息；
+7. 提交信息包含有效内容，`update some file`、`wip` 等写法不作为提交信息；
 8. 运行 `npm run check:commit-msg` 或依赖 commit-msg hook 自动校验通过。
 
 ## 10. 自动校验说明
@@ -171,7 +171,7 @@ feat(test): 新增 thrift 代码生成脚本与 static route recursive-lookup �
 - `type` 必须属于 §2；`scope` 必须属于 §3，新增 scope 需同步登记到本文档与
   [`script/check-commit-msg.js`](../../script/check-commit-msg.js) 的 `SCOPES`。
 - `Merge` / `Revert` / `fixup!` / `squash!` / `Initial commit` 开头的消息自动放行。
-- 标题过长（>50 字）、缺少中文、`chore` 缺 scope 等只**提醒不阻断**；格式错误、未知类型的
-  type/scope、标题空洞、结尾带标点、标题与正文未空行则**阻断提交**。
+- 标题过长（>50 字）、缺少中文、`chore` 缺 scope 等情况仅**提醒，不阻断提交**；格式错误、未知类型的
+  type/scope、标题信息量不足、结尾带标点、标题与正文未空行等情况将**阻断提交**。
 - 校验最近一条提交：`npm run check:commit-msg`；CI 中用 `--range <base>..<head>` 校验整个 PR，
   接入方式见 [CI 集成说明](./ci.md)。

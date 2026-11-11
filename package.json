@@ -25,6 +25,7 @@
     "check:test-modules": "node script/scaffold-test-modules.js --check",
     "check:jest-suites": "node script/jest-suite.js --check",
     "list:suite": "node script/jest-suite.js --list",
+    "list:cases": "node script/list-test-cases.js",
     "scaffold:test-modules": "node script/scaffold-test-modules.js --write",
     "check:commit-msg": "node script/check-commit-msg.js",
     "typecheck": "tsc --noEmit",

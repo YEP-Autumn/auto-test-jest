@@ -66,6 +66,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── check-test-names.js     # 用例命名规范校验
 │   ├── scaffold-test-modules.js # 按 test-module-map.json 生成模块目录
 │   ├── jest-suite.js           # profile × suite 清单：--table / --list / --check
+│   ├── list-test-cases.js      # 静态解析、按模块分组列出用例：text / json / csv / md
 │   ├── check-commit-msg.js     # 提交信息规范校验
 │   ├── generate-jest-failed-config.js
 │   ├── jest.sequencer.js       # 按模块树路径 + 文件序号排序执行
@@ -203,7 +204,17 @@ module.exports = createJestConfig({ profile: "mpls", suite: "regression" });
 node script/jest-suite.js --table                 # profile × suite 用例数矩阵
 node script/jest-suite.js --list mpls regression  # 精确文件列表（可复制）
 node script/jest-suite.js --check                 # 配置与覆盖自检（已接入 npm run check）
+
+# 列出所有测试用例（静态解析，不连设备、不执行用例）
+npm run list:cases                                # 文本列表（按一级模块分组）
+npm run -s list:cases -- --json                   # JSON（含 modules 与 module 字段）
+npm run list:cases -- --csv --out test-cases.csv  # CSV（含模块列）
+npm run list:cases -- --md --out test-cases.md    # Markdown（按模块分节）
+npm run list:cases -- --profile mpls --suite regression --status skip,failing
 ```
+
+模块标题来自 `config/test-module-map.json`；`test/misc/bugfix`、`test/misc/stack`、
+教程示例与根级用例分别作为独立模块。JSON / CSV 还会保留子模块路径，便于按模块树二次处理。
 
 已知限制：`stack` 套件暂用 `default` profile（堆叠设备实际 profile 待确认）；
 `extended-buffer` 与 `layer3` 暂无专属用例，仅保留 profile 定义。
@@ -374,6 +385,7 @@ npm run failed       # 按该配置重新执行（报告名带 -failed）
 | `npm run failed` | 执行上次失败的用例（`config/jest.failed.config.cjs`） |
 | `npm run gen-failed` | 从最新 HTML 报告生成失败用例配置 |
 | `npm run list:suite -- <profile> <suite>` | 打印精确用例清单（等价 `node script/jest-suite.js --list`） |
+| `npm run list:cases -- [选项]` | 列出所有测试用例（按模块分组，支持 text / json / csv / md、profile × suite 过滤） |
 | `npm run gen` | 强制重新生成 Thrift 代码 |
 | `npm run test -- -i -t "..."` | 透传参数给 Jest（按标题过滤等） |
 | `npm run check` | 提交前自检：命名 + 模块树 + 套件清单与覆盖 + 类型检查 |

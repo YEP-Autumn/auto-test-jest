@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "description": "测试模块/子模块的唯一事实来源。一级模块取自《E530 配置指导》(V7.5.1) 的 19 个有效章节，二级子模块取其二级小节；小节可用 children 定义三级子功能，types 决定生成哪些类型变体（func/cli/neg/spec/perf）。新增/调整模块时先改本文件，再运行 script/scaffold-test-modules.js。",
+  "description": "测试模块/子模块的唯一事实来源。一级模块取自《XXX 配置指导》(V0.0.1) 的 19 个有效章节，二级子模块取其二级小节；小节可用 children 定义三级子功能，types 决定生成哪些类型变体（func/cli/neg/spec/perf）。新增/调整模块时先改本文件，再运行 script/scaffold-test-modules.js。",
   "source": {
-    "primary": "/home/kali/Documents/doc/E530_UG_md (V7.5.1)",
-    "coverage": "/home/kali/Documents/doc/E530_commands_md (V7.4.8，仅作命令覆盖矩阵)"
+    "primary": "docs/references/XXX_UG_md (V0.0.1)",
+    "coverage": "docs/references/XXX_commands_md (V0.0.1，仅作命令覆盖矩阵)"
   },
   "typeSuffixes": {
     "func": "",

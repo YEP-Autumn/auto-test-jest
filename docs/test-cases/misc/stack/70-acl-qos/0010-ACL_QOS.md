@@ -77,8 +77,8 @@
 
 | 依据 | 条款 | 本合集验证的要求 |
 | --- | --- | --- |
-| E530 配置指导（V7.5.1） | ACL / QoS 章节 | ACL、class-map、policy-map、table-map 配置 |
-| E530 命令参考（V7.4.8） | ACL / QoS 命令 | 命令参数、回显与删除 |
+| XXX 配置指导（V0.0.1） | ACL / QoS 章节 | ACL、class-map、policy-map、table-map 配置 |
+| XXX 命令参考（V0.0.1） | ACL / QoS 命令 | 命令参数、回显与删除 |
 | 堆叠配置指导 | 配置同步 | master 配置同步到 standby |
 
 ### 1.2 能力前提

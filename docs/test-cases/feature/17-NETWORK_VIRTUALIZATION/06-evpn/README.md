@@ -1,0 +1,21 @@
+# 06-evpn EVPN配置
+
+- 脚本目录：`test/feature/17-NETWORK_VIRTUALIZATION/06-evpn/`
+- 用例文档目录：`docs/test-cases/feature/17-NETWORK_VIRTUALIZATION/06-evpn/`
+- 脚本数量：5
+- 用例文档数量：1
+- 上级索引：[README.md](../README.md)
+
+## 子目录索引
+
+当前目录无子目录。
+
+## 脚本
+
+| 脚本 | 用例文档 | 状态 |
+| --- | --- | --- |
+| `0010-NETWORK_VIRTUALIZATION-EVPN.test.ts` | [0010-NETWORK_VIRTUALIZATION-EVPN.md](0010-NETWORK_VIRTUALIZATION-EVPN.md) | 已有文档 |
+| `0020-NETWORK_VIRTUALIZATION-EVPN.test.ts` | 待补充 | 待补充 |
+| `0030-NETWORK_VIRTUALIZATION-EVPN.test.ts` | 待补充 | 待补充 |
+| `0040-NETWORK_VIRTUALIZATION-EVPN.test.ts` | 待补充 | 待补充 |
+| `0050-NETWORK_VIRTUALIZATION-EVPN.test.ts` | 待补充 | 待补充 |

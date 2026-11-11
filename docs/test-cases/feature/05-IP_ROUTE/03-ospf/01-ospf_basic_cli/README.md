@@ -1,4 +1,4 @@
-# 01-ospf_basic_cli OSPF配置
+# 01-ospf_basic_cli OSPF基础
 
 - 脚本目录：`test/feature/05-IP_ROUTE/03-ospf/01-ospf_basic_cli/`
 - 用例文档目录：`docs/test-cases/feature/05-IP_ROUTE/03-ospf/01-ospf_basic_cli/`

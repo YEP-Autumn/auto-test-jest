@@ -3,7 +3,7 @@
 - 脚本目录：`test/feature/07-SECURITY/`
 - 用例文档目录：`docs/test-cases/feature/07-SECURITY/`
 - 脚本数量：12
-- 用例文档数量：0
+- 用例文档数量：3
 - 上级索引：[README.md](../README.md)
 
 ## 子目录索引
@@ -13,11 +13,11 @@
 | `01-port_security/` | [`01-port_security/README.md`](01-port_security/README.md) | 0 | 0 |
 | `02-vlan_security/` | [`02-vlan_security/README.md`](02-vlan_security/README.md) | 0 | 0 |
 | `03-time_range/` | [`03-time_range/README.md`](03-time_range/README.md) | 0 | 0 |
-| `03-time_range_cli/` | [`03-time_range_cli/README.md`](03-time_range_cli/README.md) | 1 | 0 |
+| `03-time_range_cli/` | [`03-time_range_cli/README.md`](03-time_range_cli/README.md) | 1 | 1 |
 | `04-access_control_list/` | [`04-access_control_list/README.md`](04-access_control_list/README.md) | 0 | 0 |
-| `04-access_control_list_cli/` | [`04-access_control_list_cli/README.md`](04-access_control_list_cli/README.md) | 10 | 0 |
+| `04-access_control_list_cli/` | [`04-access_control_list_cli/README.md`](04-access_control_list_cli/README.md) | 10 | 1 |
 | `05-extended_access_control_list/` | [`05-extended_access_control_list/README.md`](05-extended_access_control_list/README.md) | 0 | 0 |
-| `05-extended_access_control_list_cli/` | [`05-extended_access_control_list_cli/README.md`](05-extended_access_control_list_cli/README.md) | 1 | 0 |
+| `05-extended_access_control_list_cli/` | [`05-extended_access_control_list_cli/README.md`](05-extended_access_control_list_cli/README.md) | 1 | 1 |
 | `06-ipv6_access_control_list/` | [`06-ipv6_access_control_list/README.md`](06-ipv6_access_control_list/README.md) | 0 | 0 |
 | `06-ipv6_access_control_list_cli/` | [`06-ipv6_access_control_list_cli/README.md`](06-ipv6_access_control_list_cli/README.md) | 0 | 0 |
 | `07-port_group/` | [`07-port_group/README.md`](07-port_group/README.md) | 0 | 0 |

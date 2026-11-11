@@ -1,4 +1,4 @@
-# 02-ospf_lfa_cli OSPF配置
+# 02-ospf_lfa_cli OSPF LFA
 
 - 脚本目录：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa_cli/`
 - 用例文档目录：`docs/test-cases/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa_cli/`

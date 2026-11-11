@@ -1,4 +1,4 @@
-# 06-ipv6_access_control_list_cli
+# 06-ipv6_access_control_list_cli IPv6访问控制列表配置
 
 - 脚本目录：`test/feature/07-SECURITY/06-ipv6_access_control_list_cli/`
 - 用例文档目录：`docs/test-cases/feature/07-SECURITY/06-ipv6_access_control_list_cli/`

@@ -1,4 +1,4 @@
-# 01-bgp_multiple_instance_cli BGP配置
+# 01-bgp_multiple_instance_cli BGP多实例
 
 - 脚本目录：`test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance_cli/`
 - 用例文档目录：`docs/test-cases/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance_cli/`

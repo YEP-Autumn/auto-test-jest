@@ -1,4 +1,4 @@
-# 22-global_acl_cli
+# 22-global_acl_cli 全局ACL配置
 
 - 脚本目录：`test/feature/07-SECURITY/22-global_acl_cli/`
 - 用例文档目录：`docs/test-cases/feature/07-SECURITY/22-global_acl_cli/`

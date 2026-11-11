@@ -1,0 +1,710 @@
+# 流量管理 QoS 应用测试用例合集
+
+> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本目录全部测试脚本。
+> 同一目录的脚本共用公共拓扑、预置条件与判定口径；各用例仅描述配置、触发、观测与清理差异。
+
+## 0. 用例清单
+
+| 用例编号 | 用例标题 | 脚本 | 类型 | 结果 |
+| --- | --- | --- | --- | --- |
+| 0010 | ACL 绑定到接口（access-group input/output） | `0010-TRAFFIC_MANAGEMENT-APPLICATION.test.ts` | P1 / CLI | |
+| 0020 | policy-map 绑定到接口（service-policy type qos input） | `0020-TRAFFIC_MANAGEMENT-APPLICATION.test.ts` | P1 / CLI | |
+| 0030 | 接口上的 qos policer（input/output） | `0030-TRAFFIC_MANAGEMENT-APPLICATION.test.ts` | P1 / CLI | |
+| 0040 | 全局 ACL 相关应用（http server acl / snmp-server access-group / acl-statistics） | `0040-TRAFFIC_MANAGEMENT-APPLICATION.test.ts` | P1 / CLI | |
+| 0050 | 接口 trust | `0050-TRAFFIC_MANAGEMENT-APPLICATION.test.ts` | P1 / CLI | |
+| 0060 | 接口 qos shape rate | `0060-TRAFFIC_MANAGEMENT-APPLICATION.test.ts` | P1 / CLI | |
+| 0070 | 接口 service-policy type traffic-class | `0070-TRAFFIC_MANAGEMENT-APPLICATION.test.ts` | P1 / CLI | |
+| 0080 | port-group / vlan-group 上引用 ACL | `0080-TRAFFIC_MANAGEMENT-APPLICATION.test.ts` | P1 / CLI | |
+| 0090 | port-group / vlan-group 上应用 service-policy | `0090-TRAFFIC_MANAGEMENT-APPLICATION.test.ts` | P1 / CLI | |
+
+## 1. 基本信息（合集）
+
+- 用例编号：`0010` ~ `0090`
+- 用例标题：流量管理 QoS 应用测试用例合集
+- 所属特性 / 分组：`10-TRAFFIC_MANAGEMENT` / `QoS配置` / `QoS 应用`
+- 级别 / 类型：P1 / CLI
+- 执行方式：手工 / 自动化脚本
+- 预估耗时：约 18 分钟（按每条用例 2 至 3 分钟估算）
+- 关联：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/03-application_cli/`；设计模板见 [test-case-template.md](../../../../../spec/test-case-template.md)
+
+### 1.1 标准依据
+
+| 标准 / RFC | 条款 | 本合集验证的要求 |
+| --- | --- | --- |
+| E530 配置指导（V7.5.1） | 10.1 | QoS 应用配置与回显 |
+| E530 命令参考（V7.4.8） | QoS配置 | 命令参数、回显与删除 |
+| IEEE 802.1Q-2018 | VLAN 标记、成员与转发 | VLAN、PVID、Trunk 与子接口处理 |
+| RFC 2474 / RFC 2475 | DSCP 与区分服务 | 分类、标记、限速与调度 |
+| E530 命令参考（V7.4.8） | ACL 命令 | ACL 规则、动作与回显 |
+
+### 1.2 能力前提
+
+| 项 | 要求 | 说明 |
+| --- | --- | --- |
+| 设备 profile | 支持QoS 应用特性 | 确认特性可用范围 |
+| License / 单板 | 支持QoS 应用相关命令 | 确认功能授权与端口能力 |
+| 端口形态 | 至少 4 个可配置接口 | 确认接口类型与数量 |
+| 规格 | 表项、实例或邻居数满足用例要求 | 确认数量上限 |
+
+能力不匹配时，用例结果标记为 `Blocked`，记录缺失项；环境具备后补测。规格低于用例要求时，仅执行基线用例，并记录规格差异。
+
+## 2. 组网与拓扑
+
+脚本未在注释中给出 ASCII 拓扑；执行时按脚本使用的端口占位符与内置拓扑完成连线。
+
+| 设备 / 对象 | 端口占位符 | 说明 |
+| --- | --- | --- |
+| DUTA ~ DUTD | `<PortA>`、`<PortB>`、`<PortC>`、`<PortD>` | 被测设备端口，执行前替换为实际接口名 |
+
+## 3. 预置条件
+
+### 3.1 协议基线参数
+
+| 参数 | 取值 | 说明 |
+| --- | --- | --- |
+| VLAN | 100 | 按拓扑规划 |
+| 定时器 | 设备默认值 | 用例另有说明时以用例配置为准 |
+| MTU | 1500 | 邻居建立前确认一致 |
+| 收敛等待 | 优先使用就绪检查 | 固定等待见各用例 |
+
+### 3.2 初始状态
+
+- 设备接口处于默认二层或三层状态；本合集涉及的 VLAN、VRF、协议进程、静态路由、隧道、ACL、QoS 对象均为空。
+- 设备已具备 console、telnet 或 ssh 登录方式，可进入全局配置模式。
+- 现场保留：默认清理；保留位置：...
+
+## 4. 测试步骤与预期结果
+
+本合集各用例的公共执行顺序如下。
+
+| 步骤 | 设备 | 动作 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 全部 DUT | 执行基线检查命令 | 初始状态符合 3.2 |
+| 2 | 各 DUT | 按 4.N 的配置块下发命令 | 命令均被接受，无 `% Invalid input` 等报错 |
+| 3 | 各 DUT / 测试仪 | 按 4.N 的触发与等待执行 | 就绪条件满足 |
+| 4 | 各 DUT / 测试仪 | 按 4.N 的观测与预期校验 | 全部预期满足 |
+| 5 | 各 DUT | 按 4.N 的清理块恢复 | 无本用例残留 |
+
+> 命令中的 `<PortA>` 至 `<PortD>` 为逻辑端口名，执行前替换为实际接口名。
+> 观测面说明见 `test-case-template.md` 附录 A；判定标准与常用定时器见附录 B。
+
+### 4.1 用例 0010：ACL 绑定到接口（access-group input/output）
+
+- 级别 / 类型：P1 / CLI
+- 预估耗时：约 2 分钟
+- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/03-application_cli/0010-TRAFFIC_MANAGEMENT-APPLICATION.test.ts`
+
+**执行顺序**
+
+| 顺序 | 动作 | 对象 |
+| --- | --- | --- |
+| 1 | 配置 | DUTA |
+| 2 | 观测 | DUTA |
+| 3 | 清理 | DUTA |
+
+**配置**
+
+DUTA：
+
+```text
+configure terminal
+ip access-list TC_ACL_IF
+10 permit tcp any any
+20 deny udp any any
+end
+configure terminal
+interface <PortA>
+access-group input TC_ACL_IF
+access-group output TC_ACL_IF
+end
+```
+
+**观测与预期**
+
+- DUTA：执行 `show running-config`，回显应包含以下内容：
+
+  - `access-group input TC_ACL_IF`
+  - `access-group output TC_ACL_IF`
+
+**清理**
+
+DUTA：
+
+```text
+configure terminal
+interface <PortA>
+no access-group input
+no access-group output
+end
+configure terminal
+no ip access-list TC_ACL_IF
+end
+```
+
+**判定**
+
+配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
+
+### 4.2 用例 0020：policy-map 绑定到接口（service-policy type qos input）
+
+- 级别 / 类型：P1 / CLI
+- 预估耗时：约 2 分钟
+- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/03-application_cli/0020-TRAFFIC_MANAGEMENT-APPLICATION.test.ts`
+
+**执行顺序**
+
+| 顺序 | 动作 | 对象 |
+| --- | --- | --- |
+| 1 | 配置 | DUTA |
+| 2 | 观测 | DUTA |
+| 3 | 清理 | DUTA |
+
+**配置**
+
+DUTA：
+
+```text
+configure terminal
+ip access-list TC_ACL_SP
+10 permit tcp any any
+end
+configure terminal
+class-map type qos TC_CM_SP
+match access-group TC_ACL_SP
+end
+configure terminal
+policy-map type qos TC_PM_SP
+class type qos TC_CM_SP
+set dscp cs1
+quit
+end
+configure terminal
+interface <PortA>
+service-policy type qos input TC_PM_SP
+end
+```
+
+**观测与预期**
+
+- DUTA：执行 `show running-config`，回显应包含 `service-policy type qos input TC_PM_SP`。
+
+**清理**
+
+DUTA：
+
+```text
+configure terminal
+interface <PortA>
+no service-policy type qos input
+end
+configure terminal
+no policy-map TC_PM_SP
+no class-map TC_CM_SP
+no ip access-list TC_ACL_SP
+end
+```
+
+**判定**
+
+配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
+
+### 4.3 用例 0030：接口上的 qos policer（input/output）
+
+- 级别 / 类型：P1 / CLI
+- 预估耗时：约 2 分钟
+- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/03-application_cli/0030-TRAFFIC_MANAGEMENT-APPLICATION.test.ts`
+
+**执行顺序**
+
+| 顺序 | 动作 | 对象 |
+| --- | --- | --- |
+| 1 | 配置 | DUTA |
+| 2 | 观测 | DUTA |
+| 3 | 清理 | DUTA |
+
+**配置**
+
+DUTA：
+
+```text
+configure terminal
+interface <PortA>
+qos policer input color-blind cir 1000 cbs 10000 statistics
+qos policer output color-blind cir 1000 cbs 10000 statistics
+end
+```
+
+**观测与预期**
+
+- DUTA：执行 `show running-config`，回显应包含以下内容：
+
+  - `qos policer input color-blind cir 1000`
+  - `qos policer output color-blind cir 1000`
+
+**清理**
+
+DUTA：
+
+```text
+configure terminal
+interface <PortA>
+no qos policer input
+no qos policer output
+end
+```
+
+**判定**
+
+配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
+
+### 4.4 用例 0040：全局 ACL 相关应用（http server acl / snmp-server access-group / acl-statistics）
+
+- 级别 / 类型：P1 / CLI
+- 预估耗时：约 2 分钟
+- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/03-application_cli/0040-TRAFFIC_MANAGEMENT-APPLICATION.test.ts`
+
+**执行顺序**
+
+| 顺序 | 动作 | 对象 |
+| --- | --- | --- |
+| 1 | 配置 | DUTA |
+| 2 | 观测 | DUTA |
+| 3 | 清理 | DUTA |
+
+**配置**
+
+DUTA：
+
+```text
+configure terminal
+ip access-list TC_ACL_G
+10 permit tcp any any
+end
+configure terminal
+http server acl TC_ACL_G
+snmp-server access-group TC_ACL_G in
+acl-statistics exclude-drop enable
+end
+```
+
+**观测与预期**
+
+- DUTA：执行 `show running-config`，回显应包含以下内容：
+
+  - `http server acl TC_ACL_G`
+  - `snmp-server access-group TC_ACL_G in`
+  - `acl-statistics exclude-drop enable`
+
+**清理**
+
+DUTA：
+
+```text
+configure terminal
+no http server acl
+no snmp-server access-group
+no acl-statistics exclude-drop enable
+no ip access-list TC_ACL_G
+end
+```
+
+**判定**
+
+配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
+
+### 4.5 用例 0050：接口 trust
+
+- 级别 / 类型：P1 / CLI
+- 预估耗时：约 2 分钟
+- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/03-application_cli/0050-TRAFFIC_MANAGEMENT-APPLICATION.test.ts`
+
+**执行顺序**
+
+| 顺序 | 动作 | 对象 |
+| --- | --- | --- |
+| 1 | 配置 | DUTA |
+| 2 | 观测 | DUTA |
+| 3 | 清理 | DUTA |
+
+**配置**
+
+DUTA：
+
+```text
+configure terminal
+interface <PortA>
+trust dscp
+end
+configure terminal
+interface <PortB>
+trust cos stag-cos
+end
+configure terminal
+interface <PortC>
+trust cos ctag-cos
+end
+configure terminal
+interface <PortD>
+trust port
+end
+```
+
+**观测与预期**
+
+- DUTA：执行 `show running-config`，回显应包含以下内容：
+
+  - `trust dscp`
+  - `trust cos stag-cos`
+  - `trust cos ctag-cos`
+  - `trust port`
+
+**清理**
+
+DUTA：
+
+```text
+configure terminal
+interface <PortA>
+no trust
+end
+configure terminal
+interface <PortB>
+no trust
+end
+configure terminal
+interface <PortC>
+no trust
+end
+configure terminal
+interface <PortD>
+no trust
+end
+```
+
+**判定**
+
+配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
+
+### 4.6 用例 0060：接口 qos shape rate
+
+- 级别 / 类型：P1 / CLI
+- 预估耗时：约 2 分钟
+- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/03-application_cli/0060-TRAFFIC_MANAGEMENT-APPLICATION.test.ts`
+
+**执行顺序**
+
+| 顺序 | 动作 | 对象 |
+| --- | --- | --- |
+| 1 | 配置 | DUTA |
+| 2 | 观测 | DUTA |
+| 3 | 清理 | DUTA |
+
+**配置**
+
+DUTA：
+
+```text
+configure terminal
+interface <PortA>
+qos shape rate 1000
+end
+configure terminal
+interface <PortB>
+qos shape rate pir 1000
+end
+configure terminal
+interface <PortC>
+qos shape rate 1000 ecn-percentage 60
+end
+configure terminal
+interface <PortD>
+qos shape rate pir 1000 ecn-percentage 60
+end
+```
+
+**观测与预期**
+
+- DUTA：执行 `show running-config`，回显应包含以下内容：
+
+  - `qos shape rate pir 1000`
+  - `qos shape rate pir 1000 ecn-percentage 60`
+
+**清理**
+
+DUTA：
+
+```text
+configure terminal
+interface <PortA>
+no qos shape rate
+end
+configure terminal
+interface <PortB>
+no qos shape rate
+end
+configure terminal
+interface <PortC>
+no qos shape rate
+end
+configure terminal
+interface <PortD>
+no qos shape rate
+end
+```
+
+**判定**
+
+配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
+
+### 4.7 用例 0070：接口 service-policy type traffic-class
+
+- 级别 / 类型：P1 / CLI
+- 预估耗时：约 2 分钟
+- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/03-application_cli/0070-TRAFFIC_MANAGEMENT-APPLICATION.test.ts`
+
+**执行顺序**
+
+| 顺序 | 动作 | 对象 |
+| --- | --- | --- |
+| 1 | 配置 | DUTA |
+| 2 | 观测 | DUTA |
+| 3 | 清理 | DUTA |
+
+**配置**
+
+DUTA：
+
+```text
+configure terminal
+class-map type traffic-class TC_IF_TC
+match traffic-class 1
+end
+configure terminal
+policy-map type traffic-class TC_IF_PM
+class type traffic-class TC_IF_TC
+priority level 1
+quit
+end
+configure terminal
+interface <PortA>
+service-policy type traffic-class TC_IF_PM
+end
+```
+
+**观测与预期**
+
+- DUTA：执行 `show running-config`，回显应包含以下内容：
+
+  - `service-policy type traffic-class TC_IF_PM`
+
+**清理**
+
+DUTA：
+
+```text
+configure terminal
+interface <PortA>
+no service-policy type traffic-class
+end
+configure terminal
+no policy-map TC_IF_PM
+no class-map TC_IF_TC
+end
+```
+
+**判定**
+
+配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
+
+### 4.8 用例 0080：port-group / vlan-group 上引用 ACL
+
+- 级别 / 类型：P1 / CLI
+- 预估耗时：约 2 分钟
+- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/03-application_cli/0080-TRAFFIC_MANAGEMENT-APPLICATION.test.ts`
+
+**执行顺序**
+
+| 顺序 | 动作 | 对象 |
+| --- | --- | --- |
+| 1 | 配置 | DUTA |
+| 2 | 观测 | DUTA |
+| 3 | 清理 | DUTA |
+
+**配置**
+
+DUTA：
+
+```text
+configure terminal
+ip access-list TC_G_ACL
+10 permit tcp any any
+end
+configure terminal
+port-group TC_PG
+member interface <PortA>
+member interface <PortB>
+access-group input TC_G_ACL
+end
+configure terminal
+vlan database
+vlan 100
+exit
+vlan-group TC_VG
+member vlan 100
+access-group input TC_G_ACL
+end
+```
+
+**观测与预期**
+
+- DUTA：执行 `show running-config`，回显应包含以下内容：
+
+  - `port-group TC_PG`
+  - `member interface <PortA>`
+  - `vlan-group TC_VG`
+  - `member vlan 100`
+  - `access-group input TC_G_ACL`
+
+**清理**
+
+DUTA：
+
+```text
+configure terminal
+no vlan-group TC_VG
+vlan database
+no vlan 100
+exit
+no port-group TC_PG
+no ip access-list TC_G_ACL
+end
+```
+
+**判定**
+
+配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
+
+### 4.9 用例 0090：port-group / vlan-group 上应用 service-policy
+
+- 级别 / 类型：P1 / CLI
+- 预估耗时：约 2 分钟
+- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/03-application_cli/0090-TRAFFIC_MANAGEMENT-APPLICATION.test.ts`
+
+**执行顺序**
+
+| 顺序 | 动作 | 对象 |
+| --- | --- | --- |
+| 1 | 配置 | DUTA |
+| 2 | 观测 | DUTA |
+| 3 | 清理 | DUTA |
+
+**配置**
+
+DUTA：
+
+```text
+configure terminal
+ip access-list TC_G_ACL
+10 permit tcp any any
+end
+configure terminal
+class-map match-all TC_G_CM
+match access-group TC_G_ACL
+end
+configure terminal
+policy-map acl
+class TC_G_CM
+statistics enable
+quit
+end
+configure terminal
+port-group TC_PG
+member interface <PortA>
+member interface <PortB>
+service-policy input acl
+end
+configure terminal
+vlan database
+vlan 100
+exit
+vlan-group TC_VG
+member vlan 100
+service-policy input acl
+end
+```
+
+**观测与预期**
+
+- DUTA：执行 `show running-config`，回显应包含以下内容：
+
+  - `port-group TC_PG`
+  - `member interface <PortA>`
+  - `vlan-group TC_VG`
+  - `member vlan 100`
+  - `service-policy input acl`
+
+**清理**
+
+DUTA：
+
+```text
+configure terminal
+no vlan-group TC_VG
+vlan database
+no vlan 100
+exit
+no port-group TC_PG
+no policy-map acl
+no class-map TC_G_CM
+no ip access-list TC_G_ACL
+end
+```
+
+**判定**
+
+配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
+
+## 5. 清理与恢复
+
+各用例的清理命令见第 4 节对应小节。合集执行完毕后，按设备执行以下检查，确认本合集新增对象均已删除。
+
+```text
+show running-config
+show class-map
+show policy-map
+show interface
+```
+
+清理顺序：业务路由 → 接口、隧道与 loopback → 协议进程 → VRF → 接口回二层。清理完成后重新执行上述命令，确认无本合集对象残留。
+
+## 6. 备注 / 标准裁剪
+
+| # | 项 | 说明 |
+| --- | --- | --- |
+| 1 | 标准裁剪 | 设备支持可选特性时执行对应测试点；能力未覆盖时标记 `Blocked` 并注明原因 |
+| 2 | 脚本与文档一致性 | 本文以当前脚本为事实来源；脚本修改后应同步更新本文 |
+
+## 7. 执行与结果记录
+
+| 项 | 内容 |
+| --- | --- |
+| 执行时间 / 执行人 | |
+| 结论 | Pass / Fail / Blocked |
+| 实际观测 | 按用例编号记录实际回显或抓包结果 |
+| 证据 | 回显文件 / 抓包文件 / 日志位置 |
+| 关联缺陷 / 需求 | |
+
+逐条结果：
+
+| 用例编号 | 结论 | 实际观测 | 证据 |
+| --- | --- | --- | --- |
+| 0010 | | | |
+| 0020 | | | |
+| 0030 | | | |
+| 0040 | | | |
+| 0050 | | | |
+| 0060 | | | |
+| 0070 | | | |
+| 0080 | | | |
+| 0090 | | | |
+

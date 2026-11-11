@@ -1,9 +1,9 @@
-# 04-combination_cli QoS配置
+# 04-combination_cli 组合场景
 
 - 脚本目录：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/04-combination_cli/`
 - 用例文档目录：`docs/test-cases/feature/10-TRAFFIC_MANAGEMENT/01-qos/04-combination_cli/`
 - 脚本数量：4
-- 用例文档数量：0
+- 用例文档数量：1
 - 上级索引：[README.md](../README.md)
 
 ## 子目录索引
@@ -14,7 +14,7 @@
 
 | 脚本 | 用例文档 | 状态 |
 | --- | --- | --- |
-| `0010-TRAFFIC_MANAGEMENT-COMBINATION.test.ts` | 待补充 | 待补充 |
-| `0020-TRAFFIC_MANAGEMENT-COMBINATION.test.ts` | 待补充 | 待补充 |
-| `0030-TRAFFIC_MANAGEMENT-COMBINATION.test.ts` | 待补充 | 待补充 |
-| `0040-TRAFFIC_MANAGEMENT-COMBINATION.test.ts` | 待补充 | 待补充 |
+| `0010-TRAFFIC_MANAGEMENT-COMBINATION.test.ts` | [0010-TRAFFIC_MANAGEMENT-COMBINATION.md](0010-TRAFFIC_MANAGEMENT-COMBINATION.md) | 合集文档 |
+| `0020-TRAFFIC_MANAGEMENT-COMBINATION.test.ts` | [0010-TRAFFIC_MANAGEMENT-COMBINATION.md](0010-TRAFFIC_MANAGEMENT-COMBINATION.md) | 合集文档 |
+| `0030-TRAFFIC_MANAGEMENT-COMBINATION.test.ts` | [0010-TRAFFIC_MANAGEMENT-COMBINATION.md](0010-TRAFFIC_MANAGEMENT-COMBINATION.md) | 合集文档 |
+| `0040-TRAFFIC_MANAGEMENT-COMBINATION.test.ts` | [0010-TRAFFIC_MANAGEMENT-COMBINATION.md](0010-TRAFFIC_MANAGEMENT-COMBINATION.md) | 合集文档 |

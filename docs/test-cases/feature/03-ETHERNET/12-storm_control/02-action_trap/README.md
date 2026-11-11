@@ -3,7 +3,7 @@
 - 脚本目录：`test/feature/03-ETHERNET/12-storm_control/02-action_trap/`
 - 用例文档目录：`docs/test-cases/feature/03-ETHERNET/12-storm_control/02-action_trap/`
 - 脚本数量：12
-- 用例文档数量：0
+- 用例文档数量：1
 - 上级索引：[README.md](../README.md)
 
 ## 子目录索引
@@ -14,15 +14,15 @@
 
 | 脚本 | 用例文档 | 状态 |
 | --- | --- | --- |
-| `0010-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0020-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0030-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0040-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0050-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0060-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0070-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0080-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0090-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0100-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0110-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
-| `0120-ETHERNET-ACTION_TRAP.test.ts` | 待补充 | 待补充 |
+| `0010-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0020-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0030-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0040-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0050-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0060-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0070-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0080-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0090-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0100-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0110-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |
+| `0120-ETHERNET-ACTION_TRAP.test.ts` | [0010-ETHERNET-ACTION_TRAP.md](0010-ETHERNET-ACTION_TRAP.md) | 合集文档 |

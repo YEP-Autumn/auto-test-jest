@@ -16,23 +16,23 @@
 | 模块 | 目录索引 | 脚本数量 | 用例文档数量 |
 | --- | --- | --- | --- |
 | 02-BASIC 基础配置 | [`feature/02-BASIC/README.md`](feature/02-BASIC/README.md) | 0 | 0 |
-| 03-ETHERNET 以太网 | [`feature/03-ETHERNET/README.md`](feature/03-ETHERNET/README.md) | 64 | 0 |
+| 03-ETHERNET 以太网 | [`feature/03-ETHERNET/README.md`](feature/03-ETHERNET/README.md) | 64 | 6 |
 | 04-IP_SERVICE IP业务 | [`feature/04-IP_SERVICE/README.md`](feature/04-IP_SERVICE/README.md) | 0 | 0 |
-| 05-IP_ROUTE IP路由 | [`feature/05-IP_ROUTE/README.md`](feature/05-IP_ROUTE/README.md) | 41 | 0 |
+| 05-IP_ROUTE IP路由 | [`feature/05-IP_ROUTE/README.md`](feature/05-IP_ROUTE/README.md) | 41 | 4 |
 | 06-MULTICAST 组播 | [`feature/06-MULTICAST/README.md`](feature/06-MULTICAST/README.md) | 0 | 0 |
-| 07-SECURITY 安全性 | [`feature/07-SECURITY/README.md`](feature/07-SECURITY/README.md) | 12 | 0 |
+| 07-SECURITY 安全性 | [`feature/07-SECURITY/README.md`](feature/07-SECURITY/README.md) | 12 | 3 |
 | 08-DEVICE_MANAGEMENT 设备管理 | [`feature/08-DEVICE_MANAGEMENT/README.md`](feature/08-DEVICE_MANAGEMENT/README.md) | 0 | 0 |
 | 09-NETWORK_MANAGEMENT 网络管理 | [`feature/09-NETWORK_MANAGEMENT/README.md`](feature/09-NETWORK_MANAGEMENT/README.md) | 0 | 0 |
-| 10-TRAFFIC_MANAGEMENT 流量管理 | [`feature/10-TRAFFIC_MANAGEMENT/README.md`](feature/10-TRAFFIC_MANAGEMENT/README.md) | 23 | 0 |
+| 10-TRAFFIC_MANAGEMENT 流量管理 | [`feature/10-TRAFFIC_MANAGEMENT/README.md`](feature/10-TRAFFIC_MANAGEMENT/README.md) | 23 | 4 |
 | 11-IPV6_SERVICE IPv6业务 | [`feature/11-IPV6_SERVICE/README.md`](feature/11-IPV6_SERVICE/README.md) | 0 | 0 |
 | 12-IPV6_SECURITY IPv6安全 | [`feature/12-IPV6_SECURITY/README.md`](feature/12-IPV6_SECURITY/README.md) | 0 | 0 |
 | 13-IPV6_ROUTE IPv6路由 | [`feature/13-IPV6_ROUTE/README.md`](feature/13-IPV6_ROUTE/README.md) | 0 | 0 |
 | 14-IPV6_MULTICAST IPv6组播 | [`feature/14-IPV6_MULTICAST/README.md`](feature/14-IPV6_MULTICAST/README.md) | 0 | 0 |
 | 15-VPN VPN | [`feature/15-VPN/README.md`](feature/15-VPN/README.md) | 0 | 0 |
 | 16-RELIABILITY 可靠性 | [`feature/16-RELIABILITY/README.md`](feature/16-RELIABILITY/README.md) | 0 | 0 |
-| 17-NETWORK_VIRTUALIZATION 网络虚拟化 | [`feature/17-NETWORK_VIRTUALIZATION/README.md`](feature/17-NETWORK_VIRTUALIZATION/README.md) | 5 | 1 |
+| 17-NETWORK_VIRTUALIZATION 网络虚拟化 | [`feature/17-NETWORK_VIRTUALIZATION/README.md`](feature/17-NETWORK_VIRTUALIZATION/README.md) | 5 | 2 |
 | 18-INTELLIGENT_LOSSLESS 智能无损网络 | [`feature/18-INTELLIGENT_LOSSLESS/README.md`](feature/18-INTELLIGENT_LOSSLESS/README.md) | 0 | 0 |
-| 19-MPLS MPLS | [`feature/19-MPLS/README.md`](feature/19-MPLS/README.md) | 63 | 0 |
+| 19-MPLS MPLS | [`feature/19-MPLS/README.md`](feature/19-MPLS/README.md) | 63 | 7 |
 | 20-STACKING 堆叠 | [`feature/20-STACKING/README.md`](feature/20-STACKING/README.md) | 0 | 0 |
 | misc | [`misc/README.md`](misc/README.md) | 60 | 1 |
 

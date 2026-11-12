@@ -107,7 +107,7 @@ test("链形组网无可用备份路径时，LFA 保护前缀数为 0 且链路�
     "3.3.3.3/32",
     "via 10.0.12.2",
   ]);
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   // 触发 A-B 链路故障，链形组网没有备份路径。
   testHelper.ExecConfigDutA([
@@ -140,10 +140,10 @@ test("链形组网无可用备份路径时，LFA 保护前缀数为 0 且链路�
   ]);
   testHelper.ReadyCheckDutA(
     "show ip route 3.3.3.3",
-    new RegExp("via 10\\.0\\.12\\.2"),
+    new RegExp("10\\.0\\.12\\.2,\\s+via"),
     60_000,
   );
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

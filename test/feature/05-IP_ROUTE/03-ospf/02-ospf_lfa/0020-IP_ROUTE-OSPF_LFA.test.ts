@@ -166,14 +166,14 @@ test("A-B 主链路故障后，OSPF LFA 将流量切换到 A-D-C 备份路径并
 
   testHelper.ReadyCheckDutA(
     "show ip route 3.3.3.3",
-    new RegExp("via 10\\.0\\.41\\.1"),
+    new RegExp("10\\.0\\.41\\.1,\\s+via"),
     30_000,
   );
   testHelper.ExecRetMatchDutA("show ip ospf route", [
     "3.3.3.3/32",
     "via 10.0.41.1",
   ]);
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   // 恢复主链路，校验路由回到主路径。
   testHelper.ExecConfigDutA([
@@ -184,13 +184,13 @@ test("A-B 主链路故障后，OSPF LFA 将流量切换到 A-D-C 备份路径并
   ]);
   testHelper.ReadyCheckDutA(
     "show ip route 3.3.3.3",
-    new RegExp("via 10\\.0\\.12\\.2"),
+    new RegExp("10\\.0\\.12\\.2,\\s+via"),
     60_000,
   );
   testHelper.ExecRetMatchDutA("show ip ospf fast-reroute per-prefix", [
     new RegExp("Protected by LFA\\s*:\\s*[1-9]\\d*"),
   ]);
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

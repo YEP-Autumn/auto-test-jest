@@ -127,7 +127,7 @@ test("多区域 ABR 汇总、外部 Type-1/Type-2 与默认路由在 LFA 使能�
     new RegExp("Protected by LFA\\s*:\\s*0\\b"),
   ]);
 
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   // 单 ABR 路径故障后，区域间、外部和默认路由均应撤销。
   testHelper.ExecConfigDutA([
@@ -164,11 +164,11 @@ test("多区域 ABR 汇总、外部 Type-1/Type-2 与默认路由在 LFA 使能�
   ]);
   testHelper.ReadyCheckDutA(
     "show ip route 3.3.0.0/16",
-    new RegExp("via 10\\.0\\.12\\.2"),
+    new RegExp("10\\.0\\.12\\.2,\\s+via"),
     60_000,
   );
   testHelper.ReadyCheckDutA("show ip route 0.0.0.0/0", "0.0.0.0/0", 60_000);
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

@@ -108,14 +108,14 @@ test("并行链路场景下，主链路故障后 LFA 将流量切换到备份链
   ]);
   testHelper.ReadyCheckDutA(
     "show ip route 2.2.2.2",
-    new RegExp("via 10\\.0\\.21\\.2"),
+    new RegExp("10\\.0\\.21\\.2,\\s+via"),
     30_000,
   );
   testHelper.ExecRetMatchDutA("show ip ospf route", [
     "2.2.2.2/32",
     "via 10.0.21.2",
   ]);
-  testHelper.ExecRetMatchDutA("ping 2.2.2.2", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 2.2.2.2", " 0% packet loss", 60_000);
 
   // 恢复主链路，流量应回到 PortA。
   testHelper.ExecConfigDutA([
@@ -126,10 +126,10 @@ test("并行链路场景下，主链路故障后 LFA 将流量切换到备份链
   ]);
   testHelper.ReadyCheckDutA(
     "show ip route 2.2.2.2",
-    new RegExp("via 10\\.0\\.12\\.2"),
+    new RegExp("10\\.0\\.12\\.2,\\s+via"),
     60_000,
   );
-  testHelper.ExecRetMatchDutA("ping 2.2.2.2", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 2.2.2.2", " 0% packet loss", 60_000);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

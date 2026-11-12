@@ -347,10 +347,21 @@ default-information originate always metric-type 2
 | CLI 用例 `02-ospf_lfa_cli/0020` | 通过 | 多 VRF 进程 100/200 分别绑定 vpn1/vpn2，进程数为 2，LFA 配置独立 |
 | CLI 用例 `02-ospf_lfa_cli/0030` | 通过 | `ip unnumbered` 返回 `% Unrecognized command`，无配置残留 |
 | CLI 用例 `02-ospf_lfa_cli/0040` | 通过 | Broadcast/NBMA/P2MP/P2P 网络类型与 NBMA neighbor 命令均写入 running-config |
-| 功能用例 0010~0180 | `Blocked` | 拓扑后端已创建并启用链路，但 DUT 侧 `show ip ospf neighbor` 始终为空；`show ip ospf interface` 显示 Hello 已发送、收到 0，判定为环境链路未建立 |
+| 功能用例 0010~0180 | 通过 | 四设备环、三设备链形和双设备并行链路拓扑复跑，15/15 通过；邻居 Full、LFA 受保护前缀按预期变化，链路/节点故障切换与恢复均符合预期 |
 | 命名、模块、套件与类型检查 | 通过 | `npm run check` 全部通过 |
 
-功能用例的脚本与判定逻辑已通过类型检查；待拓扑后端链路可用后，按第 4 节步骤补测即可。
+### 6.1 复跑问题分析
+
+早期功能用例因邻居未建立被标记为 `Blocked`，本次复跑邻居已正常进入 `Full`，原阻塞原因不再成立。复跑中发现并修复以下脚本问题：
+
+| 问题 | 影响用例 | 现象 | 修复 |
+| --- | --- | --- | --- |
+| `show ip route` 回显格式匹配错误 | 0020、0030、0040、0060、0070、0080、0090、0100 | 实际回显为 `<next-hop>, via <interface>`，脚本写成 `via <next-hop>`，故障切换后路由已正确但仍判定失败 | 改为匹配 `<next-hop>,\s+via` |
+| 首次 ping 收敛丢包 | 0010~0100 | 邻居刚 Full 时首包可能丢失，实测 `40% packet loss`，后续恢复 | 改用 `ReadyCheck` 在 60 秒内重试，直到出现 0% 丢包 |
+| 链路故障后错误期望 LFA 保护计数仍大于 0 | 0080 | A-B 故障后只剩 A-D-C 单路径，`Protected by LFA` 实际降为 0 | 故障期断言计数为 0，链路恢复后再断言大于 0 |
+| OSPF 路由表 ECMP 恢复晚于 IP 路由表 | 0090 | IP 路由已显示双下一跳时，`show ip ospf route` 仍只有备份下一跳 | 在严格断言前增加 `show ip ospf route` 的 `ReadyCheck` |
+| 非对称开销配置到错误设备 | 0180 | 在 DUTA 二层 PortC 上执行 `ip ospf cost` 返回 `% This can't be configured for L2 interface.` | 改为配置 DUTD PortC，并拆分“读取 DUTA 计数”和“配置 DUTD 开销”两步 |
+| 清理命令重复删除未配置项 | 0180 | `no ip ospf cost` 对未配置开销的接口返回 `% Parameter is not configured` | 仅保留实际配置过开销的接口清理命令 |
 
 ## 7. 参考资料
 

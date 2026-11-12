@@ -159,13 +159,17 @@ test("A-B 链路连续 3 次故障恢复后，LFA 主备切换与保护计数保
     ]);
     testHelper.ReadyCheckDutA(
       "show ip route 3.3.3.3",
-      new RegExp("via 10\\.0\\.41\\.1"),
+      new RegExp("10\\.0\\.41\\.1,\\s+via"),
       30_000,
     );
-    testHelper.ExecRetMatchDutA("show ip ospf fast-reroute per-prefix", [
-      new RegExp("Protected by LFA\\s*:\\s*[1-9]\\d*"),
-    ]);
-    testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+    // 主链路故障后只剩 A-D-C 一条路径，没有可用的 LFA 备份，
+    // 受保护前缀数应降为 0。
+    testHelper.ReadyCheckDutA(
+      "show ip ospf fast-reroute per-prefix",
+      new RegExp("Protected by LFA\\s*:\\s*0\\b"),
+      30_000,
+    );
+    testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
     testHelper.ExecConfigDutA([
       "configure terminal",
@@ -175,13 +179,15 @@ test("A-B 链路连续 3 次故障恢复后，LFA 主备切换与保护计数保
     ]);
     testHelper.ReadyCheckDutA(
       "show ip route 3.3.3.3",
-      new RegExp("via 10\\.0\\.12\\.2"),
+      new RegExp("10\\.0\\.12\\.2,\\s+via"),
       60_000,
     );
-    testHelper.ExecRetMatchDutA("show ip ospf fast-reroute per-prefix", [
+    testHelper.ReadyCheckDutA(
+      "show ip ospf fast-reroute per-prefix",
       new RegExp("Protected by LFA\\s*:\\s*[1-9]\\d*"),
-    ]);
-    testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+      60_000,
+    );
+    testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
   }
 
   testHelper.CleanConfigDutA([

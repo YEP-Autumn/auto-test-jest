@@ -159,7 +159,7 @@ test("链路开销变化触发 OSPF 重新计算后，LFA 保护状态保持可�
   ]);
   testHelper.ReadyCheckDutA(
     "show ip route 3.3.3.3",
-    new RegExp("via 10\\.0\\.41\\.1"),
+    new RegExp("10\\.0\\.41\\.1,\\s+via"),
     60_000,
   );
   testHelper.ExecRetMatchDutA("show ip ospf route", [
@@ -170,7 +170,7 @@ test("链路开销变化触发 OSPF 重新计算后，LFA 保护状态保持可�
     new RegExp("Fast-reroute per-prefix\\s*:\\s*enabled"),
     new RegExp("Protected by LFA\\s*:\\s*[1-9]\\d*"),
   ]);
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   // 恢复开销，主路径应回到 A-B-C。
   testHelper.ExecConfigDutA([
@@ -181,13 +181,13 @@ test("链路开销变化触发 OSPF 重新计算后，LFA 保护状态保持可�
   ]);
   testHelper.ReadyCheckDutA(
     "show ip route 3.3.3.3",
-    new RegExp("via 10\\.0\\.12\\.2"),
+    new RegExp("10\\.0\\.12\\.2,\\s+via"),
     60_000,
   );
   testHelper.ExecRetMatchDutA("show ip ospf fast-reroute per-prefix", [
     new RegExp("Protected by LFA\\s*:\\s*[1-9]\\d*"),
   ]);
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

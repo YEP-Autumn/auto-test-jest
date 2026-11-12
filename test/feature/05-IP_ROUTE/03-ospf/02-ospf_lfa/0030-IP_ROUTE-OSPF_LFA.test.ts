@@ -169,7 +169,7 @@ test("B 节点故障后，OSPF LFA 通过 A-D-C 路径绕开故障节点并恢�
 
   testHelper.ReadyCheckDutA(
     "show ip route 3.3.3.3",
-    new RegExp("via 10\\.0\\.41\\.1"),
+    new RegExp("10\\.0\\.41\\.1,\\s+via"),
     30_000,
   );
   testHelper.ExecRetMatchDutA("show ip ospf route", [
@@ -177,7 +177,7 @@ test("B 节点故障后，OSPF LFA 通过 A-D-C 路径绕开故障节点并恢�
     "via 10.0.41.1",
   ]);
   testHelper.ReadyCheckDutA("show ip ospf neighbor", "10.0.12.2", 60_000, true);
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   // 恢复 B 节点，校验邻居与主路径恢复。
   testHelper.ExecConfigDutB([
@@ -192,10 +192,10 @@ test("B 节点故障后，OSPF LFA 通过 A-D-C 路径绕开故障节点并恢�
   testHelper.ReadyCheckDutA("show ip ospf neighbor", "10.0.12.2", 90_000);
   testHelper.ReadyCheckDutA(
     "show ip route 3.3.3.3",
-    new RegExp("via 10\\.0\\.12\\.2"),
+    new RegExp("10\\.0\\.12\\.2,\\s+via"),
     60_000,
   );
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

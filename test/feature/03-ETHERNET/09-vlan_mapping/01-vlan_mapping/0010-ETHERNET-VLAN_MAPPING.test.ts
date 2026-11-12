@@ -10,8 +10,8 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-describe("******一、测试 vlan trunk translate 接口模式******", async () => {
-  describe("1. 测试支持的配置项", async () => {
+describe("******一、测试 vlan trunk translate 接口模式******", () => {
+  describe("1. 测试支持的配置项", () => {
     test("1.1 支持配置 raw-vlan VLAN_ID evc", async () => {
       testHelper.ExecConfigDutA(["configure terminal", "end"]);
 
@@ -34,7 +34,7 @@ describe("******一、测试 vlan trunk translate 接口模式******", async () 
     test("1.4 测试 raw-vlan VLAN_ID VLAN_ID evc egress流量", async () => {});
   });
 
-  describe("1. 测试不支持的配置项", async () => {
+  describe("1. 测试不支持的配置项", () => {
     test("2.1 不支持配置相同的 evc 或者 evc 中使用相同的 vlan", async () => {
       testHelper.ExecConfigDutA(["configure terminal", "end"]);
 

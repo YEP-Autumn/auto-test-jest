@@ -164,7 +164,7 @@ test("环形组网启用 OSPF LFA 后邻居 Full 且存在受保护前缀", asyn
     "via 10.0.12.2",
   ]);
 
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

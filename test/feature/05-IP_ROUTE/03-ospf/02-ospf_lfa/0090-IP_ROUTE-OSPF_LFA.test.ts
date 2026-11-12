@@ -160,10 +160,10 @@ test("OSPF LFA 使能后，等开销主路径保持 ECMP 且单路径故障后�
   ]);
   testHelper.ReadyCheckDutA(
     "show ip route 3.3.3.3",
-    new RegExp("via 10\\.0\\.41\\.1"),
+    new RegExp("10\\.0\\.41\\.1,\\s+via"),
     30_000,
   );
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   // 恢复 A-B 路径，ECMP 应重新形成。
   testHelper.ExecConfigDutA([
@@ -174,6 +174,12 @@ test("OSPF LFA 使能后，等开销主路径保持 ECMP 且单路径故障后�
   ]);
   testHelper.ReadyCheckDutA(
     "show ip route 3.3.3.3",
+    new RegExp("10\\.0\\.12\\.2,\\s+via"),
+    60_000,
+  );
+  // OSPF 路由表可能比 IP 路由表稍晚恢复 ECMP，等待主路径重新出现。
+  testHelper.ReadyCheckDutA(
+    "show ip ospf route",
     new RegExp("via 10\\.0\\.12\\.2"),
     60_000,
   );
@@ -182,7 +188,7 @@ test("OSPF LFA 使能后，等开销主路径保持 ECMP 且单路径故障后�
     "via 10.0.12.2",
     "via 10.0.41.1",
   ]);
-  testHelper.ExecRetMatchDutA("ping 3.3.3.3", " 0% packet loss");
+  testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

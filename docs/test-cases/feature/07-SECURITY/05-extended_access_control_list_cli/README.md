@@ -14,4 +14,4 @@
 
 | 脚本 | 用例文档 | 状态 |
 | --- | --- | --- |
-| `0010-SECURITY-EXTENDED_ACL.test.ts` | [0010-SECURITY-EXTENDED-ACL.md](0010-SECURITY-EXTENDED-ACL.md) | 合集文档 |
+| `0010-SECURITY-EXTENDED_ACL.test.ts` | [0010-SECURITY-EXTENDED_ACL.md](0010-SECURITY-EXTENDED_ACL.md) | 已有文档 |

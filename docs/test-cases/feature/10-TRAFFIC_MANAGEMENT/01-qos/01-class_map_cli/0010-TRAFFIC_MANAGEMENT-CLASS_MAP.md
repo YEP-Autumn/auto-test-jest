@@ -1,21 +1,18 @@
-# 流量管理 class-map 测试用例合集
+# class-map type qos 多种 match 组合
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本目录全部测试脚本。
-> 同一目录的脚本共用公共拓扑、预置条件与判定口径；各用例仅描述配置、触发、观测与清理差异。
+> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
+> 本脚本的测试用例共用公共拓扑、预置条件与判定口径；各子用例仅描述配置、触发、观测与清理差异。
 
 ## 0. 用例清单
 
 | 用例编号 | 用例标题 | 脚本 | 类型 | 结果 |
 | --- | --- | --- | --- | --- |
 | 0010 | class-map type qos 多种 match 组合 | `0010-TRAFFIC_MANAGEMENT-CLASS_MAP.test.ts` | P1 / CLI | |
-| 0020 | class-map type traffic-class 匹配 | `0020-TRAFFIC_MANAGEMENT-CLASS_MAP.test.ts` | P1 / CLI | |
-| 0030 | class-map type control-plane 匹配 | `0030-TRAFFIC_MANAGEMENT-CLASS_MAP.test.ts` | P1 / CLI | |
-| 0040 | class-map match-all/any 传统形式 | `0040-TRAFFIC_MANAGEMENT-CLASS_MAP.test.ts` | P1 / CLI | |
 
-## 1. 基本信息（合集）
+## 1. 基本信息（用例）
 
-- 用例编号：`0010` ~ `0040`
-- 用例标题：流量管理 class-map 测试用例合集
+- 用例编号：`0010`
+- 用例标题：class-map type qos 多种 match 组合
 - 所属特性 / 分组：`10-TRAFFIC_MANAGEMENT` / `QoS配置` / `class-map`
 - 级别 / 类型：P1 / CLI
 - 执行方式：手工 / 自动化脚本
@@ -24,7 +21,7 @@
 
 ### 1.1 标准依据
 
-| 标准 / RFC | 条款 | 本合集验证的要求 |
+| 标准 / RFC | 条款 | 本文档验证的要求 |
 | --- | --- | --- |
 | E530 配置指导（V7.5.1） | 10.1 | class-map配置与回显 |
 | E530 命令参考（V7.4.8） | QoS配置 | 命令参数、回显与删除 |
@@ -43,7 +40,7 @@
 
 ## 2. 组网与拓扑
 
-本合集未使用设备端口占位符与测试仪端口；按脚本中的设备登录信息执行。
+本文档未使用设备端口占位符与测试仪端口；按脚本中的设备登录信息执行。
 
 | 设备 / 对象 | 端口占位符 | 说明 |
 | --- | --- | --- |
@@ -55,21 +52,21 @@
 
 | 参数 | 取值 | 说明 |
 | --- | --- | --- |
-| 接口地址 / VLAN / VNI | 见第 4 节各用例配置 | 按拓扑规划 |
-| 协议进程 / 实例 | 见第 4 节各用例配置 | 同一用例内保持一致 |
+| 接口地址 / VLAN / VNI | 见第 4 节各子用例配置 | 按拓扑规划 |
+| 协议进程 / 实例 | 见第 4 节各子用例配置 | 同一用例内保持一致 |
 | 定时器 | 设备默认值 | 用例另有说明时以用例配置为准 |
 | MTU | 1500 | 邻居建立前确认一致 |
-| 收敛等待 | 优先使用就绪检查 | 固定等待见各用例 |
+| 收敛等待 | 优先使用就绪检查 | 固定等待见各子用例 |
 
 ### 3.2 初始状态
 
-- 设备接口处于默认二层或三层状态；本合集涉及的 VLAN、VRF、协议进程、静态路由、隧道、ACL、QoS 对象均为空。
+- 设备接口处于默认二层或三层状态；本文档涉及的 VLAN、VRF、协议进程、静态路由、隧道、ACL、QoS 对象均为空。
 - 设备已具备 console、telnet 或 ssh 登录方式，可进入全局配置模式。
 - 现场保留：默认清理；保留位置：...
 
 ## 4. 测试步骤与预期结果
 
-本合集各用例的公共执行顺序如下。
+本文档各子用例的公共执行顺序如下。
 
 | 步骤 | 设备 | 动作 | 预期 |
 | --- | --- | --- | --- |
@@ -154,164 +151,9 @@ end
 
 配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
 
-### 4.2 用例 0020：class-map type traffic-class 匹配
-
-- 级别 / 类型：P1 / CLI
-- 预估耗时：约 2 分钟
-- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/01-class_map_cli/0020-TRAFFIC_MANAGEMENT-CLASS_MAP.test.ts`
-
-**执行顺序**
-
-| 顺序 | 动作 | 对象 |
-| --- | --- | --- |
-| 1 | 配置 | DUTA |
-| 2 | 观测 | DUTA |
-| 3 | 清理 | DUTA |
-
-**配置**
-
-DUTA：
-
-```text
-configure terminal
-class-map type traffic-class TC_CM_TC
-match traffic-class 1
-end
-configure terminal
-class-map type traffic-class TC_CM_TCALL
-match traffic-class-all 3
-end
-```
-
-**观测与预期**
-
-- DUTA：执行 `show running-config`，回显应包含以下内容：
-
-  - `class-map type traffic-class TC_CM_TC`
-  - `match traffic-class 1`
-  - `class-map type traffic-class TC_CM_TCALL`
-  - `match traffic-class 3`
-
-**清理**
-
-DUTA：
-
-```text
-configure terminal
-no class-map TC_CM_TC
-no class-map TC_CM_TCALL
-end
-```
-
-**判定**
-
-配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
-
-### 4.3 用例 0030：class-map type control-plane 匹配
-
-- 级别 / 类型：P1 / CLI
-- 预估耗时：约 2 分钟
-- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/01-class_map_cli/0030-TRAFFIC_MANAGEMENT-CLASS_MAP.test.ts`
-
-**执行顺序**
-
-| 顺序 | 动作 | 对象 |
-| --- | --- | --- |
-| 1 | 配置 | DUTA |
-| 2 | 观测 | DUTA |
-| 3 | 清理 | DUTA |
-
-**配置**
-
-DUTA：
-
-```text
-configure terminal
-control-plane access-list TC_ACL_CP2
-10 permit exception any
-end
-configure terminal
-class-map type control-plane TC_CM_CP
-match access-group TC_ACL_CP2
-end
-```
-
-**观测与预期**
-
-- DUTA：执行 `show running-config`，回显应包含以下内容：
-
-  - `class-map type control-plane TC_CM_CP`
-  - `match access-group TC_ACL_CP2`
-
-**清理**
-
-DUTA：
-
-```text
-configure terminal
-no class-map TC_CM_CP
-no control-plane access-list TC_ACL_CP2
-end
-```
-
-**判定**
-
-配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
-
-### 4.4 用例 0040：class-map match-all/any 传统形式
-
-- 级别 / 类型：P1 / CLI
-- 预估耗时：约 2 分钟
-- 脚本：`test/feature/10-TRAFFIC_MANAGEMENT/01-qos/01-class_map_cli/0040-TRAFFIC_MANAGEMENT-CLASS_MAP.test.ts`
-
-**执行顺序**
-
-| 顺序 | 动作 | 对象 |
-| --- | --- | --- |
-| 1 | 配置 | DUTA |
-| 2 | 观测 | DUTA |
-| 3 | 清理 | DUTA |
-
-**配置**
-
-DUTA：
-
-```text
-configure terminal
-ip access-list TC_ACL_L
-10 permit tcp any any
-end
-configure terminal
-class-map match-all TC_CM_LEGACY
-match access-group TC_ACL_L
-end
-```
-
-**观测与预期**
-
-- DUTA：执行 `show running-config`，回显应包含以下内容：
-
-  - `class-map match-all TC_CM_LEGACY`
-  - `match access-group TC_ACL_L`
-
-**清理**
-
-DUTA：
-
-```text
-configure terminal
-no class-map TC_CM_LEGACY
-no ip access-list TC_ACL_L
-end
-```
-
-**判定**
-
-配置命令均被接受，观测项全部满足，清理后无本用例残留 → `Pass`；任一必检项不满足 → `Fail`；环境或能力不足 → `Blocked`。
-
 ## 5. 清理与恢复
 
-各用例的清理命令见第 4 节对应小节。合集执行完毕后，按设备执行以下检查，确认本合集新增对象均已删除。
+各子用例的清理命令见第 4 节对应小节。用例执行完毕后，按设备执行以下检查，确认本文档新增对象均已删除。
 
 ```text
 show running-config
@@ -320,7 +162,7 @@ show policy-map
 show interface
 ```
 
-清理顺序：业务路由 → 接口、隧道与 loopback → 协议进程 → VRF → 接口回二层。清理完成后重新执行上述命令，确认无本合集对象残留。
+清理顺序：业务路由 → 接口、隧道与 loopback → 协议进程 → VRF → 接口回二层。清理完成后重新执行上述命令，确认无本文档对象残留。
 
 ## 6. 备注 / 标准裁剪
 
@@ -344,7 +186,4 @@ show interface
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |
 | 0010 | | | |
-| 0020 | | | |
-| 0030 | | | |
-| 0040 | | | |
 

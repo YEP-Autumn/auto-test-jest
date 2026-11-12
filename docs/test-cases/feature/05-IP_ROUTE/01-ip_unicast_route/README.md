@@ -3,15 +3,15 @@
 - 脚本目录：`test/feature/05-IP_ROUTE/01-ip_unicast_route/`
 - 用例文档目录：`docs/test-cases/feature/05-IP_ROUTE/01-ip_unicast_route/`
 - 脚本数量：15
-- 用例文档数量：2
+- 用例文档数量：15
 - 上级索引：[README.md](../README.md)
 
 ## 子目录索引
 
 | 子目录 | 目录索引 | 脚本数量 | 用例文档数量 |
 | --- | --- | --- | --- |
-| `01-ip_route_basic/` | [`01-ip_route_basic/README.md`](01-ip_route_basic/README.md) | 7 | 1 |
-| `02-ip_route_rnh/` | [`02-ip_route_rnh/README.md`](02-ip_route_rnh/README.md) | 8 | 1 |
+| `01-ip_route_basic/` | [`01-ip_route_basic/README.md`](01-ip_route_basic/README.md) | 7 | 7 |
+| `02-ip_route_rnh/` | [`02-ip_route_rnh/README.md`](02-ip_route_rnh/README.md) | 8 | 8 |
 
 ## 脚本
 

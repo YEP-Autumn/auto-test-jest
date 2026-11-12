@@ -3,7 +3,7 @@
 - 脚本目录：`test/feature/07-SECURITY/`
 - 用例文档目录：`docs/test-cases/feature/07-SECURITY/`
 - 脚本数量：12
-- 用例文档数量：3
+- 用例文档数量：12
 - 上级索引：[README.md](../README.md)
 
 ## 子目录索引
@@ -15,7 +15,7 @@
 | `03-time_range/` | [`03-time_range/README.md`](03-time_range/README.md) | 0 | 0 |
 | `03-time_range_cli/` | [`03-time_range_cli/README.md`](03-time_range_cli/README.md) | 1 | 1 |
 | `04-access_control_list/` | [`04-access_control_list/README.md`](04-access_control_list/README.md) | 0 | 0 |
-| `04-access_control_list_cli/` | [`04-access_control_list_cli/README.md`](04-access_control_list_cli/README.md) | 10 | 1 |
+| `04-access_control_list_cli/` | [`04-access_control_list_cli/README.md`](04-access_control_list_cli/README.md) | 10 | 10 |
 | `05-extended_access_control_list/` | [`05-extended_access_control_list/README.md`](05-extended_access_control_list/README.md) | 0 | 0 |
 | `05-extended_access_control_list_cli/` | [`05-extended_access_control_list_cli/README.md`](05-extended_access_control_list_cli/README.md) | 1 | 1 |
 | `06-ipv6_access_control_list/` | [`06-ipv6_access_control_list/README.md`](06-ipv6_access_control_list/README.md) | 0 | 0 |

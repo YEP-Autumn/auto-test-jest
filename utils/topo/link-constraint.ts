@@ -320,6 +320,32 @@ export class LinkConstraint {
   /**
    *
    *    +--------+                   +--------+
+   *    |  DUTA  |--PortA <=> PortA--|  DUTB  |
+   *    +--------+                   +--------+
+   *        |                            |
+   *      PortD                        PortB
+   *        |                            |
+   *      PortD                        PortB
+   *        |                            |
+   *    +--------+                   +--------+
+   *    |  DUTD  |--PortC <=> PortC--|  DUTC  |
+   *    +--------+                   +--------+
+   *
+   */
+  static get four_devices_topo_links_type_3(): TopoLinks {
+    return cached("four_devices_topo_links_type_3", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("B", "B"), dut("C", "B")),
+        link(dut("D", "C"), dut("C", "C")),
+        link(dut("D", "D"), dut("A", "D")),
+      ),
+    );
+  }
+
+  /**
+   *
+   *    +--------+                   +--------+
    *    |  DUTE  |--PortA <=> PortA--|  DUTF  |
    *    +--------+                   +--------+
    *        |                            |

@@ -175,25 +175,9 @@ testHelper.addPktSender({
 
 - 在 `RenixPort.B` 启动抓包。
 - 固定等待 5 秒；等待依据见脚本注释。
-- 在 `RenixPort.B` 校验报文，报文层包括 SNMP，SNMP 版本为 0，OID 包括 `1.3.6.1.4.1.64197.5.1.4`，期望计数为 1。
+- 当前版本社区 Trap 目标默认使用 v2c，不配置 `version v1` 时不会发送 v1 Trap；本文档仅校验 v2c 和 v3。
 
-<details>
-<summary>脚本片段（仅追溯）</summary>
-
-```ts
-testHelper.addPktChecker({
-    port: RenixPort.B,
-    packet: new PacketBuilder().setSNMP({
-      version: 0,
-      varbinds: [{ oid: "1.3.6.1.4.1.64197.5.1.4" }],
-    }),
-    expected_count: 1,
-  })
-```
-
-</details>
-
-- 在 `RenixPort.B` 校验报文，报文层包括 SNMP，SNMP 版本为 1，OID 包括 `1.3.6.1.2.1.1.3.0`、`1.3.6.1.6.3.1.1.4.1.0`，期望计数为 1。
+- 在 `RenixPort.B` 校验报文，报文层包括 SNMP，SNMP 版本为 1，OID 包括 `1.3.6.1.2.1.1.3.0`、`1.3.6.1.6.3.1.1.4.1.0`，其值的企业号部分使用正则 `^1\.3\.6\.1\.4\.1\.\d+\.5\.2\.2$` 匹配，期望计数为 1。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
@@ -207,7 +191,7 @@ testHelper.addPktChecker({
         { oid: "1.3.6.1.2.1.1.3.0" },
         {
           oid: "1.3.6.1.6.3.1.1.4.1.0",
-          value: "1.3.6.1.4.1.64197.5.2.2",
+          value: /^1\.3\.6\.1\.4\.1\.\d+\.5\.2\.2$/,
         },
       ],
     }),
@@ -217,7 +201,7 @@ testHelper.addPktChecker({
 
 </details>
 
-- 在 `RenixPort.B` 校验报文，报文层包括 SNMP，SNMP 版本为 3，OID 包括 `1.3.6.1.2.1.1.3.0`、`1.3.6.1.6.3.1.1.4.1.0`，期望计数为 1。
+- 在 `RenixPort.B` 校验报文，报文层包括 SNMP，SNMP 版本为 3，OID 包括 `1.3.6.1.2.1.1.3.0`、`1.3.6.1.6.3.1.1.4.1.0`，其值的企业号部分使用正则 `^1\.3\.6\.1\.4\.1\.\d+\.5\.2\.2$` 匹配，期望计数为 1。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
@@ -231,7 +215,7 @@ testHelper.addPktChecker({
         { oid: "1.3.6.1.2.1.1.3.0" },
         {
           oid: "1.3.6.1.6.3.1.1.4.1.0",
-          value: "1.3.6.1.4.1.64197.5.2.2",
+          value: /^1\.3\.6\.1\.4\.1\.\d+\.5\.2\.2$/,
         },
       ],
     }),

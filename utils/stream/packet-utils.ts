@@ -364,6 +364,20 @@ export function matchLLC(field: any, actualField: any): boolean {
 }
 
 /**
+ * 比较期望值与实际值。
+ * 期望值未指定时跳过；期望值为 RegExp 时按正则匹配，否则严格相等。
+ */
+function expectedMatches(expected: any, actual: any): boolean {
+  if (expected === undefined || expected === null) return true;
+  if (expected instanceof RegExp) {
+    if (actual === undefined || actual === null) return false;
+    expected.lastIndex = 0;
+    return expected.test(String(actual));
+  }
+  return expected === actual;
+}
+
+/**
  * 比较 SNMP 字段是否匹配
  * @param field 期望的字段内容
  * @param actualField 实际捕获的字段内容
@@ -404,14 +418,8 @@ export function matchSNMP(field: any, actualField: any): boolean {
       let found = false;
       for (let j = actualStart; j < actualSnmp.varbinds.length; j++) {
         const actualVb = actualSnmp.varbinds[j];
-        const oidOk =
-          expectedVb.oid === undefined ||
-          expectedVb.oid === null ||
-          expectedVb.oid === actualVb.oid;
-        const valueOk =
-          expectedVb.value === undefined ||
-          expectedVb.value === null ||
-          expectedVb.value === actualVb.value;
+        const oidOk = expectedMatches(expectedVb.oid, actualVb.oid);
+        const valueOk = expectedMatches(expectedVb.value, actualVb.value);
         const typeOk =
           expectedVb.value_type === undefined ||
           expectedVb.value_type === null ||

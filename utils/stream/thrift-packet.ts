@@ -144,10 +144,10 @@ interface LLCOptions {
 }
 
 interface VarbindOptions {
-  /** 点分形式 OID，如 "1.3.6.1.2.1.1.1.0" */
-  oid?: string;
-  /** 值字符串：INTEGER 为十进制数；OCTET STRING 为 UTF-8 文本 */
-  value?: string;
+  /** 点分形式 OID，如 "1.3.6.1.2.1.1.1.0"；期望值可用正则匹配 */
+  oid?: string | RegExp;
+  /** 值字符串：INTEGER 为十进制数；OCTET STRING 为 UTF-8 文本；期望值可用正则匹配 */
+  value?: string | RegExp;
   /** 0/缺省=无值(GET 用)，2=INTEGER，4=OCTET STRING，5=NULL，6=OID */
   value_type?: number;
 }

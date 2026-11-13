@@ -105,7 +105,7 @@ test("配置 LDP 后邻居进入 OPERATIONAL", async () => {
 
 ## 3. TestHelper 动作 API
 
-所有方法都返回 `this`，执行顺序 = 注册顺序。`X` 可替换为 `A/B/C/D`（对应 `DutIdx`）。
+所有方法都返回 `this`，执行顺序 = 注册顺序。`X` 可替换为 `A/B/C/D/E/F/G/H/I/J/K/L`（对应 `DutIdx`）。
 
 | 分类 | 方法 | 说明 |
 |---|---|---|
@@ -118,11 +118,11 @@ test("配置 LDP 后邻居进入 OPERATIONAL", async () => {
 | 延时 | `sleep(ms)` | 固定等待，**优先用就绪等待**（见 §5） |
 
 通用（非便捷）形式：`ExecConfigDut(idx, cmds)`、`ExecRetMatchDut(idx, cmd, expect, notMatch?)` 等，
-`idx` 取 `DutIdx.A` ~ `DutIdx.H`。设备序号与 `Config.dut_list` 下标一一对应，越界会 fail-fast 报错。
+`idx` 取 `DutIdx.A` ~ `DutIdx.L`（最多 12 台）。设备序号与 `Config.dut_list` 下标一一对应，越界会 fail-fast 报错。
 
 ### 设备端口与占位符
 
-- `Port.A/B/C/D`（值形如 `<PortA>`）是**端口占位符**，命令字符串里直接写
+- `Port.A/B/C/D/E/F`（值形如 `<PortA>`）是**端口占位符**，DUT 最多支持 6 个端口；命令字符串里直接写
   `` `interface ${Port.A}` ``，执行前会按当前 DUT 的 `portList` 替换为真实端口名。
 - 流量收发端口使用 `RenixPort.A/B/C/D`（`StreamPort`），与 DUT 端口无关。
 

@@ -344,6 +344,109 @@ export class LinkConstraint {
   }
 
   /**
+   * 四设备全互联（Full Mesh），任意两台设备之间均有一条独立链路：
+   *
+   *   A-B: DUTA PortA <=> DUTB PortA
+   *   A-C: DUTA PortB <=> DUTC PortA
+   *   A-D: DUTA PortC <=> DUTD PortA
+   *   B-C: DUTB PortB <=> DUTC PortB
+   *   B-D: DUTB PortC <=> DUTD PortB
+   *   C-D: DUTC PortC <=> DUTD PortC
+   *
+   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
+   *
+   *          DUTB          DUTC          DUTD
+   *   DUTA  PortA-PortA   PortB-PortA   PortC-PortA
+   *   DUTB                PortB-PortB   PortC-PortB
+   *   DUTC                              PortC-PortC
+   *
+   *   拓扑形状（每一条边都是一对一的点对点链路）：
+   *
+   *        DUTA --------- DUTB
+   *          | \        / |
+   *          |   \    /   |
+   *          |     \/     |
+   *          |     /\     |
+   *          |   /    \   |
+   *          | /        \ |
+   *        DUTD --------- DUTC
+   */
+  static get four_devices_topo_links_type_4(): TopoLinks {
+    return cached("four_devices_topo_links_type_4", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("A", "B"), dut("C", "A")),
+        link(dut("A", "C"), dut("D", "A")),
+        link(dut("B", "B"), dut("C", "B")),
+        link(dut("B", "C"), dut("D", "B")),
+        link(dut("C", "C"), dut("D", "C")),
+      ),
+    );
+  }
+
+  /**
+   * 四设备 RFC 6571 Figure 2 Triangle 原图：
+   *
+   *   C1 = DUTA, C2 = DUTB, E1 = DUTC, E2 = DUTD
+   *
+   *   A-B: C1 PortA <=> C2 PortA
+   *   A-C: C1 PortB <=> E1 PortA
+   *   B-C: C2 PortB <=> E1 PortB
+   *   A-D: C1 PortC <=> E2 PortA
+   *   B-D: C2 PortC <=> E2 PortB
+   *
+   *        C1 = DUTA ---- DUTB = C2
+   *          | \          / |
+   *          |   \      /   |
+   *          |     \  /     |
+   *          |     /  \     |
+   *          |   /      \   |
+   *          | /          \ |
+   *        E1 = DUTC ---- DUTD = E2
+   */
+  static get four_devices_topo_links_type_5(): TopoLinks {
+    return cached("four_devices_topo_links_type_5", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("A", "B"), dut("C", "A")),
+        link(dut("B", "B"), dut("C", "B")),
+        link(dut("A", "C"), dut("D", "A")),
+        link(dut("B", "C"), dut("D", "B")),
+      ),
+    );
+  }
+
+  /**
+   * 十二设备环形拓扑，用于验证 DUT A~L 的端点解析和 12 设备建链能力。
+   * 每台设备使用两个端口，形成一条闭合环：
+   *
+   *   A -- B -- C -- D -- E -- F
+   *   |                        |
+   *   L -- K -- J -- I -- H -- G
+   *
+   * 端口约定：顺时针方向使用本端 PortA/PortB：
+   *   A PortA -> B PortA, B PortB -> C PortA, ..., L PortB -> A PortB
+   */
+  static get twelve_devices_topo_links_type_1(): TopoLinks {
+    return cached("twelve_devices_topo_links_type_1", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("B", "B"), dut("C", "A")),
+        link(dut("C", "B"), dut("D", "A")),
+        link(dut("D", "B"), dut("E", "A")),
+        link(dut("E", "B"), dut("F", "A")),
+        link(dut("F", "B"), dut("G", "A")),
+        link(dut("G", "B"), dut("H", "A")),
+        link(dut("H", "B"), dut("I", "A")),
+        link(dut("I", "B"), dut("J", "A")),
+        link(dut("J", "B"), dut("K", "A")),
+        link(dut("K", "B"), dut("L", "A")),
+        link(dut("L", "B"), dut("A", "B")),
+      ),
+    );
+  }
+
+  /**
    *
    *    +--------+                   +--------+
    *    |  DUTE  |--PortA <=> PortA--|  DUTF  |
@@ -420,6 +523,40 @@ export class LinkConstraint {
 
         link(dut("C", "C"), dut("F", "A")),
         link(dut("C", "D"), dut("F", "B")),
+      ),
+    );
+  }
+
+  /**
+   * 六设备 RFC 8518 Figure 2 MHP 拓扑：
+   *
+   *   S = DUTA, N1 = DUTB, N2 = DUTC, B = DUTD, E = DUTE, F = DUTF
+   *
+   *   S-N2: DUTA PortA <=> DUTC PortA
+   *   S-B:  DUTA PortB <=> DUTD PortA
+   *   S-N1: DUTA PortC <=> DUTB PortA
+   *   N1-E: DUTB PortB <=> DUTE PortA
+   *   N2-B: DUTC PortB <=> DUTD PortB
+   *   B-F:  DUTD PortC <=> DUTF PortA
+   *   E-F:  DUTE PortB <=> DUTF PortB
+   *
+   *            S
+   *          / | \
+   *         /  |  \
+   *       N1   N2  B
+   *        \   /    \
+   *         E------ F
+   */
+  static get six_devices_topo_links_type_3(): TopoLinks {
+    return cached("six_devices_topo_links_type_3", () =>
+      topo(
+        link(dut("A", "A"), dut("C", "A")),
+        link(dut("A", "B"), dut("D", "A")),
+        link(dut("A", "C"), dut("B", "A")),
+        link(dut("B", "B"), dut("E", "A")),
+        link(dut("C", "B"), dut("D", "B")),
+        link(dut("D", "C"), dut("F", "A")),
+        link(dut("E", "B"), dut("F", "B")),
       ),
     );
   }

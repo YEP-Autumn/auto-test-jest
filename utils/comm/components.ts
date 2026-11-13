@@ -443,7 +443,9 @@ export function replaceCmdTemplate(configs: string, dut: Dut): string {
       .replace(new RegExp(Port.A, "g"), dut.getPortList()[0] ?? Port.A)
       .replace(new RegExp(Port.B, "g"), dut.getPortList()[1] ?? Port.B)
       .replace(new RegExp(Port.C, "g"), dut.getPortList()[2] ?? Port.C)
-      .replace(new RegExp(Port.D, "g"), dut.getPortList()[3] ?? Port.D);
+      .replace(new RegExp(Port.D, "g"), dut.getPortList()[3] ?? Port.D)
+      .replace(new RegExp(Port.E, "g"), dut.getPortList()[4] ?? Port.E)
+      .replace(new RegExp(Port.F, "g"), dut.getPortList()[5] ?? Port.F);
 
   return repl(configs);
 }

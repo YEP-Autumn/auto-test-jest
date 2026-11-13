@@ -28,7 +28,7 @@ export let DeviceBRouteMac: string;
 export let DeviceCRouteMac: string;
 export let DeviceDRouteMac: string;
 
-/** DUT 索引，与 Config.dut_list / this.dut_list 的下标一一对应 */
+/** DUT 索引，与 Config.dut_list / this.dut_list 的下标一一对应（最多 12 台） */
 export enum DutIdx {
   A = 0,
   B = 1,
@@ -38,6 +38,10 @@ export enum DutIdx {
   F = 5,
   G = 6,
   H = 7,
+  I = 8,
+  J = 9,
+  K = 10,
+  L = 11,
 }
 
 export class TestHelper {
@@ -252,6 +256,38 @@ export class TestHelper {
     return this.ExecConfigDut(DutIdx.D, config);
   }
 
+  ExecConfigDutE(config: string[]) {
+    return this.ExecConfigDut(DutIdx.E, config);
+  }
+
+  ExecConfigDutF(config: string[]) {
+    return this.ExecConfigDut(DutIdx.F, config);
+  }
+
+  ExecConfigDutG(config: string[]) {
+    return this.ExecConfigDut(DutIdx.G, config);
+  }
+
+  ExecConfigDutH(config: string[]) {
+    return this.ExecConfigDut(DutIdx.H, config);
+  }
+
+  ExecConfigDutI(config: string[]) {
+    return this.ExecConfigDut(DutIdx.I, config);
+  }
+
+  ExecConfigDutJ(config: string[]) {
+    return this.ExecConfigDut(DutIdx.J, config);
+  }
+
+  ExecConfigDutK(config: string[]) {
+    return this.ExecConfigDut(DutIdx.K, config);
+  }
+
+  ExecConfigDutL(config: string[]) {
+    return this.ExecConfigDut(DutIdx.L, config);
+  }
+
   /** Clean Config */
   CleanConfigDut(idx: DutIdx, config: string[]) {
     const dut = this.getDut(idx);
@@ -274,6 +310,38 @@ export class TestHelper {
 
   CleanConfigDutD(config: string[]) {
     return this.CleanConfigDut(DutIdx.D, config);
+  }
+
+  CleanConfigDutE(config: string[]) {
+    return this.CleanConfigDut(DutIdx.E, config);
+  }
+
+  CleanConfigDutF(config: string[]) {
+    return this.CleanConfigDut(DutIdx.F, config);
+  }
+
+  CleanConfigDutG(config: string[]) {
+    return this.CleanConfigDut(DutIdx.G, config);
+  }
+
+  CleanConfigDutH(config: string[]) {
+    return this.CleanConfigDut(DutIdx.H, config);
+  }
+
+  CleanConfigDutI(config: string[]) {
+    return this.CleanConfigDut(DutIdx.I, config);
+  }
+
+  CleanConfigDutJ(config: string[]) {
+    return this.CleanConfigDut(DutIdx.J, config);
+  }
+
+  CleanConfigDutK(config: string[]) {
+    return this.CleanConfigDut(DutIdx.K, config);
+  }
+
+  CleanConfigDutL(config: string[]) {
+    return this.CleanConfigDut(DutIdx.L, config);
   }
 
   /** Exec Match */
@@ -323,6 +391,70 @@ export class TestHelper {
     notMatch: boolean = false,
   ) {
     return this.ExecRetMatchDut(DutIdx.D, config, expect, notMatch);
+  }
+
+  ExecRetMatchDutE(
+    config: string,
+    expect: string | RegExp | (string | RegExp)[],
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIdx.E, config, expect, notMatch);
+  }
+
+  ExecRetMatchDutF(
+    config: string,
+    expect: string | RegExp | (string | RegExp)[],
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIdx.F, config, expect, notMatch);
+  }
+
+  ExecRetMatchDutG(
+    config: string,
+    expect: string | RegExp | (string | RegExp)[],
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIdx.G, config, expect, notMatch);
+  }
+
+  ExecRetMatchDutH(
+    config: string,
+    expect: string | RegExp | (string | RegExp)[],
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIdx.H, config, expect, notMatch);
+  }
+
+  ExecRetMatchDutI(
+    config: string,
+    expect: string | RegExp | (string | RegExp)[],
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIdx.I, config, expect, notMatch);
+  }
+
+  ExecRetMatchDutJ(
+    config: string,
+    expect: string | RegExp | (string | RegExp)[],
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIdx.J, config, expect, notMatch);
+  }
+
+  ExecRetMatchDutK(
+    config: string,
+    expect: string | RegExp | (string | RegExp)[],
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIdx.K, config, expect, notMatch);
+  }
+
+  ExecRetMatchDutL(
+    config: string,
+    expect: string | RegExp | (string | RegExp)[],
+    notMatch: boolean = false,
+  ) {
+    return this.ExecRetMatchDut(DutIdx.L, config, expect, notMatch);
   }
 
   ReadyCheckDut(
@@ -376,6 +508,78 @@ export class TestHelper {
     return this.ReadyCheckDut(DutIdx.D, config, expect, timeout, notMatch);
   }
 
+  ReadyCheckDutE(
+    config: string,
+    expect: string | RegExp,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
+    return this.ReadyCheckDut(DutIdx.E, config, expect, timeout, notMatch);
+  }
+
+  ReadyCheckDutF(
+    config: string,
+    expect: string | RegExp,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
+    return this.ReadyCheckDut(DutIdx.F, config, expect, timeout, notMatch);
+  }
+
+  ReadyCheckDutG(
+    config: string,
+    expect: string | RegExp,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
+    return this.ReadyCheckDut(DutIdx.G, config, expect, timeout, notMatch);
+  }
+
+  ReadyCheckDutH(
+    config: string,
+    expect: string | RegExp,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
+    return this.ReadyCheckDut(DutIdx.H, config, expect, timeout, notMatch);
+  }
+
+  ReadyCheckDutI(
+    config: string,
+    expect: string | RegExp,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
+    return this.ReadyCheckDut(DutIdx.I, config, expect, timeout, notMatch);
+  }
+
+  ReadyCheckDutJ(
+    config: string,
+    expect: string | RegExp,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
+    return this.ReadyCheckDut(DutIdx.J, config, expect, timeout, notMatch);
+  }
+
+  ReadyCheckDutK(
+    config: string,
+    expect: string | RegExp,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
+    return this.ReadyCheckDut(DutIdx.K, config, expect, timeout, notMatch);
+  }
+
+  ReadyCheckDutL(
+    config: string,
+    expect: string | RegExp,
+    timeout: number = 30 * 1000,
+    notMatch: boolean = false,
+  ) {
+    return this.ReadyCheckDut(DutIdx.L, config, expect, timeout, notMatch);
+  }
+
   sleep(milliseconds: number) {
     this.actuator.push(new Sleep(milliseconds));
     return this;
@@ -421,5 +625,61 @@ export class TestHelper {
     exec_clean: boolean = false,
   ) {
     return this.ExecCustomDut(DutIdx.D, cb, exec_clean);
+  }
+
+  ExecCustomDutE(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
+    return this.ExecCustomDut(DutIdx.E, cb, exec_clean);
+  }
+
+  ExecCustomDutF(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
+    return this.ExecCustomDut(DutIdx.F, cb, exec_clean);
+  }
+
+  ExecCustomDutG(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
+    return this.ExecCustomDut(DutIdx.G, cb, exec_clean);
+  }
+
+  ExecCustomDutH(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
+    return this.ExecCustomDut(DutIdx.H, cb, exec_clean);
+  }
+
+  ExecCustomDutI(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
+    return this.ExecCustomDut(DutIdx.I, cb, exec_clean);
+  }
+
+  ExecCustomDutJ(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
+    return this.ExecCustomDut(DutIdx.J, cb, exec_clean);
+  }
+
+  ExecCustomDutK(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
+    return this.ExecCustomDut(DutIdx.K, cb, exec_clean);
+  }
+
+  ExecCustomDutL(
+    cb: (h: DutHandle) => Promise<boolean> | boolean,
+    exec_clean: boolean = false,
+  ) {
+    return this.ExecCustomDut(DutIdx.L, cb, exec_clean);
   }
 }

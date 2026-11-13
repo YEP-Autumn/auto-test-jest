@@ -12,6 +12,8 @@ export enum Port {
   B = "<PortB>",
   C = "<PortC>",
   D = "<PortD>",
+  E = "<PortE>",
+  F = "<PortF>",
 }
 
 export const STR_DEBUG_INFO: string = chalk.bgBlue.white("INFO: ");

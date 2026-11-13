@@ -28,8 +28,8 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 
 - **TestHelper 测试 DSL**：以链式调用组装「配置 / 校验 / 等待 / 流量发送 / 抓包」等动作，
   一次性 `startTest()` 顺序执行并汇总结果。
-- **多设备支持**：`DutIdx.A` ~ `DutIdx.H` 对应 `Config.dut_list`，`ExecConfigDutA/B/C/D` 等
-  便捷方法覆盖常见场景。
+- **多设备支持**：`DutIdx.A` ~ `DutIdx.L` 对应 `Config.dut_list`（最多 12 台），
+  `ExecConfigDutA` ~ `ExecConfigDutL` 等便捷方法覆盖常见场景。
 - **Telnet / SSH 双传输**：`Dut` 依据 `protocol` 字段自动选择 `TelnetConnection` 或
   `SshConnection`，对上暴露统一的 `exec` / `safeExec` 接口。
 - **声明式拓扑**：用 `dut("A", "D")`、`renix("A")`、`link(...)`、`topo(...)` 描述连线，
@@ -241,8 +241,8 @@ npm run list:cases -- --profile mpls --suite regression --status skip,failing
 
 ### DUT 与端口映射（`utils/comm/config.ts`）
 
-- `Config.dut_list` 决定被测设备清单，下标与 `DutIdx.A`(0) ~ `DutIdx.H`(7) 一一对应。
-- 每台 DUT 通过 `portList`（如 `eth-0-1 ~ eth-0-4`）和 `portMapping`
+- `Config.dut_list` 决定被测设备清单，下标与 `DutIdx.A`(0) ~ `DutIdx.L`(11) 一一对应，最多支持 12 台。
+- 每台 DUT 通过 `portList`（如 `eth-0-1 ~ eth-0-4`，最多支持 6 个端口）和 `portMapping`
   （`{ device, if_index }`，指向拓扑/流量收发后端里的真实端口）描述物理连接。
 - `Config.Renix.portList` 定义测试仪/Scapy 端口，`RenixPort.A/B/C/D` 是常用端口的快捷方式。
 - `Config.defaultTopoName`（默认 `auto-test-topo`）：`TestHelper.init()` 会先删除同名旧拓扑再重建。

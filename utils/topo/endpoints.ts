@@ -9,11 +9,23 @@
 import { Config } from "../comm/config";
 import { PortMapping } from "./types";
 
-/** 逻辑设备名，对应 Config.dut_list 的下标 A=0 .. F=5 */
-export type DutName = "A" | "B" | "C" | "D" | "E" | "F";
+/** 逻辑设备名，对应 Config.dut_list 的下标 A=0 .. L=11（最多 12 台） */
+export type DutName =
+  | "A"
+  | "B"
+  | "C"
+  | "D"
+  | "E"
+  | "F"
+  | "G"
+  | "H"
+  | "I"
+  | "J"
+  | "K"
+  | "L";
 
-/** 逻辑端口名，对应 portMapping 的下标 A=0 .. D=3 */
-export type PortName = "A" | "B" | "C" | "D";
+/** 逻辑端口名，对应 portMapping 的下标 A=0 .. F=5（DUT 最多支持 6 个端口） */
+export type PortName = "A" | "B" | "C" | "D" | "E" | "F";
 
 const DUT_INDEX: Record<DutName, number> = {
   A: 0,
@@ -22,6 +34,12 @@ const DUT_INDEX: Record<DutName, number> = {
   D: 3,
   E: 4,
   F: 5,
+  G: 6,
+  H: 7,
+  I: 8,
+  J: 9,
+  K: 10,
+  L: 11,
 };
 
 const PORT_INDEX: Record<PortName, number> = {
@@ -29,6 +47,8 @@ const PORT_INDEX: Record<PortName, number> = {
   B: 1,
   C: 2,
   D: 3,
+  E: 4,
+  F: 5,
 };
 
 /** 拓扑中的一端：DUT 的某个端口，或 Renix 的某个端口 */

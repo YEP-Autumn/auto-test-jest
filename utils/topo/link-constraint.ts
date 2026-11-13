@@ -345,7 +345,7 @@ export class LinkConstraint {
   }
 
   /**
-   * 四设备全互联（Full Mesh），任意两台设备之间均有一条独立链路：
+   * 四设备全互联拓扑，任意两台设备之间均有一条独立链路：
    *
    *   A-B: DUTA PortA <=> DUTB PortA
    *   A-C: DUTA PortB <=> DUTC PortA
@@ -386,24 +386,28 @@ export class LinkConstraint {
   }
 
   /**
-   * 四设备 RFC 6571 Figure 2 Triangle 原图：
+   * 四设备拓扑：
    *
-   *   C1 = DUTA, C2 = DUTB, E1 = DUTC, E2 = DUTD
+   *   A-B: DUTA PortA <=> DUTB PortA
+   *   A-C: DUTA PortB <=> DUTC PortA
+   *   B-C: DUTB PortB <=> DUTC PortB
+   *   A-D: DUTA PortC <=> DUTD PortA
+   *   B-D: DUTB PortC <=> DUTD PortB
    *
-   *   A-B: C1 PortA <=> C2 PortA
-   *   A-C: C1 PortB <=> E1 PortA
-   *   B-C: C2 PortB <=> E1 PortB
-   *   A-D: C1 PortC <=> E2 PortA
-   *   B-D: C2 PortC <=> E2 PortB
+   *        DUTA --------- DUTB
+   *          | \        / |
+   *          |   \    /   |
+   *          |     \/     |
+   *          |     /\     |
+   *          |   /    \   |
+   *          | /        \ |
+   *        DUTC          DUTD
    *
-   *        C1 = DUTA ---- DUTB = C2
-   *          | \          / |
-   *          |   \      /   |
-   *          |     \  /     |
-   *          |     /  \     |
-   *          |   /      \   |
-   *          | /          \ |
-   *        E1 = DUTC ---- DUTD = E2
+   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
+   *
+   *          DUTB          DUTC          DUTD
+   *   DUTA  PortA-PortA   PortB-PortA   PortC-PortA
+   *   DUTB                PortB-PortB   PortC-PortB
    */
   static get four_devices_topo_links_type_5(): TopoLinks {
     return cached("four_devices_topo_links_type_5", () =>
@@ -418,8 +422,7 @@ export class LinkConstraint {
   }
 
   /**
-   * 十二设备环形拓扑，用于验证 DUT A~L 的端点解析和 12 设备建链能力。
-   * 每台设备使用两个端口，形成一条闭合环：
+   * 十二设备环形拓扑。每台设备使用两个端口，形成一条闭合环：
    *
    *   A -- B -- C -- D -- E -- F
    *   |                        |
@@ -529,24 +532,32 @@ export class LinkConstraint {
   }
 
   /**
-   * 六设备 RFC 8518 Figure 2 MHP 拓扑：
+   * 六设备拓扑：
    *
-   *   S = DUTA, N1 = DUTB, N2 = DUTC, B = DUTD, E = DUTE, F = DUTF
+   *   A-C: DUTA PortA <=> DUTC PortA
+   *   A-D: DUTA PortB <=> DUTD PortA
+   *   A-B: DUTA PortC <=> DUTB PortA
+   *   B-E: DUTB PortB <=> DUTE PortA
+   *   C-D: DUTC PortB <=> DUTD PortB
+   *   D-F: DUTD PortC <=> DUTF PortA
+   *   E-F: DUTE PortB <=> DUTF PortB
    *
-   *   S-N2: DUTA PortA <=> DUTC PortA
-   *   S-B:  DUTA PortB <=> DUTD PortA
-   *   S-N1: DUTA PortC <=> DUTB PortA
-   *   N1-E: DUTB PortB <=> DUTE PortA
-   *   N2-B: DUTC PortB <=> DUTD PortB
-   *   B-F:  DUTD PortC <=> DUTF PortA
-   *   E-F:  DUTE PortB <=> DUTF PortB
+   *              DUTA
+   *             / | \
+   *            /  |  \
+   *        DUTB  DUTC--DUTD
+   *          |           |
+   *          |           |
+   *        DUTE---------DUTF
    *
-   *            S
-   *          / | \
-   *         /  |  \
-   *       N1   N2  B
-   *        \   /    \
-   *         E------ F
+   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
+   *
+   *          DUTB          DUTC          DUTD          DUTE          DUTF
+   *   DUTA  PortC-PortA   PortA-PortA   PortB-PortA   —             —
+   *   DUTB                —             —             PortB-PortA   —
+   *   DUTC                              PortB-PortB   —             —
+   *   DUTD                                            —             PortC-PortA
+   *   DUTE                                                          PortB-PortB
    */
   static get six_devices_topo_links_type_3(): TopoLinks {
     return cached("six_devices_topo_links_type_3", () =>

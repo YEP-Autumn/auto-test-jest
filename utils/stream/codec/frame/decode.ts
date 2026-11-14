@@ -3,14 +3,14 @@
  *
  * 发送方向不再需要本地编码（走 packet.proto headers），这里只负责把
  * CaptureService.ReadByIndex 返回的原始帧解析成和 PacketBuilder 一致的层结构，
- * 供 packet-utils 的 match* 直接复用。
+ * 供 packet/match 的 match* 直接复用。
  *
  * 当前覆盖：Ethernet / VLAN / IPv4 / IPv6 / TCP / UDP / ICMP / ARP / Dot3 / LLC，
  * 以及 IPv4/IPv6 之上常见端口的 SNMP v1/v2c/v3（用于 Storm Control Trap 用例）。
  */
 
-import { bufferToIpv4, bufferToIpv6, bufferToMac } from "./address";
-import { FieldType, PacketLayer } from "../packet/model";
+import { bufferToIpv4, bufferToIpv6, bufferToMac } from "../address";
+import { FieldType, PacketLayer } from "../../packet/model";
 
 const ETHERTYPE_IPV4 = 0x0800;
 const ETHERTYPE_IPV6 = 0x86dd;
@@ -67,7 +67,10 @@ function decodeTcp(buf: Buffer): PacketLayer {
       window: buf.readUInt16BE(14),
       chksum: buf.readUInt16BE(16),
       urgptr: buf.readUInt16BE(18),
-      options: dataOffset > 20 ? buf.subarray(20, dataOffset).toString("hex") : undefined,
+      options:
+        dataOffset > 20
+          ? buf.subarray(20, dataOffset).toString("hex")
+          : undefined,
     },
   });
 }
@@ -99,13 +102,25 @@ function decodeArp(buf: Buffer): PacketLayer {
   const hwlen = buf.length >= 5 ? buf[4] : 6;
   const plen = buf.length >= 6 ? buf[5] : 4;
   let off = 8;
-  const hwsrc = hwlen === 6 ? bufferToMac(buf, off) : buf.subarray(off, off + hwlen).toString("hex");
+  const hwsrc =
+    hwlen === 6
+      ? bufferToMac(buf, off)
+      : buf.subarray(off, off + hwlen).toString("hex");
   off += hwlen;
-  const psrc = plen === 4 ? bufferToIpv4(buf, off) : buf.subarray(off, off + plen).toString("hex");
+  const psrc =
+    plen === 4
+      ? bufferToIpv4(buf, off)
+      : buf.subarray(off, off + plen).toString("hex");
   off += plen;
-  const hwdst = hwlen === 6 ? bufferToMac(buf, off) : buf.subarray(off, off + hwlen).toString("hex");
+  const hwdst =
+    hwlen === 6
+      ? bufferToMac(buf, off)
+      : buf.subarray(off, off + hwlen).toString("hex");
   off += hwlen;
-  const pdst = plen === 4 ? bufferToIpv4(buf, off) : buf.subarray(off, off + plen).toString("hex");
+  const pdst =
+    plen === 4
+      ? bufferToIpv4(buf, off)
+      : buf.subarray(off, off + plen).toString("hex");
   return layer(FieldType.ARP, {
     arp: {
       hwtype: buf.readUInt16BE(0),
@@ -233,7 +248,8 @@ function decodeDot3(frame: Buffer, length: number): PacketLayer[] {
   const dsap = frame[offset];
   const ssap = frame[offset + 1];
   const controlLen = (dsap & 0x03) === 0x03 ? 2 : 1;
-  const ctrl = controlLen === 1 ? frame[offset + 2] : frame.readUInt16BE(offset + 2);
+  const ctrl =
+    controlLen === 1 ? frame[offset + 2] : frame.readUInt16BE(offset + 2);
   layers.push(
     layer(FieldType.LLC, {
       llc: { dsap, ssap, ctrl },
@@ -242,7 +258,13 @@ function decodeDot3(frame: Buffer, length: number): PacketLayer[] {
   offset += 2 + controlLen;
 
   // SNAP：AA AA 03 + OUI(3) + PID(2)；PID 即内层 ethertype
-  if (dsap === 0xaa && ssap === 0xaa && controlLen === 1 && ctrl === 0x03 && offset + 5 <= end) {
+  if (
+    dsap === 0xaa &&
+    ssap === 0xaa &&
+    controlLen === 1 &&
+    ctrl === 0x03 &&
+    offset + 5 <= end
+  ) {
     const oui = frame.readUIntBE(offset, 3);
     const pid = frame.readUInt16BE(offset + 3);
     layers.push(
@@ -335,12 +357,18 @@ function berOid(buf: Buffer, tlv: BerTlv): string {
   return parts.join(".");
 }
 
-function berValue(buf: Buffer, tlv: BerTlv): { value: string; value_type: number } {
+function berValue(
+  buf: Buffer,
+  tlv: BerTlv,
+): { value: string; value_type: number } {
   switch (tlv.tag) {
     case 0x02:
       return { value: String(berInt(buf, tlv)), value_type: 2 };
     case 0x04:
-      return { value: buf.subarray(tlv.start, tlv.end).toString("utf8"), value_type: 4 };
+      return {
+        value: buf.subarray(tlv.start, tlv.end).toString("utf8"),
+        value_type: 4,
+      };
     case 0x05:
       return { value: "", value_type: 5 };
     case 0x06:
@@ -367,7 +395,9 @@ function parseVarbinds(buf: Buffer, list: BerTlv | undefined): any[] {
     if (children.length < 1) continue;
     const oid = berOid(buf, children[0]);
     const valueTlv = children[1];
-    const value = valueTlv ? berValue(buf, valueTlv) : { value: "", value_type: 0 };
+    const value = valueTlv
+      ? berValue(buf, valueTlv)
+      : { value: "", value_type: 0 };
     result.push({ oid, value: value.value, value_type: value.value_type });
   }
   return result;
@@ -389,6 +419,13 @@ function parsePdu(buf: Buffer, pdu: BerTlv): any {
   }
   const children = berChildren(buf, pdu);
   if (children[0]) snmp.request_id = berInt(buf, children[0]);
+  if (pdu.tag === 0xa5) {
+    // GetBulk：request-id / non-repeaters / max-repetitions / varbinds
+    if (children[1]) snmp.non_repeaters = berInt(buf, children[1]);
+    if (children[2]) snmp.max_repetitions = berInt(buf, children[2]);
+    snmp.varbinds = parseVarbinds(buf, children[3]);
+    return snmp;
+  }
   if (children[1]) snmp.error = berInt(buf, children[1]);
   if (children[2]) snmp.error_index = berInt(buf, children[2]);
   snmp.varbinds = parseVarbinds(buf, children[3]);
@@ -439,10 +476,18 @@ function decodeSnmpFromUdp(
   udpLayer: PacketLayer,
 ): PacketLayer | null {
   const udp = udpLayer.field.udp;
-  const isSnmpPort = udp.sport === 161 || udp.dport === 161 || udp.sport === 162 || udp.dport === 162;
-  const isSnmpLike = udpPayload.length > 2 && udpPayload[0] === 0x30;
+  const isSnmpPort =
+    udp.sport === 161 ||
+    udp.dport === 161 ||
+    udp.sport === 162 ||
+    udp.dport === 162;
+  // udpPayload 是完整 UDP 数据报，SNMP 的 SEQUENCE 在 8B 头之后。
+  const isSnmpLike = udpPayload.length > 9 && udpPayload[8] === 0x30;
   if (!isSnmpPort && !isSnmpLike) return null;
-  const payload = udpPayload.subarray(8, Math.min(udpPayload.length, udp.len || udpPayload.length));
+  const payload = udpPayload.subarray(
+    8,
+    Math.min(udpPayload.length, udp.len || udpPayload.length),
+  );
   try {
     return decodeSnmp(payload);
   } catch {
@@ -476,7 +521,10 @@ export function decodeFrame(frame: Buffer): PacketLayer[] {
 
     let offset = 14;
     let etherType = etherTypeOrLen;
-    while ((etherType === ETHERTYPE_VLAN || etherType === ETHERTYPE_QINQ) && offset + 4 <= frame.length) {
+    while (
+      (etherType === ETHERTYPE_VLAN || etherType === ETHERTYPE_QINQ) &&
+      offset + 4 <= frame.length
+    ) {
       const tci = frame.readUInt16BE(offset);
       const innerType = frame.readUInt16BE(offset + 2);
       layers.push(

@@ -2,11 +2,11 @@
  * 与具体打流/抓包后端无关的报文模型与构建器。
  *
  * 这里只描述"要构造什么报文"，不负责序列化：
- * - Renix HTTP 后端用 codec/renix-thrift 转成 thrift packet；
- * - streamcontrol gRPC 后端用 codec/raw-frame 转成原始以太网帧/pcap。
+ * - Renix HTTP 后端用 codec/thrift/renix 转成 thrift packet；
+ * - streamcontrol gRPC 后端用 codec/frame/decode 转成原始以太网帧/pcap。
  *
  * 层对象的结构保持与原 thrift 模型一致（{ type, field: { ether | vlan | ... } }），
- * 因此 packet-utils 里的 match* / formatPktList 可以继续直接复用。
+ * 因此 packet/match 与 packet/format 可以继续直接复用。
  */
 
 /** 协议层类型，数值与原 thrift FieldType 保持一致 */
@@ -238,11 +238,14 @@ export function normalizeMacAddress(macAddress: string): string {
 /**
  * 归一化 SNAP OUI 为 24-bit 数字，便于期望值与抓包解码直接比较。
  */
-export function normalizeOui(oui: number | Buffer | string | undefined): number {
+export function normalizeOui(
+  oui: number | Buffer | string | undefined,
+): number {
   if (oui === undefined || oui === null) return 0;
   if (typeof oui === "number") return oui & 0xffffff;
   if (Buffer.isBuffer(oui)) {
-    if (oui.length > 3) throw new Error(`SNAP OUI 必须是 3 字节: ${oui.length}`);
+    if (oui.length > 3)
+      throw new Error(`SNAP OUI 必须是 3 字节: ${oui.length}`);
     let value = 0;
     for (const byte of oui) value = (value << 8) | byte;
     return value & 0xffffff;

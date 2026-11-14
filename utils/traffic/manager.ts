@@ -11,9 +11,9 @@
  */
 
 import type { TrafficBackend } from "../stream/backend/types";
-import { HttpTrafficTransport } from "../stream/backend/http-transport";
-import { RenixHttpBackend } from "../stream/backend/renix-http";
-import { StreamControlBackend } from "../stream/backend/streamcontrol";
+import { HttpTrafficTransport } from "../stream/backend/shared/http-transport";
+import { RenixHttpBackend } from "../stream/backend/http/renix-http";
+import { StreamControlBackend } from "../stream/backend/grpc/stream-linux";
 import type { CapturedPacket, SendOptions } from "../stream/backend/types";
 import type { PacketSpec } from "../stream/packet/model";
 import {

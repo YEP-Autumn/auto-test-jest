@@ -9,15 +9,15 @@
  * 运行时/生成代码带进纯 gRPC 环境。
  */
 
-import { PacketLayer } from "../packet/model";
+import { PacketLayer } from "../../packet/model";
 import {
   ThriftFullProtocolType,
   ThriftPresets,
   ThriftProtocolFactory,
-} from "../thrift-protocol.factory";
+} from "./protocol-factory";
 
 export const thrift = require("thrift");
-const ttypes = require("../../rpc/gen-nodejs/packet_types");
+const ttypes = require("../../../rpc/gen-nodejs/packet_types");
 
 // 兼容层：thrift js:node 生成的代码把 read/write 挂在 Symbol.for("read")/Symbol.for("write") 上，
 // 这里为所有生成的 struct 类补上普通的 read/write 别名，便于直接调用（如 packet.write(protocol)）。

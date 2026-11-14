@@ -16,7 +16,10 @@ export function macToBuffer(mac: string): Buffer {
       ? parts.map((p) => parseInt(p, 16))
       : parts
           .map((p) => p.padStart(4, "0"))
-          .flatMap((p) => [parseInt(p.slice(0, 2), 16), parseInt(p.slice(2, 4), 16)]);
+          .flatMap((p) => [
+            parseInt(p.slice(0, 2), 16),
+            parseInt(p.slice(2, 4), 16),
+          ]);
   if (bytes.some((b) => !Number.isInteger(b) || b < 0 || b > 255)) {
     throw new Error(`无效的 MAC 地址: ${mac}`);
   }

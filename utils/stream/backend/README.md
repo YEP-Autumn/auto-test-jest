@@ -13,7 +13,7 @@ PacketBuilder -> PacketSpec
              TrafficBackend
         ┌───────────┴────────────┐
  RenixHttpBackend        StreamControlBackend
- (codec/renix-thrift)     (codec/packet-headers + raw-frame)
+ (codec/thrift/renix)     (codec/grpc/headers + codec/frame)
 ```
 
 ## 后端选择
@@ -34,6 +34,8 @@ gRPC 相关环境变量：
 - `STREAM_CONTROL_TLS_INSECURE`（`true` 时跳过证书校验，仅测试环境）
 - `STREAM_CONTROL_TOKEN`（自动补 `Bearer ` 前缀）
 - `STREAM_CONTROL_DEBUG_YAML`（`true` 时打印下发的 blocks YAML）
+- `STREAM_CONTROL_STRUCTURED_PAYLOAD`（`true` 时启用 `payload: custom/blob`
+  新路径；当前引擎有 UAF，默认关闭并回退到原始帧）
 
 ## 当前状态
 
@@ -59,7 +61,7 @@ Renix 和 Scapy 共享 `HttpTrafficTransport`：登录、token、multipart 上�
 
 ```
 PacketSpec
-  -> codec/packet-headers：HeaderInstance + PacketFieldModifier
+  -> codec/grpc/headers：HeaderInstance + PacketFieldModifier
   -> 固定报文：TrafficService.Encode(headers) 得到真实帧
      -> stream.templateString 原样发送
   -> 带 modifier：退回落 YAML layers/fields 路径
@@ -100,32 +102,49 @@ TX 端口和抓包端口，并用 `RunService.StartTest` 启动，因此可以�
   已验证 Dot3+LLC+SNAP+IPv4+UDP 的 `len=36`、SNAP oui=0/pid=0x0800。
 - **Dot3 MAC modifier（已复测通过）**：走 `PacketFieldModifier`，source MAC
   从 `...bb` 递增到 `...c4`。
-- **Dot3 + RAW payload**：RAW 没有对应 HeaderType，仍用
-  `codec/raw-frame-encode` + `templateString`；带 modifier 时一帧一个 stream。
-  已验证 Dot3+LLC+SNAP+RAW 的 SNAP 层和 payload 都能匹配。
+- **地址 Random modifier（已复测通过）**：新引擎支持 MAC/IPv4/IPv6/BYTES
+  的 `kind=random`；`PacketModifierParam` 新增 `end_value`，Dot3 source MAC
+  在 `00:02:00:02:00:02 .. 00:02:00:02:00:0f` 内随机。
+- **Dot3 + RAW payload**：新网关支持 `payload: blob`，但当前引擎在
+  `RunService.StartTest` 路径存在 use-after-free（见下），所以默认仍用
+  `codec/frame/encode` + `templateString`；修复后可用
+  `STREAM_CONTROL_STRUCTURED_PAYLOAD=true` 切到 headers + blob。
+- **Ethernet + RAW payload**：同一个 payload 路径，默认同样会回退/报错；
+  不再静默把 `setRaw()` 当成协议层。
 - **SNMP v1/v2c Get/GetNext（已复测通过）**：`packet.proto` 新增的
   `HeaderType.SNMP` 是固定 43B 模板；`PacketBuilder.setSNMP` 的
-  version/community/first-varbind-oid 可映射到该模板，`Encode` 与
-  `PacketSender + PacketChecker` 均通过（抓包侧再走完整 SNMP BER 解码）。
-- **SNMP Trap（v2c/v3，已复测通过）**：Trap 不属于固定模板，仍用
-  `sendRawFrame` 注入原始 BER 帧；抓包解码 version/community/varbinds
-  与 `matchSNMP` 匹配。
+  version/community/first-varbind-oid 可映射到该模板，抓包侧可完整解码。
+- **SNMP 可变 PDU**：`codec/snmp.ts` 已能编码 v1/v2c 的 SET / Trap /
+  GetBulk / 多 varbind；但结构化 payload 路径同样被引擎 UAF 阻塞，默认
+  用 `templateString` 发送原始 BER。
+- **SNMP 解码端口**：已修正 UDP 端口不是 161/162 时的 SNMP 识别（之前误把
+  UDP 头的首字节当 BER SEQUENCE）。
 
 当前剩余问题：
 
-1. **SNMP HeaderType 只覆盖固定模板**：v1/v2c Get/GetNext、单 varbind、
-   community 固定 6B、OID 固定 8B；SET/TRAP/多 varbind 仍需要原始 BER 帧
-   或后续协议扩展。
-2. **HeaderInstance.options / proto_name 未接**：新 proto 支持 IPv4/TCP 选项
-   和动态类层名，backend 暂未使用。
-3. **Dot3 + RAW payload 仍走原始帧**：RAW payload 没有对应 HeaderType 字段模型；
-   普通 Dot3/LLC/SNAP 已走 headers。
-4. **BURST 内 gap / burst_count 未映射**：引擎 YAML 目前只接受
-   `mode/frames/duration_ms/rate`，没有 burst 内间隔字段；BURST 会被压平成
-   “总帧数 + 速率”，能力表里 `burstGap=false`。
+1. **引擎 payload UAF（阻塞新后端 1/2）**：`payload: custom/blob` 的
+   `custom` 内存在 `sl_load_report_free()` 后被 stream cfg 继续引用，
+   抓到帧的前 16B 会变成堆指针。2026-11-14 再次复测（网关已包含 burst
+   修复）：Dot3+RAW 10/10 仍错误、Ethernet+RAW 9/10 仍错误，说明目标
+   引擎还没有包含 `stream_build()` 里的 payload 深拷贝修复。修复代码在
+   `src/flow/stream.c` 的工作区改动中，提交并重新构建/部署后再打开
+   `STREAM_CONTROL_STRUCTURED_PAYLOAD`。
+2. **SNMP HeaderType 只覆盖固定模板**：v1/v2c Get/GetNext、单 varbind、
+   community 固定 6B、OID 固定 8B；SET/TRAP/多 varbind 走 BER payload。
+3. **HeaderInstance.options / proto_name 未接**：网关已验证支持 IPv4/TCP
+   选项（IHL/data_off 自动同步），但 `PacketBuilder` 还没有
+   `HeaderOption` 映射；`proto_name` 只对动态 `CUSTOM` 层有意义，当前没有
+   自定义层 API。
+4. **BURST 总帧数已生效，但 burst 内 gap 仍未映射**：2026-11-14 复测
+   `burst_size=5, burst_count=3` 抓到 15 帧；新引擎增加了 `combine`，
+   但 YAML 仍没有 `gap/gap_unit` 字段，所以 `burst_count` 只是被压平成
+   “总帧数 + 速率”，不是带间隔的多次 burst。
 5. **抓包性能**：停止抓包且帧数达到阈值后，`readCapture` 会走
    `Capture.Download -> FileService.Download -> pcap 解析`；否则仍用
    `ReadByIndex`。可用 `STREAM_CONTROL_BATCH_CAPTURE_MIN` 调整阈值。
+6. **抓包参数**：`startCapture(port)` 没有 options；backend 固定
+   `WRAP + 4MB + 65536 帧`。引擎支持 `maxBytes/maxFrames/snaplen`，但
+   没有 BPF 过滤。
 
 ### 其他实测问题
 
@@ -137,12 +156,17 @@ TX 端口和抓包端口，并用 `RunService.StartTest` 启动，因此可以�
 
 - `TrafficService.Encode(headers)` 已实现：本 backend 已用它预览固定帧，
   返回的 plain/VLAN 帧都正确。
-- `packet.proto` 新增 `DOT3` / `LLC` / `SNAP` / `SNMP` HeaderType，以及
-  `HeaderOption`（IPv4/TCP 选项）和 `HeaderInstance.proto_name`；字段数从
-  75 扩到 96。backend 已接 DOT3/LLC/SNMP 字段映射，HeaderOption 暂未使用。
+- `packet.proto` 新增 `DOT3` / `LLC` / `SNAP` / `SNMP` / IPv6 扩展头 /
+  `VXLAN` / `PPPOE` HeaderType，以及 `HeaderOption`（IPv4/TCP 选项）和
+  `HeaderInstance.proto_name`；字段数从 75 扩到 134。backend 已接
+  DOT3/LLC/SNAP/SNMP 字段映射；HeaderOption 已在网关验证通过，客户端映射待补。
+- `HeaderType.RAW` 现在会被网关明确拒绝：它不是协议层，只能用
+  `PayloadSpec custom/blob` 或整帧 `templateString`。
+- `PayloadType.BLOB` 已加入（只写一次 custom、剩余补零），用于 Dot3 LLC data；
+  但当前引擎 payload 生命周期有 UAF，暂不作为默认路径。
 - `HeaderInstance` 的增删层、`header_length`、`PayloadSpec`（cycle/incr/decr/
-  random/custom/PRBS）、`ErrorInjectionSpec`、`StreamTemplate.repeat_count`
-  已在网关侧接入；backend 目前只用到 headers 的层栈和字段，payload/error/repeat 还未接。
+  random/custom/blob/PRBS）、`ErrorInjectionSpec`、`StreamTemplate.repeat_count`
+  已在网关侧接入；backend 目前只用到 headers 的层栈和字段，error/repeat 还未接。
 - `ImportPcap` 单帧上限从 2048B 提升到 16000B（最多 64 帧）。
 - `ExtensionService` 已实现 7/10：`ListHeaderTypes` / `ListHeaderProperties` /
   `ListHeaders` / `CreateHeader` / `InsertHeader` / `UpdateHeader` / `DeleteHeader`。

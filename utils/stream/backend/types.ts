@@ -18,7 +18,7 @@ import { PacketModifierParam, PacketTransmitModeParam } from "../packet/types";
 
 /** 抓包得到的一个报文 */
 export interface CapturedPacket {
-  /** 中立协议层列表，可直接交给 packet-utils 的 match* 使用 */
+  /** 中立协议层列表，可直接交给 packet/match 的 match* 使用 */
   layers: PacketLayer[];
   /** 原始以太网帧（gRPC 后端可用；thrift 后端可能没有） */
   raw?: Buffer;

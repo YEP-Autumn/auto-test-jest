@@ -6,8 +6,8 @@
  * 对应 HeaderType 能表达 payload，才用这里拼原始帧 + templateString。
  */
 
-import { FieldType, PacketSpec } from "../packet/model";
-import { macToBuffer } from "./address";
+import { FieldType, PacketSpec } from "../../packet/model";
+import { macToBuffer } from "../address";
 
 function layerOf(packet: PacketSpec, type: FieldType): any | undefined {
   return packet.layers.find((layer) => layer.type === type)?.field;

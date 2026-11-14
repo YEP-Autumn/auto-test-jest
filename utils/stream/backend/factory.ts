@@ -1,6 +1,6 @@
 import { StreamBackendConfig, StreamBackendKind } from "../../comm/config";
-import { RenixHttpBackend } from "./renix-http";
-import { StreamControlBackend } from "./streamcontrol";
+import { RenixHttpBackend } from "./http/renix-http";
+import { StreamControlBackend } from "./grpc/stream-linux";
 import { TrafficBackend } from "./types";
 
 /**

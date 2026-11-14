@@ -9,17 +9,13 @@
  * 原始帧（RAW 没有对应 HeaderType）。
  */
 
-import { PacketLayer, PacketSpec, FieldType } from "../packet/model";
+import { PacketLayer, PacketSpec, FieldType } from "../../packet/model";
 import {
   ModifierField,
   ModifierMode,
   PacketModifierParam,
-} from "../packet/types";
-import {
-  ipv4ToBuffer,
-  ipv6ToBuffer,
-  macToBuffer,
-} from "./address";
+} from "../../packet/types";
+import { ipv4ToBuffer, ipv6ToBuffer, macToBuffer } from "../address";
 
 export const HeaderType = {
   ETHERNET: 1,
@@ -221,6 +217,9 @@ function toModifier(
     start: parseValue(kind, param.start_value),
     count: param.count,
   };
+  if (param.end_value !== undefined) {
+    modifier.end = parseValue(kind, param.end_value);
+  }
   if (param.step !== undefined) {
     modifier.step = u64(param.step);
   }
@@ -228,9 +227,9 @@ function toModifier(
 }
 
 /** 把 modifier_param 按 层+字段 建索引，映射时替换同名 fixed 字段 */
-function buildModifierIndex(
-  modifiers: PacketModifierParam[] = [],
-): { map: Map<string, { param: PacketModifierParam; target: ModifierTarget }> } {
+function buildModifierIndex(modifiers: PacketModifierParam[] = []): {
+  map: Map<string, { param: PacketModifierParam; target: ModifierTarget }>;
+} {
   const map = new Map<
     string,
     { param: PacketModifierParam; target: ModifierTarget }
@@ -252,7 +251,10 @@ function addFixed(
 ): void {
   const modifier = modifiers.map.get(`${layerType}:${name}`);
   if (modifier) {
-    fields.push({ name, modifier: toModifier(modifier.param, modifier.target.valueKind) });
+    fields.push({
+      name,
+      modifier: toModifier(modifier.param, modifier.target.valueKind),
+    });
     return;
   }
   if (value !== undefined) fields.push({ name, fixed: value });
@@ -264,13 +266,31 @@ function ethernetFields(
 ): PacketField[] {
   const fields: PacketField[] = [];
   if (field.dst != null) {
-    addFixed(fields, "dst", raw(macToBuffer(field.dst)), modifiers, FieldType.EthernetII);
+    addFixed(
+      fields,
+      "dst",
+      raw(macToBuffer(field.dst)),
+      modifiers,
+      FieldType.EthernetII,
+    );
   }
   if (field.src != null) {
-    addFixed(fields, "src", raw(macToBuffer(field.src)), modifiers, FieldType.EthernetII);
+    addFixed(
+      fields,
+      "src",
+      raw(macToBuffer(field.src)),
+      modifiers,
+      FieldType.EthernetII,
+    );
   }
   if (field.type != null) {
-    addFixed(fields, "ethertype", u64(field.type), modifiers, FieldType.EthernetII);
+    addFixed(
+      fields,
+      "ethertype",
+      u64(field.type),
+      modifiers,
+      FieldType.EthernetII,
+    );
   }
   return fields;
 }
@@ -281,7 +301,8 @@ function vlanFields(
 ): PacketField[] {
   const fields: PacketField[] = [];
   const add = (name: string, value: any) => {
-    if (value != null) addFixed(fields, name, u64(value), modifiers, FieldType.VLAN);
+    if (value != null)
+      addFixed(fields, name, u64(value), modifiers, FieldType.VLAN);
   };
   add("pcp", field.prio);
   add("dei", field.dei);
@@ -296,7 +317,8 @@ function ipv4Fields(
 ): PacketField[] {
   const fields: PacketField[] = [];
   const add = (name: string, value: any) => {
-    if (value != null) addFixed(fields, name, u64(value), modifiers, FieldType.IPv4);
+    if (value != null)
+      addFixed(fields, name, u64(value), modifiers, FieldType.IPv4);
   };
   add("version", field.version);
   add("ihl", field.ihl);
@@ -314,10 +336,22 @@ function ipv4Fields(
   add("proto", field.proto);
   add("csum", field.chksum);
   if (field.src != null) {
-    addFixed(fields, "src", raw(ipv4ToBuffer(field.src)), modifiers, FieldType.IPv4);
+    addFixed(
+      fields,
+      "src",
+      raw(ipv4ToBuffer(field.src)),
+      modifiers,
+      FieldType.IPv4,
+    );
   }
   if (field.dst != null) {
-    addFixed(fields, "dst", raw(ipv4ToBuffer(field.dst)), modifiers, FieldType.IPv4);
+    addFixed(
+      fields,
+      "dst",
+      raw(ipv4ToBuffer(field.dst)),
+      modifiers,
+      FieldType.IPv4,
+    );
   }
   return fields;
 }
@@ -328,7 +362,8 @@ function ipv6Fields(
 ): PacketField[] {
   const fields: PacketField[] = [];
   const add = (name: string, value: any) => {
-    if (value != null) addFixed(fields, name, u64(value), modifiers, FieldType.IPv6);
+    if (value != null)
+      addFixed(fields, name, u64(value), modifiers, FieldType.IPv6);
   };
   add("version", field.version);
   add("traffic_class", field.tc);
@@ -337,10 +372,22 @@ function ipv6Fields(
   add("next_header", field.nh);
   add("hop_limit", field.hlim);
   if (field.src != null) {
-    addFixed(fields, "src", raw(ipv6ToBuffer(field.src)), modifiers, FieldType.IPv6);
+    addFixed(
+      fields,
+      "src",
+      raw(ipv6ToBuffer(field.src)),
+      modifiers,
+      FieldType.IPv6,
+    );
   }
   if (field.dst != null) {
-    addFixed(fields, "dst", raw(ipv6ToBuffer(field.dst)), modifiers, FieldType.IPv6);
+    addFixed(
+      fields,
+      "dst",
+      raw(ipv6ToBuffer(field.dst)),
+      modifiers,
+      FieldType.IPv6,
+    );
   }
   return fields;
 }
@@ -363,7 +410,8 @@ function tcpFields(
 ): PacketField[] {
   const fields: PacketField[] = [];
   const add = (name: string, value: any) => {
-    if (value != null) addFixed(fields, name, u64(value), modifiers, FieldType.TCP);
+    if (value != null)
+      addFixed(fields, name, u64(value), modifiers, FieldType.TCP);
   };
   if (field.sport != null) {
     addFixed(fields, "src_port", u64(field.sport), modifiers, FieldType.TCP);
@@ -412,7 +460,8 @@ function icmpFields(
 ): PacketField[] {
   const fields: PacketField[] = [];
   const add = (name: string, value: any) => {
-    if (value != null) addFixed(fields, name, u64(value), modifiers, FieldType.ICMP);
+    if (value != null)
+      addFixed(fields, name, u64(value), modifiers, FieldType.ICMP);
   };
   add("type", field.type);
   add("code", field.code);
@@ -428,7 +477,8 @@ function arpFields(
 ): PacketField[] {
   const fields: PacketField[] = [];
   const add = (name: string, value: any) => {
-    if (value != null) addFixed(fields, name, u64(value), modifiers, FieldType.ARP);
+    if (value != null)
+      addFixed(fields, name, u64(value), modifiers, FieldType.ARP);
   };
   add("hw_type", field.hwtype);
   add("proto_type", field.ptype);
@@ -436,16 +486,40 @@ function arpFields(
   add("proto_len", field.plen);
   add("opcode", field.op);
   if (field.hwsrc != null) {
-    addFixed(fields, "sender_mac", raw(macToBuffer(field.hwsrc)), modifiers, FieldType.ARP);
+    addFixed(
+      fields,
+      "sender_mac",
+      raw(macToBuffer(field.hwsrc)),
+      modifiers,
+      FieldType.ARP,
+    );
   }
   if (field.psrc != null) {
-    addFixed(fields, "sender_ip", raw(ipv4ToBuffer(field.psrc)), modifiers, FieldType.ARP);
+    addFixed(
+      fields,
+      "sender_ip",
+      raw(ipv4ToBuffer(field.psrc)),
+      modifiers,
+      FieldType.ARP,
+    );
   }
   if (field.hwdst != null) {
-    addFixed(fields, "target_mac", raw(macToBuffer(field.hwdst)), modifiers, FieldType.ARP);
+    addFixed(
+      fields,
+      "target_mac",
+      raw(macToBuffer(field.hwdst)),
+      modifiers,
+      FieldType.ARP,
+    );
   }
   if (field.pdst != null) {
-    addFixed(fields, "target_ip", raw(ipv4ToBuffer(field.pdst)), modifiers, FieldType.ARP);
+    addFixed(
+      fields,
+      "target_ip",
+      raw(ipv4ToBuffer(field.pdst)),
+      modifiers,
+      FieldType.ARP,
+    );
   }
   return fields;
 }
@@ -456,10 +530,22 @@ function dot3Fields(
 ): PacketField[] {
   const fields: PacketField[] = [];
   if (field.dst != null) {
-    addFixed(fields, "dst", raw(macToBuffer(field.dst)), modifiers, FieldType.Dot3);
+    addFixed(
+      fields,
+      "dst",
+      raw(macToBuffer(field.dst)),
+      modifiers,
+      FieldType.Dot3,
+    );
   }
   if (field.src != null) {
-    addFixed(fields, "src", raw(macToBuffer(field.src)), modifiers, FieldType.Dot3);
+    addFixed(
+      fields,
+      "src",
+      raw(macToBuffer(field.src)),
+      modifiers,
+      FieldType.Dot3,
+    );
   }
   // length 由引擎 seal 按实际帧长回填，不手工设置
   return fields;
@@ -471,7 +557,8 @@ function llcFields(
 ): PacketField[] {
   const fields: PacketField[] = [];
   const add = (name: string, value: any) => {
-    if (value != null) addFixed(fields, name, u64(value), modifiers, FieldType.LLC);
+    if (value != null)
+      addFixed(fields, name, u64(value), modifiers, FieldType.LLC);
   };
   add("dsap", field.dsap);
   add("ssap", field.ssap);
@@ -492,7 +579,13 @@ function snapFields(
   ]);
   addFixed(fields, "oui", raw(ouiBytes), modifiers, FieldType.SNAP);
   if (field.pid != null) {
-    addFixed(fields, "pid", u64(Number(field.pid) & 0xffff), modifiers, FieldType.SNAP);
+    addFixed(
+      fields,
+      "pid",
+      u64(Number(field.pid) & 0xffff),
+      modifiers,
+      FieldType.SNAP,
+    );
   }
   return fields;
 }
@@ -544,7 +637,8 @@ function snmpFields(
 
   const fields: PacketField[] = [];
   const add = (name: string, value: any) => {
-    if (value != null) addFixed(fields, name, u64(value), modifiers, FieldType.SNMP);
+    if (value != null)
+      addFixed(fields, name, u64(value), modifiers, FieldType.SNMP);
   };
   const addRaw = (name: string, value: Buffer) => {
     addFixed(fields, name, raw(value), modifiers, FieldType.SNMP);
@@ -552,16 +646,17 @@ function snmpFields(
   add("version", Number(field.version ?? 1));
   addRaw(
     "community",
-    padBytes(Buffer.from(String(field.community ?? "public"), "utf8"), 6, "community"),
+    padBytes(
+      Buffer.from(String(field.community ?? "public"), "utf8"),
+      6,
+      "community",
+    ),
   );
   add("pdu_type", pdu === 0 ? 0xa0 : 0xa1);
   add("request_id", Number(field.request_id ?? 0));
   add("error_status", Number(field.error ?? 0));
   add("error_index", Number(field.error_index ?? 0));
-  addRaw(
-    "oid",
-    padBytes(encodeOidContent(String(varbinds[0].oid)), 8, "oid"),
-  );
+  addRaw("oid", padBytes(encodeOidContent(String(varbinds[0].oid)), 8, "oid"));
   // message_len/pdu_len/vbl_len/varbind_len/oid_len 由引擎 seal 回填
   return fields;
 }
@@ -641,7 +736,8 @@ export function packetToHeaders(
   return packet.layers.map((layer) => {
     const headerType = LAYER_TO_HEADER[layer.type];
     if (headerType === undefined) {
-      const label = UNSUPPORTED_LAYERS[layer.type] ?? `FieldType(${layer.type})`;
+      const label =
+        UNSUPPORTED_LAYERS[layer.type] ?? `FieldType(${layer.type})`;
       throw new Error(
         `[streamcontrol] PacketBuilder 的 ${label} 层暂时无法映射到 packet.proto HeaderType`,
       );

@@ -8,7 +8,7 @@
 
 import axios, { AxiosInstance } from "axios";
 import FormData from "form-data";
-import { StreamBackendConfig } from "../../comm/config";
+import { StreamBackendConfig } from "../../../comm/config";
 
 export interface LoginResponse {
   token: string;

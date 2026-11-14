@@ -32,6 +32,7 @@ enum PayloadType {
   PAYLOAD_TYPE_RANDOM = 4;
   PAYLOAD_TYPE_CUSTOM = 5;
   PAYLOAD_TYPE_PRBS = 6;
+  PAYLOAD_TYPE_BLOB = 7;        // 只写一次 custom，剩余字节补零（802.3 LLC data / 原始 PDU）
 }
 
 // Renix EnumPayloadValueType：单字节/双字节填充单位。

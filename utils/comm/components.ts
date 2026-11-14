@@ -1,6 +1,6 @@
 import { Port, sleep, STR_DEBUG_INFO, STR_FAILED, STR_SUCCESS } from "..";
+import { formatPktList } from "../stream/packet/format";
 import {
-  formatPktList,
   matchARP,
   matchDot3,
   matchEthernetII,
@@ -14,13 +14,13 @@ import {
   matchTCP,
   matchUDP,
   matchVLAN,
-} from "../stream/packet-utils";
+} from "../stream/packet/match";
 import { TrafficBackend } from "../stream/backend/types";
 import type {
   PacketModifierParam,
   PacketTransmitModeParam,
 } from "../stream/packet/types";
-import { PacketBuilder } from "../stream/thrift-packet";
+import { PacketBuilder } from "../stream";
 import type { TrafficPort } from "../traffic/model";
 import { Dut } from "./dut";
 

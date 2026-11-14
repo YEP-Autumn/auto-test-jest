@@ -5,7 +5,7 @@
 //   2. 字段值类型化，避免 PropertyBag 字符串解析；
 //   3. 支持 Renix XetModifier 的 Type/Start/Step/Count/Offset/Mask/Seed/Repeat；
 //   4. HeaderInstance 同时用于配置持久化与 gRPC 读回；
-//   5. 计算字段默认只读，错误注入走 ErrorInjectionSpec。
+//   5. 计算字段默认由引擎自动重算；显式设置后保留用户值（可构造错包）。
 
 syntax = "proto3";
 
@@ -32,11 +32,19 @@ enum HeaderType {
   HEADER_TYPE_ARP = 10;
   HEADER_TYPE_ICMP = 11;
   HEADER_TYPE_ICMPV6 = 12;
-  HEADER_TYPE_RAW = 13;
+  HEADER_TYPE_RAW = 13;         // 不是协议层：仅用于整帧 raw（templateString）
   HEADER_TYPE_DOT3 = 14;        // IEEE 802.3（dst/src/length）
   HEADER_TYPE_LLC = 15;         // IEEE 802.2 LLC
   HEADER_TYPE_SNAP = 16;        // LLC SNAP
-  HEADER_TYPE_SNMP = 17;        // SNMP v1/v2c 固定报文模板（UDP 之上）
+  HEADER_TYPE_SNMP = 17;        // SNMP v1/v2c 43B 模板；任意 PDU 用 payload custom 承载
+  HEADER_TYPE_IPV6_HOPOPTS = 18;  // IPv6 Hop-by-Hop Options
+  HEADER_TYPE_IPV6_ROUTING = 19;  // IPv6 Routing Header
+  HEADER_TYPE_IPV6_FRAGMENT = 20; // IPv6 Fragment Header
+  HEADER_TYPE_IPV6_DSTOPTS = 21;  // IPv6 Destination Options
+  HEADER_TYPE_VXLAN = 22;         // VXLAN（UDP 之上，后接内层 Ethernet）
+  HEADER_TYPE_PPPOE = 23;         // PPPoE Session（8B：头 + PPP protocol）
+  HEADER_TYPE_GTPU = 24;          // GTP-U（UDP 2152，后接内层 IP）
+  HEADER_TYPE_IGMP = 25;          // IGMP（IPv4 proto 2，v1/v2/v3 query）
 }
 
 enum PacketFieldType {
@@ -54,8 +62,8 @@ enum PacketFieldType {
 
 enum PacketFieldFlag {
   PACKET_FIELD_FLAG_NONE = 0;
-  PACKET_FIELD_FLAG_COMPUTED = 1;  // 校验和，由 seal 重算
-  PACKET_FIELD_FLAG_DERIVED = 2;   // 长度，由 seal 重算
+  PACKET_FIELD_FLAG_COMPUTED = 1;  // 未显式设置时由 seal 重算
+  PACKET_FIELD_FLAG_DERIVED = 2;   // 未显式设置时由 seal 填长度
   PACKET_FIELD_FLAG_READONLY = 4;  // 语义只读；引擎默认不强制拦截
 }
 
@@ -138,7 +146,7 @@ message HeaderInstance {
   uint32 index = 3;            // 0-based；列表顺序优先
   uint32 header_length = 4;    // 0 = 默认；>默认值用于 options 预留
   repeated PacketField fields = 5;
-  repeated HeaderOption options = 6;  // 仅 IPv4/TCP；需要完整层栈模式
+  repeated HeaderOption options = 6;  // IPv4/TCP、IPv6 hop/dst、ICMPv6 NDP；需要完整层栈模式
   // 引擎层名。动态类（HeaderType.CUSTOM）必填，其他头留空。
   string proto_name = 7;
 }

@@ -3,10 +3,11 @@
  *
  * 重构后：
  * - PacketBuilder / 报文模型 -> ./packet/model
- * - thrift 编解码          -> ./codec/renix-thrift
+ * - thrift 编解码          -> ./codec/thrift/renix
  *
  * 保留此文件，确保测试里既有的
  * `import { PacketBuilder } from "@/utils/stream/thrift-packet"` 不需要修改。
+ * 新代码建议使用 `import { PacketBuilder } from "@/utils/stream"`。
  */
 
 export * from "./packet/model";
@@ -35,6 +36,6 @@ export {
   packetListToLayers,
   PacketListParser,
   PARSE_STRATEGIES,
-} from "./codec/renix-thrift";
+} from "./codec/thrift/renix";
 
-export type { IFieldMeta, IPacketList } from "./codec/renix-thrift";
+export type { IFieldMeta, IPacketList } from "./codec/thrift/renix";

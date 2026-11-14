@@ -56,6 +56,8 @@ export interface PacketModifierParam {
   modifier_field: ModifierField;
   mode: ModifierMode;
   start_value: string;
+  /** Random 模式的结束值（含）；地址类字段必须给，否则只会取到 start */
+  end_value?: string;
   step?: number;
   count: number;
 }

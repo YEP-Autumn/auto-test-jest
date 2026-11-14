@@ -1,0 +1,138 @@
+// 自定义扩展（自定义报文头 / 动态类 / 动态属性 / 通用对象操作）
+//
+// 报文头模型见 packet.proto；本文件只定义“增删改查”命令。
+// 参考 Renix：CreateHeaderCommand / InsertHeaderCommand / UpdateHeaderCommand /
+// DeleteHeaderCommand / ListHeaderTypesCommand / ListHeaderPropertiesCommand /
+// ListHeaderNamesCommand / GetStreamHeaderTypesCommand。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/packet.proto";
+import "streamcontrol/v1/resource.proto";
+
+// ---------------------------------------------------------------- 报文头查询
+
+message ListHeaderTypesRequest {
+  ResourceRef stream = 1;      // 可选；设置后返回具体 path
+  uint32 index = 2;            // 可选；限定某个 header 实例
+  HeaderType header_type = 3;  // 可选过滤
+}
+
+message ListHeaderTypesReply {
+  Result result = 1;
+  repeated HeaderTypeInfo types = 2;
+}
+
+message ListHeaderPropertiesRequest {
+  HeaderType header_type = 1;
+  // header_type=CUSTOM 时按动态类名查找。
+  string type_name = 2;
+}
+
+message ListHeaderPropertiesReply {
+  Result result = 1;
+  HeaderTypeInfo type = 2;
+}
+
+message ListHeadersRequest {
+  ResourceRef stream = 1;
+}
+
+message HeaderListReply {
+  Result result = 1;
+  repeated HeaderInstance headers = 2;
+}
+
+// ---------------------------------------------------------------- 报文头编辑
+
+message CreateHeaderRequest {
+  ResourceRef stream = 1;
+  repeated HeaderInstance headers = 2;  // 按顺序追加
+  uint32 protocol_index = 3;            // Renix ProtocolIndex，可选
+}
+
+message InsertHeaderRequest {
+  ResourceRef stream = 1;
+  HeaderInstance header = 2;
+  uint32 index = 3;                     // 插入位置
+  string lower_header = 4;              // 或指定下层头名
+}
+
+message UpdateHeaderRequest {
+  ResourceRef stream = 1;
+  string header_name = 2;               // 与 index 二选一
+  uint32 index = 3;
+  repeated PacketField updates = 4;
+  bool binding_modifier = 5;            // Renix 兼容位；第一版忽略
+}
+
+message DeleteHeaderRequest {
+  ResourceRef stream = 1;
+  uint32 index = 2;                     // 与 header_name 二选一
+  string header_name = 3;
+}
+
+// ---------------------------------------------------------------- 动态类/属性
+
+message DynamicClass {
+  ResourceRef ref = 1;
+  string name = 2;
+  string class_type = 3;        // object / statistic / command
+  string display_name = 4;
+  string description = 5;
+  bool serializable = 6;
+  bool private = 7;
+  bool singleton = 8;
+  // object 类作为自定义报文头时的头长与分派信息。
+  uint32 header_length = 9;     // 0 = 不是报文头类
+  uint32 ethertype = 10;        // 作为 L2.5 层时的 ethertype；0 = 不适用
+  uint32 ip_proto = 11;         // 作为 L3.5 层时的 IP protocol；0 = 不适用
+}
+
+message DynamicProperty {
+  ResourceRef class_ref = 1;
+  string name = 2;
+  string category = 3;
+  string display_name = 4;
+  string description = 5;
+  string default_value = 6;
+  string reference_property = 7;
+  string replace_policy = 8;
+  string expression = 9;
+  bool aggregate = 10;
+  bool private = 11;
+
+  // 报文头字段定义（category=field 或为空时生效）。
+  string value_type = 12;       // u8/u16/u32/u64/bytes/mac/ipv4/ipv6
+  uint32 offset = 13;           // 相对自定义头起始
+  uint32 width = 14;            // 0 = 按 value_type 推导
+}
+
+message DynamicNetwork {
+  ResourceRef ref = 1;
+  string name = 2;
+  PropertyBag properties = 3;
+}
+
+service ExtensionService {
+  rpc ListHeaderTypes(ListHeaderTypesRequest) returns (ListHeaderTypesReply);                 // viewer
+  rpc ListHeaderProperties(ListHeaderPropertiesRequest) returns (ListHeaderPropertiesReply);  // viewer
+  rpc ListHeaders(ListHeadersRequest) returns (HeaderListReply);                              // viewer
+
+  rpc CreateHeader(CreateHeaderRequest) returns (HeaderListReply);                            // operator
+  rpc InsertHeader(InsertHeaderRequest) returns (HeaderListReply);                            // operator
+  rpc UpdateHeader(UpdateHeaderRequest) returns (HeaderListReply);                            // operator
+  rpc DeleteHeader(DeleteHeaderRequest) returns (HeaderListReply);                            // operator
+
+  rpc CreateDynamicClass(DynamicClass) returns (ResourceReply);                               // operator
+  rpc CreateDynamicProperty(DynamicProperty) returns (ResourceReply);                         // operator
+  rpc CreateDynamicNetwork(DynamicNetwork) returns (ResourceReply);                           // operator
+}

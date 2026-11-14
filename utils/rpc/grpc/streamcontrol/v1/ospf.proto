@@ -1,0 +1,368 @@
+// stream-linux 公开 gRPC 契约（streamcontrol.v1）
+//
+// 本文件是公开契约的一部分；引擎内部 SLNX/2 不是公开接口。
+// 规则：
+//   * 字段号只增不改；删除字段必须 reserved；枚举 0 值必须是 UNSPECIFIED 类语义。
+//   * 单位写在字段名里：_ms/_us/_ns、_frames/_bytes/_bps/_pps、_x100。
+//   * 时间戳：墙钟用 *_wall_us 或 google.protobuf.Timestamp；单调时钟用 *_mono_us。
+//   * 业务失败用 Result（code != 0）；传输/鉴权失败用 gRPC status。
+//   * 角色：viewer < operator < admin；每个 RPC 注释里写所需角色。
+//   * 只定义已实现或明确排期的能力；不存在的 RPC 不放进公开契约。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+// ---------------------------------------------------------------- OSPF
+//
+// 引擎侧复用 SLNX/1 的 OSPF 编解码（0x01D0–0x0209），网关负责与下面的
+// 强类型消息互转。分页上限由网关夹到 500 行（单帧 48KB）。
+
+message OspfCapsRequest {}
+
+message OspfCapsReply {
+  Result result = 1;
+  string protocol = 2;                 // "sl-ospf/1.0"
+  uint32 max_neighbors_per_iface = 3;
+  uint32 max_instances = 4;
+  uint32 max_rate_pps = 5;
+  repeated string capabilities = 6;    // external/lsdb/flood/...
+}
+
+// 实例选择：name 可以是实例名或三层接口名；省略时要求本进程只有一个实例。
+message OspfInstanceRef {
+  string name = 1;
+}
+
+message OspfStatus {
+  Result result = 1;
+  string name = 2;
+  string iface = 3;
+  bool started = 4;                    // GetStats 有效
+  uint32 neighbors = 5;
+  uint32 neighbors_full = 6;
+  uint64 packets_in = 7;
+  uint64 packets_out = 8;
+  uint64 lsa_in = 9;
+  uint64 lsa_new = 10;
+  uint64 lsa_update = 11;
+  uint64 lsa_dup = 12;
+  uint64 retransmits = 13;
+  uint64 lsa_full = 14;
+  uint64 neighbors_up = 15;
+  uint64 neighbors_down = 16;
+  uint64 errors = 17;
+  uint64 lsdb_count = 18;              // GetScale 有效
+  uint64 lsa_bytes = 19;               // GetScale 有效
+  uint32 externals = 20;
+  uint32 externals_pending = 21;
+  uint64 externals_flushed = 22;
+  uint32 rate_pps = 23;
+}
+
+message OspfPeer {
+  string neighbor_ip = 1;
+  string router_id = 2;
+  uint32 state = 3;                    // 1=Down … 9=Full
+  string state_name = 4;
+  uint32 priority = 5;
+  string dr = 6;
+  string bdr = 7;
+  string mac = 8;                      // "aa:bb:cc:dd:ee:ff"
+}
+
+message ListOspfPeersRequest {
+  string name = 1;
+  uint32 offset = 2;
+  uint32 limit = 3;                    // 0 = 100；网关夹到 500
+}
+
+message OspfPeerList {
+  Result result = 1;
+  repeated OspfPeer peers = 2;
+  uint32 total = 3;
+  uint32 offset = 4;
+  bool more = 5;
+}
+
+message OspfLsa {
+  uint32 type = 1;
+  string ls_id = 2;                    // 点分 IPv4
+  string adv_router = 3;
+  int32 seq = 4;
+  uint32 age = 5;                      // 秒
+  uint32 length = 6;
+}
+
+message ListOspfLsdbRequest {
+  string name = 1;
+  uint32 offset = 2;
+  uint32 limit = 3;
+}
+
+message OspfLsdbList {
+  Result result = 1;
+  repeated OspfLsa lsas = 2;
+  uint32 total = 3;
+  uint32 offset = 4;
+  bool more = 5;
+}
+
+message OspfRoute {
+  string prefix = 1;                   // 点分 IPv4
+  uint32 prefix_len = 2;
+  uint32 metric = 3;
+  uint32 metric_type = 4;              // 1 = E1，2 = E2
+  uint32 route_tag = 5;
+}
+
+message GetOspfRoutesRequest {
+  string name = 1;
+  uint32 offset = 2;
+  uint32 limit = 3;
+}
+
+message OspfRouteList {
+  Result result = 1;
+  repeated OspfRoute routes = 2;
+  uint32 total = 3;
+  uint32 offset = 4;
+  bool more = 5;
+  uint32 externals = 6;
+  uint32 externals_pending = 7;
+  uint32 rate_pps = 8;
+}
+
+// 整批替换：任何一条非法则整批拒绝，现有路由不动。
+message SetOspfRoutesRequest {
+  string name = 1;
+  uint32 rate_pps = 2;                 // 0 = 不改
+  repeated OspfRoute routes = 3;
+}
+
+message SetOspfRoutesReply {
+  Result result = 1;
+  uint32 externals = 2;
+  uint32 externals_pending = 3;
+  uint32 rate_pps = 4;
+}
+
+// 三步：begin → get（轮询）→ stop（可选）。begin 只记起点，不改路由。
+message OspfMeasureRequest {
+  string name = 1;
+  string action = 2;                   // begin | get | stop
+  string prefix = 3;                   // begin 可选
+  uint32 prefix_len = 4;
+  bool expect_present = 5;             // true = 等出现，false = 等消失
+}
+
+message OspfMeasureReply {
+  Result result = 1;
+  bool active = 2;
+  string prefix = 3;
+  uint32 prefix_len = 4;
+  bool expect_present = 5;
+  uint32 lsdb_ms = 6;                  // 0xFFFFFFFF = 未到
+  uint32 ack_ms = 7;
+  uint32 full_ms = 8;
+  uint32 converge_ms = 9;
+  uint32 changes = 10;                 // >1 = 抖动
+  string method = 11;                  // lsdb+ack / lsdb / ack / none
+}
+
+message OspfFault {
+  string kind = 1;
+  bool active = 2;
+  uint32 remaining = 3;                // 还要发几次，0 = 不限
+  uint32 interval_ms = 4;
+  uint32 sent = 5;
+  uint32 neighbor_drops = 6;
+}
+
+// kind 省略/none/clear/off = 停止该实例上的全部注入。
+message SetOspfFaultRequest {
+  string name = 1;
+  string kind = 2;
+  optional uint32 count = 3;           // 省略 = 1；0 = 不限
+  optional uint32 interval_ms = 4;     // 省略 = 0
+}
+
+message SetOspfFaultReply {
+  Result result = 1;
+  string kind = 2;
+  bool active = 3;
+}
+
+message ListOspfFaultsRequest {
+  string name = 1;
+}
+
+message OspfFaultList {
+  Result result = 1;
+  repeated OspfFault faults = 2;
+  uint32 total = 3;
+}
+
+service OspfService {
+  rpc GetCaps(OspfCapsRequest) returns (OspfCapsReply);              // viewer
+  rpc GetStats(OspfInstanceRef) returns (OspfStatus);                // viewer
+  rpc GetScale(OspfInstanceRef) returns (OspfStatus);                // viewer
+  rpc ListPeers(ListOspfPeersRequest) returns (OspfPeerList);        // viewer
+  rpc ListLsdb(ListOspfLsdbRequest) returns (OspfLsdbList);          // viewer
+  rpc GetRoutes(GetOspfRoutesRequest) returns (OspfRouteList);       // viewer
+  rpc SetRoutes(SetOspfRoutesRequest) returns (SetOspfRoutesReply);  // operator
+  rpc Measure(OspfMeasureRequest) returns (OspfMeasureReply);        // operator
+  rpc SetFault(SetOspfFaultRequest) returns (SetOspfFaultReply);     // operator
+  rpc ListFaults(ListOspfFaultsRequest) returns (OspfFaultList);     // viewer
+}
+
+
+// ---------------------------------------------------------------- OSPFv2 / OSPFv3 配置与动作
+
+enum OspfNetworkType {
+  OSPF_NETWORK_TYPE_UNSPECIFIED = 0;
+  OSPF_NETWORK_TYPE_BROADCAST = 1;
+  OSPF_NETWORK_TYPE_POINT_TO_POINT = 2;
+  OSPF_NETWORK_TYPE_NBMA = 3;
+  OSPF_NETWORK_TYPE_POINT_TO_MULTIPOINT = 4;
+}
+
+enum OspfAreaType {
+  OSPF_AREA_TYPE_UNSPECIFIED = 0;
+  OSPF_AREA_TYPE_NORMAL = 1;
+  OSPF_AREA_TYPE_STUB = 2;
+  OSPF_AREA_TYPE_NSSA = 3;
+}
+
+enum OspfAuthType {
+  OSPF_AUTH_TYPE_UNSPECIFIED = 0;
+  OSPF_AUTH_TYPE_NULL = 1;
+  OSPF_AUTH_TYPE_SIMPLE = 2;
+  OSPF_AUTH_TYPE_MD5 = 3;
+  OSPF_AUTH_TYPE_SHA1 = 4;
+  OSPF_AUTH_TYPE_SHA256 = 5;
+  OSPF_AUTH_TYPE_SHA384 = 6;
+  OSPF_AUTH_TYPE_SHA512 = 7;
+}
+
+message OspfAreaConfig {
+  uint32 area_id = 1;
+  OspfAreaType type = 2;
+  bool no_summary = 3;
+  repeated string ranges = 4;
+}
+
+message OspfAuthConfig {
+  OspfAuthType type = 1;
+  string password = 2;
+  uint32 key_id = 3;
+  string key = 4;
+  uint32 auth_seq = 5;
+}
+
+message OspfLsaConfig {
+  enum LsaType {
+    LSA_TYPE_UNSPECIFIED = 0;
+    LSA_TYPE_ROUTER = 1;
+    LSA_TYPE_NETWORK = 2;
+    LSA_TYPE_SUMMARY = 3;
+    LSA_TYPE_ASBR_SUMMARY = 4;
+    LSA_TYPE_EXTERNAL = 5;
+    LSA_TYPE_NSSA = 7;
+  }
+  LsaType type = 1;
+  string prefix_base = 2;
+  uint32 prefix_len = 3;
+  uint32 count = 4;
+  uint32 metric = 5;
+  uint32 metric_type = 6;
+  uint32 tag = 7;
+  string forwarding_address = 8;
+  uint32 batch_size = 9;
+  uint32 rate_pps = 10;
+}
+
+message Ospfv2Config {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string router_id = 4;
+  uint32 area_id = 5;
+  OspfAreaConfig area = 6;
+  OspfNetworkType network_type = 7;
+  uint32 hello_interval_s = 8;
+  uint32 dead_interval_s = 9;
+  uint32 retransmit_interval_s = 10;
+  uint32 transmit_delay_s = 11;
+  uint32 priority = 12;
+  uint32 mtu = 13;
+  uint32 cost = 14;
+  bool graceful_restart = 15;
+  bool bfd = 16;
+  OspfAuthConfig auth = 17;
+  repeated OspfLsaConfig lsas = 18;
+  PropertyBag properties = 19;
+}
+
+message Ospfv3Config {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string router_id = 4;
+  uint32 area_id = 5;
+  OspfAreaConfig area = 6;
+  OspfNetworkType network_type = 7;
+  uint32 hello_interval_s = 8;
+  uint32 dead_interval_s = 9;
+  uint32 priority = 10;
+  uint32 mtu = 11;
+  uint32 cost = 12;
+  bool graceful_restart = 13;
+  bool bfd = 14;
+  OspfAuthConfig auth = 15;
+  repeated OspfLsaConfig lsas = 16;
+  PropertyBag properties = 17;
+}
+
+message OspfActionRequest {
+  ResourceRef config = 1;
+  repeated string prefixes = 2;
+  string idempotency_key = 3;
+}
+
+message OspfConfigRequest {
+  ResourceRef ref = 1;
+}
+
+service Ospfv2Service {
+  rpc Create(Ospfv2Config) returns (ResourceReply);                   // operator
+  rpc Get(OspfConfigRequest) returns (ResourceReply);                 // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);        // viewer
+  rpc Update(UpdateResourceRequest) returns (ResourceReply);          // operator
+  rpc Delete(OspfConfigRequest) returns (JobReply);                   // operator
+  rpc Establish(OspfActionRequest) returns (JobReply);                // operator
+  rpc Advertise(OspfActionRequest) returns (JobReply);                // operator
+  rpc Withdraw(OspfActionRequest) returns (JobReply);                 // operator
+  rpc GracefulRestart(OspfActionRequest) returns (JobReply);          // operator
+}
+
+service Ospfv3Service {
+  rpc Create(Ospfv3Config) returns (ResourceReply);                   // operator
+  rpc Get(OspfConfigRequest) returns (ResourceReply);                 // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);        // viewer
+  rpc Update(UpdateResourceRequest) returns (ResourceReply);          // operator
+  rpc Delete(OspfConfigRequest) returns (JobReply);                   // operator
+  rpc Establish(OspfActionRequest) returns (JobReply);                // operator
+  rpc Advertise(OspfActionRequest) returns (JobReply);                // operator
+  rpc Withdraw(OspfActionRequest) returns (JobReply);                 // operator
+  rpc GracefulRestart(OspfActionRequest) returns (JobReply);          // operator
+}

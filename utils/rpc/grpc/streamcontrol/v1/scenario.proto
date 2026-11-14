@@ -1,0 +1,260 @@
+// 场景化向导（TSN / MPLS / SRv6）
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+enum WizardType {
+  WIZARD_TYPE_UNSPECIFIED = 0;
+  WIZARD_TYPE_QBV = 1;
+  WIZARD_TYPE_QCI = 2;
+  WIZARD_TYPE_QCR = 3;
+  WIZARD_TYPE_QCH = 4;
+  WIZARD_TYPE_CB = 5;
+  WIZARD_TYPE_AVB = 6;
+  WIZARD_TYPE_PREEMPTION_VERIFY = 7;
+  WIZARD_TYPE_PREEMPTION_CAPABILITY = 8;
+  WIZARD_TYPE_PREEMPTION_RETRANSMIT = 9;
+  WIZARD_TYPE_MPLS_L3VPN = 10;
+  WIZARD_TYPE_BGP_VPLS = 11;
+  WIZARD_TYPE_LDP_VPLS = 12;
+  WIZARD_TYPE_EVPN_MPLS = 13;
+  WIZARD_TYPE_PWE3 = 14;
+  WIZARD_TYPE_SRV6_IP = 15;
+  WIZARD_TYPE_SRV6_VPN = 16;
+  WIZARD_TYPE_SRV6_EVPN = 17;
+}
+
+enum TsnTestType {
+  TSN_TEST_TYPE_UNSPECIFIED = 0;
+  TSN_TEST_TYPE_CONTINUOUS = 1;
+  TSN_TEST_TYPE_FIXED_BURST = 2;
+  TSN_TEST_TYPE_FIXED_SECONDS = 3;
+}
+
+message QbvGateControlEntry {
+  uint32 index = 1;
+  repeated bool gate_states = 2;
+  uint32 duration_ns = 3;
+}
+
+message QbvFilter {
+  uint32 index = 1;
+  uint32 pcp_mask = 2;
+  uint32 pcp_value = 3;
+  string destination_mac_mask = 4;
+  string destination_mac_value = 5;
+}
+
+message QbvWizard {
+  ResourceRef tx_port = 1;
+  ResourceRef rx_port = 2;
+  repeated QbvFilter filters = 3;
+  uint64 base_time_ns = 4;
+  uint32 cycle_time_ns = 5;
+  uint32 tick_granularity_ns = 6;
+  uint64 link_speed_mbps = 7;
+  TsnTestType test_type = 8;
+  repeated QbvGateControlEntry entries = 9;
+  PropertyBag properties = 10;
+}
+
+message QciWizard {
+  ResourceRef talker = 1;
+  ResourceRef listener = 2;
+  uint64 base_time_ns = 3;
+  uint32 cycle_time_ns = 4;
+  uint32 start_time_ns = 5;
+  uint32 tick_granularity_ns = 6;
+  uint32 stream_start_wait_ns = 7;
+  uint32 color_identifier = 8;
+  uint32 priority = 9;
+  double load = 10;
+  string frame_length_mode = 11;
+  string stream_identification = 12;
+  PropertyBag properties = 13;
+}
+
+message QcrWizard {
+  ResourceRef talker = 1;
+  ResourceRef listener = 2;
+  uint32 priority = 3;
+  double load = 4;
+  string frame_length_mode = 5;
+  string stream_identification = 6;
+  PropertyBag properties = 7;
+}
+
+message QchWizard {
+  ResourceRef tx_port = 1;
+  ResourceRef rx_port = 2;
+  uint64 base_time_ns = 3;
+  uint32 cycle_time_ns = 4;
+  repeated QbvGateControlEntry entries = 5;
+  string loop_type = 6;
+  PropertyBag properties = 7;
+}
+
+message CbWizard {
+  ResourceRef talker = 1;
+  ResourceRef listener = 2;
+  string dut_role = 3;
+  string test_case = 4;
+  string traffic_type = 5;
+  uint32 burst = 6;
+  uint32 duration_ms = 7;
+  uint32 repeat = 8;
+  uint32 priority = 9;
+  double load = 10;
+  string frame_length_mode = 11;
+  string stream_identification = 12;
+  string r_tag_path_id = 13;
+  string r_tag_lan_id = 14;
+  uint32 lsdu_size = 15;
+  uint32 sequence_number = 16;
+  PropertyBag properties = 17;
+}
+
+message AvbWizard {
+  ResourceRef talker = 1;
+  ResourceRef listener = 2;
+  repeated ResourceRef non_avb_ports = 3;
+  uint32 sr_class_vid = 4;
+  uint32 class_a_bandwidth = 5;
+  uint32 class_b_bandwidth = 6;
+  uint32 stream_count = 7;
+  string srp = 8;
+  string avtp_stream = 9;
+  uint32 non_avb_stream_count = 10;
+  PropertyBag properties = 11;
+}
+
+message PreemptionWizard {
+  ResourceRef tx_port = 1;
+  ResourceRef rx_port = 2;
+  uint32 express_burst = 3;
+  uint32 preemption_burst = 4;
+  double express_load = 5;
+  double preemption_load = 6;
+  string express_frame_length = 7;
+  string preemption_frame_length = 8;
+  uint32 express_vlan = 9;
+  uint32 preemption_vlan = 10;
+  uint32 smd_s = 11;
+  uint32 fragment_count = 12;
+  PropertyBag properties = 13;
+}
+
+message MplsL3VpnWizard {
+  repeated ResourceRef provider_ports = 1;
+  repeated ResourceRef customer_ports = 2;
+  uint32 vpn_count = 3;
+  string rd = 4;
+  string rt = 5;
+  string ce_protocol = 6;
+  string pe_protocol = 7;
+  string route_prefix = 8;
+  uint32 route_count = 9;
+  uint32 label_base = 10;
+  PropertyBag properties = 11;
+}
+
+message VplsWizard {
+  repeated ResourceRef provider_ports = 1;
+  repeated ResourceRef customer_ports = 2;
+  uint32 vpls_count = 3;
+  string rd = 4;
+  string rt = 5;
+  uint32 mtu = 6;
+  uint32 ve_id = 7;
+  string distribution = 8;
+  string fec_type = 9;
+  PropertyBag properties = 10;
+}
+
+message EvpnMplsWizard {
+  repeated ResourceRef provider_ports = 1;
+  repeated ResourceRef customer_ports = 2;
+  uint32 evi_count = 3;
+  string esi = 4;
+  string rd = 5;
+  string rt = 6;
+  string route_types = 7;
+  string host_behind_pe = 8;
+  string ip_prefix_route = 9;
+  PropertyBag properties = 10;
+}
+
+message Srv6Wizard {
+  repeated ResourceRef provider_ports = 1;
+  repeated ResourceRef customer_ports = 2;
+  string locator = 3;
+  uint32 block_length = 4;
+  uint32 node_length = 5;
+  uint32 function_length = 6;
+  uint32 argument_length = 7;
+  uint32 vpn_count = 8;
+  string rt = 9;
+  string sid_list = 10;
+  uint32 segment_left = 11;
+  string outer_ipv6 = 12;
+  PropertyBag properties = 13;
+}
+
+message WizardConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  WizardType type = 3;
+  oneof config {
+    QbvWizard qbv = 10;
+    QciWizard qci = 11;
+    QcrWizard qcr = 12;
+    QchWizard qch = 13;
+    CbWizard cb = 14;
+    AvbWizard avb = 15;
+    PreemptionWizard preemption = 16;
+    MplsL3VpnWizard mpls_l3vpn = 20;
+    VplsWizard bgp_vpls = 21;
+    VplsWizard ldp_vpls = 22;
+    EvpnMplsWizard evpn_mpls = 23;
+    VplsWizard pwe3 = 24;
+    Srv6Wizard srv6_ip = 30;
+    Srv6Wizard srv6_vpn = 31;
+    Srv6Wizard srv6_evpn = 32;
+  }
+}
+
+message CreateWizardRequest {
+  WizardConfig config = 1;
+  string idempotency_key = 2;
+}
+
+message ExpandScenarioRequest {
+  ResourceRef wizard = 1;
+  string idempotency_key = 2;
+}
+
+message ExpandScenarioReply {
+  Result result = 1;
+  repeated ResourceRef resources = 2;
+  uint64 job_id = 3;
+}
+
+service ScenarioService {
+  rpc Create(CreateWizardRequest) returns (ResourceReply);              // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                         // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);          // viewer
+  rpc Update(UpdateResourceRequest) returns (ResourceReply);            // operator
+  rpc Delete(ResourceRef) returns (JobReply);                           // operator
+  rpc Expand(ExpandScenarioRequest) returns (ExpandScenarioReply);          // operator
+  rpc Save(ResourceRef) returns (JobReply);                             // operator
+}

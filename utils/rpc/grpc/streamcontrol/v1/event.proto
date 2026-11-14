@@ -1,0 +1,64 @@
+// stream-linux 公开 gRPC 契约（streamcontrol.v1）
+//
+// 本文件是公开契约的一部分；引擎内部 SLNX/2 不是公开接口。
+// 规则：
+//   * 字段号只增不改；删除字段必须 reserved；枚举 0 值必须是 UNSPECIFIED 类语义。
+//   * 单位写在字段名里：_ms/_us/_ns、_frames/_bytes/_bps/_pps、_x100。
+//   * 时间戳：墙钟用 *_wall_us 或 google.protobuf.Timestamp；单调时钟用 *_mono_us。
+//   * 业务失败用 Result（code != 0）；传输/鉴权失败用 gRPC status。
+//   * 角色：viewer < operator < admin；每个 RPC 注释里写所需角色。
+//   * 只定义已实现或明确排期的能力；不存在的 RPC 不放进公开契约。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+
+enum Severity {
+  SEVERITY_UNSPECIFIED = 0;
+  SEVERITY_INFO = 1;
+  SEVERITY_WARNING = 2;
+  SEVERITY_ERROR = 3;
+  SEVERITY_CRITICAL = 4;
+}
+
+message EventsRequest {
+  reserved 2, 4;
+  reserved "since_seq", "include_snapshot";
+
+  uint64 filter = 1;         // 事件族位图；0 = 全部
+  Severity min_severity = 3;
+}
+
+message Event {
+  reserved 9, 10, 11, 12, 13;
+  reserved "data", "port", "run", "config", "alert";
+
+  uint64 seq = 1;
+  uint32 type = 2;
+  Severity severity = 3;
+  uint64 ts_mono_us = 4;
+  uint64 ts_wall_us = 5;
+  uint64 source_id = 6;
+  uint64 run_id = 7;
+  string note = 8;
+}
+
+message EventAckRequest {
+  uint64 seq = 1;            // 客户端已消费到的序号（引擎当前不做补发，仅记录）
+}
+
+message EventAckReply {
+  Result result = 1;
+}
+
+service EventService {
+  rpc Subscribe(EventsRequest) returns (stream Event);        // viewer
+  rpc Ack(EventAckRequest) returns (EventAckReply);           // viewer
+}

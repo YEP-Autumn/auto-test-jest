@@ -1,0 +1,362 @@
+// stream-linux 公开 gRPC 契约（streamcontrol.v1）
+//
+// 本文件是公开契约的一部分；引擎内部 SLNX/2 不是公开接口。
+// 规则：
+//   * 字段号只增不改；删除字段必须 reserved；枚举 0 值必须是 UNSPECIFIED 类语义。
+//   * 单位写在字段名里：_ms/_us/_ns、_frames/_bytes/_bps/_pps、_x100。
+//   * 时间戳：墙钟用 *_wall_us 或 google.protobuf.Timestamp；单调时钟用 *_mono_us。
+//   * 业务失败用 Result（code != 0）；传输/鉴权失败用 gRPC status。
+//   * 角色：viewer < operator < admin；每个 RPC 注释里写所需角色。
+//   * 只定义已实现或明确排期的能力；不存在的 RPC 不放进公开契约。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/system.proto";
+
+message Port {
+  string name = 1;
+  uint32 state = 2;          // 0 closed, 1 down, 2 up
+  uint32 ifindex = 3;
+  uint32 mtu = 4;
+  uint64 speed_mbps = 5;
+  bytes mac = 6;
+  bool link = 7;
+  uint32 rx_queues = 8;
+  uint32 tx_queues = 9;
+  uint32 flags = 10;         // bit0 open, bit1 online, bit2 link（与引擎一致）
+  bool configured = 11;
+  uint64 tx_frames = 12;     // 仅 open 的端口有值
+  uint64 rx_frames = 13;
+  uint64 tx_bytes = 14;
+  uint64 rx_bytes = 15;
+  string media = 16;
+  bool autoneg = 17;
+  string duplex = 18;
+  bool flow_control = 19;
+  string fec = 20;
+  int32 ppm = 21;
+  string phy_mode = 22;
+  string data_path = 23;
+  bool remote_fault = 24;
+  string master = 25;
+  bool auto_mdix = 26;
+  PortCapabilities capabilities = 27;
+  SfpInfo sfp = 28;
+  uint32 lag_id = 29;
+}
+
+enum PortMedia {
+  PORT_MEDIA_UNSPECIFIED = 0;
+  PORT_MEDIA_COPPER = 1;
+  PORT_MEDIA_FIBER = 2;
+  PORT_MEDIA_VIRTUAL = 3;
+}
+
+enum PortDuplex {
+  PORT_DUPLEX_UNSPECIFIED = 0;
+  PORT_DUPLEX_HALF = 1;
+  PORT_DUPLEX_FULL = 2;
+}
+
+enum PortFec {
+  PORT_FEC_UNSPECIFIED = 0;
+  PORT_FEC_OFF = 1;
+  PORT_FEC_CLAUSE74 = 2;
+  PORT_FEC_CLAUSE91 = 3;
+  PORT_FEC_CLAUSE108 = 4;
+  PORT_FEC_CLAUSE119 = 5;
+  PORT_FEC_CONSORTIUM = 6;
+  PORT_FEC_544 = 7;
+  PORT_FEC_514 = 8;
+}
+
+enum PortPhyMode {
+  PORT_PHY_MODE_UNSPECIFIED = 0;
+  PORT_PHY_MODE_AUTO = 1;
+  PORT_PHY_MODE_1000BASE_X = 2;
+  PORT_PHY_MODE_SGMII = 3;
+  PORT_PHY_MODE_10GBASE_R = 4;
+  PORT_PHY_MODE_25GBASE_R = 5;
+}
+
+enum PortDataPathMode {
+  PORT_DATA_PATH_UNSPECIFIED = 0;
+  PORT_DATA_PATH_NORMAL = 1;
+  PORT_DATA_PATH_LOOPBACK = 2;
+}
+
+enum PortPerfType {
+  PORT_PERF_TYPE_UNSPECIFIED = 0;
+  PORT_PERF_TYPE_L1 = 1;
+  PORT_PERF_TYPE_L2 = 2;
+  PORT_PERF_TYPE_L3 = 3;
+}
+
+message PortCapabilities {
+  repeated uint64 line_speeds_mbps = 1;
+  repeated PortMedia media = 2;
+  repeated PortFec fec = 3;
+  repeated PortPhyMode phy_modes = 4;
+  bool autoneg = 5;
+  bool flow_control = 6;
+  bool ppm = 7;
+  bool sfp = 8;
+  uint32 max_queues = 9;
+}
+
+message PortSettings {
+  PortMedia media = 1;
+  bool auto_negotiation = 2;
+  uint64 line_speed_mbps = 3;
+  PortDuplex duplex = 4;
+  bool flow_control = 5;
+  PortPhyMode phy_mode = 6;
+  PortFec fec = 7;
+  int32 ppm_adjust = 8;
+  PortDataPathMode data_path = 9;
+  bool remote_fault = 10;
+  string master = 11;
+  bool auto_mdix = 12;
+  uint32 mtu = 13;
+  optional bool promisc = 14;
+  optional bool disable_offload = 15;
+  optional bool disable_ipv6 = 16;
+  optional int32 cpu = 17;
+}
+
+message ConfigurePortsRequest {
+  repeated string ports = 1;
+  PortSettings settings = 2;
+  string idempotency_key = 3;
+}
+
+message ConfigPortsLinkRequest {
+  repeated string ports = 1;
+  bool enable_link = 2;
+}
+
+message LinkFaultRequest {
+  repeated string ports = 1;
+  bool start = 2;
+}
+
+message RestartAutonegRequest {
+  repeated string ports = 1;
+}
+
+message SwitchMediaRequest {
+  ResourceRef media = 1;
+  PortMedia media_type = 2;
+  uint64 line_speed_mbps = 3;
+}
+
+message CreateOfflinePortsRequest {
+  string port_name = 1;
+  PortMedia media = 2;
+  uint64 line_speed_mbps = 3;
+  uint32 count = 4;
+}
+
+message AggregatePortsRequest {
+  repeated string ports = 1;
+}
+
+message LagPort {
+  uint32 lag_id = 1;
+  string name = 2;
+  repeated string members = 3;
+  string mode = 4;
+}
+
+message LagReply {
+  Result result = 1;
+  repeated LagPort lags = 2;
+}
+
+message LagMemberRequest {
+  uint32 lag_id = 1;
+  repeated string ports = 2;
+}
+
+message LacpRequest {
+  repeated uint32 lag_ids = 1;
+}
+
+message PortSfpReply {
+  Result result = 1;
+  SfpInfo sfp = 2;
+}
+
+message PortStatsRequest {
+  repeated string ports = 1;
+  uint32 window_ms = 2;
+}
+
+message PortStats {
+  string port = 1;
+  uint64 tx_frames = 2;
+  uint64 rx_frames = 3;
+  uint64 tx_bytes = 4;
+  uint64 rx_bytes = 5;
+  uint32 tx_fps_x100 = 6;
+  uint32 rx_fps_x100 = 7;
+  uint64 tx_l1_bps = 8;
+  uint64 rx_l1_bps = 9;
+  uint64 fcs_err = 10;
+  uint64 undersize = 11;
+  uint64 oversize = 12;
+  uint64 jumbo = 13;
+  uint64 dropped = 14;
+  uint64 filtered = 15;
+}
+
+message PortStatsReply {
+  Result result = 1;
+  repeated PortStats stats = 2;
+}
+
+message PortAvgLatencyStats {
+  string port = 1;
+  uint32 avg_us = 2;
+  uint32 min_us = 3;
+  uint32 max_us = 4;
+  uint32 p50_us = 5;
+  uint32 p99_us = 6;
+}
+
+message PortAvgLatencyReply {
+  Result result = 1;
+  repeated PortAvgLatencyStats stats = 2;
+}
+
+message PortQbuStats {
+  string port = 1;
+  uint64 tx_frames = 2;
+  uint64 rx_frames = 3;
+  uint32 tx_qbu_x100 = 4;
+  uint32 rx_qbu_x100 = 5;
+}
+
+message PortQbuReply {
+  Result result = 1;
+  repeated PortQbuStats stats = 2;
+}
+
+enum PortSamplingMode {
+  PORT_SAMPLING_MODE_UNSPECIFIED = 0;
+  PORT_SAMPLING_MODE_ALL = 1;
+  PORT_SAMPLING_MODE_PERIODIC = 2;
+  PORT_SAMPLING_MODE_TRIGGER = 3;
+}
+
+message PortSamplingConfig {
+  repeated string ports = 1;
+  PortSamplingMode mode = 2;
+  uint32 interval_ms = 3;
+  uint32 max_samples = 4;
+}
+
+message PortSamplingResult {
+  string port = 1;
+  uint64 samples = 2;
+  uint64 bytes = 3;
+  bytes data = 4;
+}
+
+message PortSamplingReply {
+  Result result = 1;
+  repeated PortSamplingResult samples = 2;
+}
+
+message PortPropertyVerifyRequest {
+  repeated string ports = 1;
+  repeated string properties = 2;
+}
+
+message PortPropertyVerifyReply {
+  Result result = 1;
+  repeated string mismatches = 2;
+}
+
+service PortService {
+  rpc ListPorts(ListPortsRequest) returns (PortList);         // viewer
+  rpc GetPort(GetPortRequest) returns (PortReply);            // viewer
+  rpc OpenPort(PortSelector) returns (PortReply);             // operator
+  rpc ClosePort(PortSelector) returns (PortReply);            // operator
+  rpc OnlinePort(PortSelector) returns (PortReply);           // operator
+  rpc OfflinePort(PortSelector) returns (PortReply);          // operator
+  rpc SetPort(SetPortRequest) returns (JobReply);             // operator
+  rpc ConfigurePorts(ConfigurePortsRequest) returns (JobReply);             // operator
+  rpc SetLinks(ConfigPortsLinkRequest) returns (JobReply);                  // operator
+  rpc SendLinkFault(LinkFaultRequest) returns (JobReply);                   // operator
+  rpc RestartAutoneg(RestartAutonegRequest) returns (JobReply);             // operator
+  rpc SwitchMedia(SwitchMediaRequest) returns (JobReply);                   // operator
+  rpc CreateOfflinePorts(CreateOfflinePortsRequest) returns (PortList);     // operator
+  rpc AggregatePorts(AggregatePortsRequest) returns (LagReply);             // operator
+  rpc AddLagMember(LagMemberRequest) returns (LagReply);                    // operator
+  rpc DeleteLagMember(LagMemberRequest) returns (LagReply);                 // operator
+  rpc StartLacp(LacpRequest) returns (JobReply);                            // operator
+  rpc StopLacp(LacpRequest) returns (JobReply);                             // operator
+  rpc GetSfp(PortSelector) returns (PortSfpReply);                          // viewer
+  rpc GetStats(PortStatsRequest) returns (PortStatsReply);                  // viewer
+  rpc GetAvgLatency(PortStatsRequest) returns (PortAvgLatencyReply);        // viewer
+  rpc GetQbuStats(PortStatsRequest) returns (PortQbuReply);                 // viewer
+  rpc StartSampling(PortSamplingConfig) returns (JobReply);                 // operator
+  rpc StopSampling(PortSelector) returns (JobReply);                        // operator
+  rpc TriggerSampling(PortSelector) returns (JobReply);                     // operator
+  rpc ShowSampling(PortSelector) returns (PortSamplingReply);               // viewer
+  rpc VerifyProperties(PortPropertyVerifyRequest) returns (PortPropertyVerifyReply); // viewer
+}
+
+message ListPortsRequest {
+  bool include_all = 1;      // true = 连同未配置的系统网卡一起枚举
+}
+
+message PortList {
+  Result result = 1;
+  repeated Port ports = 2;
+}
+
+message GetPortRequest {
+  string name = 1;
+}
+
+// 只保留引擎 PORT_OPEN 真正消费的属性；open 的端口会短暂 close→open。
+message PortConfig {
+  reserved 6, 7, 8, 9;
+  reserved "rx_block_size", "rx_block_nr", "tx_frame_nr", "qdisc_bypass";
+
+  string name = 1;
+  optional bool promisc = 2;
+  optional bool disable_offload = 3;
+  optional bool disable_ipv6 = 4;
+  optional int32 cpu = 5;
+}
+
+message SetPortRequest {
+  reserved 3;
+  reserved "idempotency_key";
+
+  string name = 1;
+  PortConfig config = 2;
+}
+
+message PortSelector {
+  string name = 1;
+}
+
+message PortReply {
+  Result result = 1;
+  Port port = 2;
+}
+
+

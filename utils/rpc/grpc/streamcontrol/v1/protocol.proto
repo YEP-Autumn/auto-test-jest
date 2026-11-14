@@ -1,0 +1,165 @@
+// 通用协议资源（把各协议 config 统一到一个对象入口）
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+import "streamcontrol/v1/bgp.proto";
+import "streamcontrol/v1/ospf.proto";
+import "streamcontrol/v1/isis.proto";
+import "streamcontrol/v1/rip.proto";
+import "streamcontrol/v1/multicast.proto";
+import "streamcontrol/v1/mpls.proto";
+import "streamcontrol/v1/sr.proto";
+import "streamcontrol/v1/bfd.proto";
+import "streamcontrol/v1/switching.proto";
+import "streamcontrol/v1/tunnel.proto";
+import "streamcontrol/v1/controller.proto";
+
+enum ProtocolKind {
+  PROTOCOL_KIND_UNSPECIFIED = 0;
+  PROTOCOL_KIND_BGP = 1;
+  PROTOCOL_KIND_OSPFV2 = 2;
+  PROTOCOL_KIND_OSPFV3 = 3;
+  PROTOCOL_KIND_ISIS = 4;
+  PROTOCOL_KIND_RIP = 5;
+  PROTOCOL_KIND_PIM = 6;
+  PROTOCOL_KIND_IGMP = 7;
+  PROTOCOL_KIND_MLD = 8;
+  PROTOCOL_KIND_LDP = 9;
+  PROTOCOL_KIND_SR = 10;
+  PROTOCOL_KIND_BFD = 11;
+  PROTOCOL_KIND_STP = 12;
+  PROTOCOL_KIND_LACP = 13;
+  PROTOCOL_KIND_VXLAN = 14;
+  PROTOCOL_KIND_GRE = 15;
+  PROTOCOL_KIND_TRILL = 16;
+  PROTOCOL_KIND_OPENFLOW = 17;
+  PROTOCOL_KIND_NETCONF = 18;
+  PROTOCOL_KIND_OVSDB = 19;
+  PROTOCOL_KIND_PCEP = 20;
+}
+
+enum ProtocolState {
+  PROTOCOL_STATE_UNSPECIFIED = 0;
+  PROTOCOL_STATE_DISABLED = 1;
+  PROTOCOL_STATE_NOT_START = 2;
+  PROTOCOL_STATE_RUNNING = 3;
+  PROTOCOL_STATE_STARTING = 4;
+  PROTOCOL_STATE_STOPPING = 5;
+  PROTOCOL_STATE_ERROR = 6;
+}
+
+message ProtocolConfig {
+  ResourceRef ref = 1;
+  ResourceRef port = 2;
+  string name = 3;
+  ProtocolKind kind = 4;
+  oneof config {
+    BgpConfig bgp = 10;
+    Ospfv2Config ospfv2 = 11;
+    Ospfv3Config ospfv3 = 12;
+    IsisConfig isis = 13;
+    RipConfig rip = 14;
+    PimConfig pim = 15;
+    IgmpConfig igmp = 16;
+    MldConfig mld = 17;
+    LdpConfig ldp = 18;
+    SrConfig sr = 19;
+    BfdConfig bfd = 20;
+    StpConfig stp = 21;
+    LacpConfig lacp = 22;
+    VxlanConfig vxlan = 23;
+    GreConfig gre = 24;
+    TrillConfig trill = 25;
+    OpenFlowConfig openflow = 26;
+    NetconfConfig netconf = 27;
+    OvsdbConfig ovsdb = 28;
+    PcepConfig pcep = 29;
+  }
+}
+
+message ProtocolSession {
+  string peer = 1;
+  ProtocolState state = 2;
+  uint64 uptime_s = 3;
+  uint64 rx_pdus = 4;
+  uint64 tx_pdus = 5;
+  uint64 errors = 6;
+  string detail = 7;
+}
+
+message ProtocolStats {
+  ResourceRef ref = 1;
+  ProtocolState state = 2;
+  uint64 sessions = 3;
+  uint64 sessions_up = 4;
+  uint64 routes = 5;
+  uint64 rx_pdus = 6;
+  uint64 tx_pdus = 7;
+  uint64 errors = 8;
+  uint64 last_error_wall_us = 9;
+  repeated ProtocolSession session_list = 10;
+}
+
+message ProtocolRequest {
+  ResourceRef ref = 1;
+}
+
+message ProtocolListRequest {
+  ResourceRef port = 1;
+  ProtocolKind kind = 2;
+  PageRequest page = 3;
+}
+
+message ProtocolListReply {
+  Result result = 1;
+  repeated ProtocolConfig protocols = 2;
+  PageInfo page = 3;
+}
+
+message ProtocolActionRequest {
+  repeated ResourceRef protocols = 1;
+  string idempotency_key = 2;
+}
+
+message ProtocolStatsRequest {
+  repeated ResourceRef protocols = 1;
+}
+
+message ProtocolStatsReply {
+  Result result = 1;
+  repeated ProtocolStats stats = 2;
+}
+
+message WaitProtocolRequest {
+  repeated ResourceRef protocols = 1;
+  ProtocolState target = 2;
+  uint32 timeout_ms = 3;
+}
+
+service ProtocolService {
+  rpc Create(ProtocolConfig) returns (ResourceReply);                       // operator
+  rpc Get(ProtocolRequest) returns (ResourceReply);                         // viewer
+  rpc List(ProtocolListRequest) returns (ProtocolListReply);               // viewer
+  rpc Update(UpdateResourceRequest) returns (ResourceReply);               // operator
+  rpc Delete(ProtocolRequest) returns (JobReply);                          // operator
+  rpc Start(ProtocolActionRequest) returns (JobReply);                     // operator
+  rpc Stop(ProtocolActionRequest) returns (JobReply);                      // operator
+  rpc StartAll(ProtocolActionRequest) returns (JobReply);                  // operator
+  rpc StopAll(ProtocolActionRequest) returns (JobReply);                   // operator
+  rpc WaitForUp(WaitProtocolRequest) returns (JobReply);                   // operator
+  rpc Advertise(ProtocolActionRequest) returns (JobReply);                 // operator
+  rpc Withdraw(ProtocolActionRequest) returns (JobReply);                  // operator
+  rpc Restart(ProtocolActionRequest) returns (JobReply);                   // operator
+  rpc GetStats(ProtocolStatsRequest) returns (ProtocolStatsReply);         // viewer
+  rpc ListSessions(ProtocolStatsRequest) returns (ProtocolStatsReply);     // viewer
+}

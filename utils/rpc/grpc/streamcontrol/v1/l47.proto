@@ -1,0 +1,229 @@
+// L4–L7 应用测试（HTTP / DNS / TLS）
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+enum L47Protocol {
+  L47_PROTOCOL_UNSPECIFIED = 0;
+  L47_PROTOCOL_HTTP = 1;
+  L47_PROTOCOL_HTTPS = 2;
+  L47_PROTOCOL_DNS = 3;
+}
+
+enum L47LoadType {
+  L47_LOAD_TYPE_UNSPECIFIED = 0;
+  L47_LOAD_TYPE_USERS = 1;
+  L47_LOAD_TYPE_USERS_PER_SECOND = 2;
+  L47_LOAD_TYPE_CONCURRENT_USERS = 3;
+  L47_LOAD_TYPE_CONNECTIONS = 4;
+  L47_LOAD_TYPE_CONNECTIONS_PER_SECOND = 5;
+  L47_LOAD_TYPE_CONNECTIONS_ATTEMPTS_PER_SECOND = 6;
+  L47_LOAD_TYPE_CONCURRENT_CONNECTIONS = 7;
+  L47_LOAD_TYPE_TRANSACTIONS = 8;
+  L47_LOAD_TYPE_TRANSACTIONS_PER_SECOND = 9;
+  L47_LOAD_TYPE_BANDWIDTH = 10;
+}
+
+enum HttpMethod {
+  HTTP_METHOD_UNSPECIFIED = 0;
+  HTTP_METHOD_GET = 1;
+  HTTP_METHOD_POST = 2;
+  HTTP_METHOD_PUT = 3;
+  HTTP_METHOD_DELETE = 4;
+}
+
+message L47LoadProfile {
+  L47LoadType type = 1;
+  uint32 max_outstanding_connections = 2;
+  uint32 max_concurrent_connections = 3;
+  double load_value = 4;
+  uint32 ramp_time_ms = 5;
+  uint32 steady_time_ms = 6;
+}
+
+message L47Command {
+  string type = 1;              // http / dns / think / loop
+  HttpMethod method = 2;
+  string destination = 3;
+  uint32 port = 4;
+  string url = 5;
+  string connection_type = 6;
+  string abort_type = 7;
+  bytes body = 8;
+  repeated HttpHeader headers = 9;
+  uint32 loop_count = 10;
+  uint32 think_time_ms = 11;
+}
+
+message L47Loop {
+  uint32 begin = 1;
+  uint32 end = 2;
+  uint32 count = 3;
+}
+
+message HttpHeader {
+  string name = 1;
+  string value = 2;
+}
+
+message HttpHeaderProfile {
+  string name = 1;
+  repeated HttpHeader headers = 2;
+}
+
+message HttpResponse {
+  string name = 1;
+  uint32 status_code = 2;
+  repeated HttpHeader headers = 3;
+  bytes body = 4;
+}
+
+message HttpPayload {
+  string name = 1;
+  bytes data = 2;
+  string content_type = 3;
+}
+
+message HttpWebPage {
+  string name = 1;
+  string path = 2;
+  bytes content = 3;
+  repeated string resources = 4;
+}
+
+message HttpClientProfile {
+  string name = 1;
+  string version = 2;
+  HttpHeaderProfile header_profile = 3;
+  HttpWebPage web_page = 4;
+}
+
+message HttpServerProfile {
+  string name = 1;
+  HttpResponse response = 2;
+  HttpPayload payload = 3;
+}
+
+message DnsQuery {
+  string name = 1;
+  string record_type = 2;
+  string value = 3;
+  uint32 ttl = 4;
+}
+
+message DnsRecord {
+  string name = 1;
+  string type = 2;
+  string value = 3;
+  uint32 ttl = 4;
+}
+
+message DnsZone {
+  string name = 1;
+  repeated DnsRecord records = 2;
+}
+
+message DnsProfile {
+  string name = 1;
+  repeated DnsQuery queries = 2;
+  repeated DnsZone zones = 3;
+}
+
+message TlsProfile {
+  string name = 1;
+  string protocol_version = 2;
+  repeated string cipher_suites = 3;
+  string certificate = 4;
+  string private_key = 5;
+  string ca_certificate = 6;
+}
+
+message L47ClientConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  L47Protocol protocol = 4;
+  uint32 destination_port = 5;
+  uint32 template_count = 6;
+  L47LoadProfile load = 7;
+  repeated L47Command commands = 8;
+  L47Loop loop = 9;
+  HttpClientProfile http = 10;
+  DnsProfile dns = 11;
+  TlsProfile tls = 12;
+  PropertyBag properties = 13;
+}
+
+message L47ServerConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  L47Protocol protocol = 4;
+  uint32 listen_port = 5;
+  HttpServerProfile http = 6;
+  DnsProfile dns = 7;
+  TlsProfile tls = 8;
+  PropertyBag properties = 9;
+}
+
+message L47Stats {
+  ResourceRef ref = 1;
+  uint64 connection_attempts = 2;
+  uint64 connections_established = 3;
+  uint64 connections_aborted = 4;
+  uint64 connections_closed = 5;
+  uint64 concurrent_connections = 6;
+  uint64 connections_per_second = 7;
+  uint64 transactions = 8;
+  uint64 bytes_sent = 9;
+  uint64 bytes_received = 10;
+}
+
+message L47ActionRequest {
+  ResourceRef config = 1;
+  uint32 timeout_ms = 2;
+  string idempotency_key = 3;
+}
+
+message CertificateRequest {
+  ResourceRef target = 1;
+  string certificate = 2;
+  string private_key = 3;
+  string ca_certificate = 4;
+}
+
+message CertificateReply {
+  Result result = 1;
+  string certificate_id = 2;
+}
+
+service L47Service {
+  rpc CreateClient(L47ClientConfig) returns (ResourceReply);                 // operator
+  rpc CreateServer(L47ServerConfig) returns (ResourceReply);                 // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                              // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);               // viewer
+  rpc Update(UpdateResourceRequest) returns (ResourceReply);                 // operator
+  rpc Delete(ResourceRef) returns (JobReply);                                // operator
+  rpc Start(L47ActionRequest) returns (JobReply);                            // operator
+  rpc Stop(L47ActionRequest) returns (JobReply);                             // operator
+  rpc StartAll(L47ActionRequest) returns (JobReply);                         // operator
+  rpc StopAll(L47ActionRequest) returns (JobReply);                          // operator
+  rpc GetStats(ResourceRef) returns (L47Stats);                              // viewer
+}
+
+service CertificateService {
+  rpc UploadCertificate(CertificateRequest) returns (CertificateReply);      // operator
+  rpc UploadPrivateKey(CertificateRequest) returns (CertificateReply);       // operator
+  rpc UploadCaCertificate(CertificateRequest) returns (CertificateReply);    // operator
+  rpc DeleteCertificates(CertificateRequest) returns (JobReply);             // operator
+}

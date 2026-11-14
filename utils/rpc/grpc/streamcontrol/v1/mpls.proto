@@ -1,0 +1,98 @@
+// MPLS / LDP / VPLS / PWE3 / LSP Ping
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+message MplsLabel {
+  uint32 label = 1;
+  uint32 label_step = 2;
+  uint32 label_count = 3;
+  uint32 exp = 4;
+  bool bottom_of_stack = 5;
+  uint32 ttl = 6;
+}
+
+message LdpConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string label_range = 4;
+  string transport_address = 5;
+  string hello_interval = 6;
+  string hold_time = 7;
+  string advertisement_mode = 8;
+  repeated MplsLabel labels = 9;
+  PropertyBag properties = 10;
+}
+
+message VplsConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  uint32 vpls_count = 3;
+  string rd = 4;
+  string rt = 5;
+  uint32 mtu = 6;
+  uint32 ve_id = 7;
+  string distribution = 8;
+  PropertyBag properties = 9;
+}
+
+message PwConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  uint32 pw_count = 3;
+  uint32 mtu = 4;
+  uint32 group_id = 5;
+  bool c_bit = 6;
+  bool status_tlv = 7;
+  string encapsulation = 8;
+  string fec_type = 9;
+  PropertyBag properties = 10;
+}
+
+message MplsActionRequest {
+  ResourceRef config = 1;
+  repeated MplsLabel labels = 2;
+  string idempotency_key = 3;
+}
+
+message LspPingRequest {
+  ResourceRef config = 1;
+  string target = 2;
+  uint32 interval_ms = 3;
+  uint32 timeout_ms = 4;
+  uint32 ttl = 5;
+}
+
+service MplsService {
+  rpc CreateLdp(LdpConfig) returns (ResourceReply);                  // operator
+  rpc CreateVpls(VplsConfig) returns (ResourceReply);                // operator
+  rpc CreatePw(PwConfig) returns (ResourceReply);                    // operator
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);       // viewer
+  rpc Get(ResourceRef) returns (ResourceReply);                      // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                        // operator
+  rpc LdpStart(MplsActionRequest) returns (JobReply);                // operator
+  rpc LdpStop(MplsActionRequest) returns (JobReply);                 // operator
+  rpc LdpEstablish(MplsActionRequest) returns (JobReply);            // operator
+  rpc LdpRequestLabel(MplsActionRequest) returns (JobReply);         // operator
+  rpc LdpRestart(MplsActionRequest) returns (JobReply);              // operator
+  rpc LdpWithdrawLsps(MplsActionRequest) returns (JobReply);         // operator
+  rpc CreateStaticLabel(MplsActionRequest) returns (JobReply);       // operator
+  rpc CreateVpnLabel(MplsActionRequest) returns (JobReply);          // operator
+  rpc LspPingStart(LspPingRequest) returns (JobReply);               // operator
+  rpc LspPingStop(LspPingRequest) returns (JobReply);                // operator
+  rpc LspPingPause(LspPingRequest) returns (JobReply);               // operator
+  rpc LspPingResume(LspPingRequest) returns (JobReply);              // operator
+  rpc LspTracePause(LspPingRequest) returns (JobReply);              // operator
+  rpc LspTraceResume(LspPingRequest) returns (JobReply);             // operator
+}

@@ -9,16 +9,40 @@ import {
   matchIPv6,
   matchLLC,
   matchRaw,
+  matchSNAP,
   matchSNMP,
   matchTCP,
   matchUDP,
   matchVLAN,
-  packet_thrift_buffer_build,
 } from "../stream/packet-utils";
-import { StreamBackendApi } from "../stream/stream-backend-api";
+import { TrafficBackend } from "../stream/backend/types";
+import type {
+  PacketModifierParam,
+  PacketTransmitModeParam,
+} from "../stream/packet/types";
 import { PacketBuilder } from "../stream/thrift-packet";
-import { StreamPort } from "./config";
+import type { TrafficPort } from "../traffic/model";
 import { Dut } from "./dut";
+
+/**
+ * 发送相关类型已下沉到 stream/packet/types，这里原样 re-export，
+ * 保持测试里 `from "@/utils/comm/components"` 的 import 不变。
+ */
+export {
+  ModifierField,
+  TransmitMode,
+  BurstGapUnit,
+  BurstRateUnit,
+  ModifierMode,
+} from "../stream/packet/types";
+export type {
+  PacketModifierParam,
+  TransmitBurstParam,
+  TransmitStepParam,
+  TransmitContinuousParam,
+  TransmitTimeParam,
+  PacketTransmitModeParam,
+} from "../stream/packet/types";
 
 export interface Actuator {
   start(any?: any): any;
@@ -166,13 +190,13 @@ export class ReadyCheck implements Actuator {
 }
 
 export class StartCapture implements Actuator {
-  private stream_port: StreamPort;
-  constructor(stream_port: StreamPort) {
+  private stream_port: TrafficPort;
+  constructor(stream_port: TrafficPort) {
     this.stream_port = stream_port;
   }
-  async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
+  async start(streamBackend: TrafficBackend): Promise<boolean> {
     try {
-      await streamBackendApi?.streamPacketCaptureStart(this.stream_port);
+      await streamBackend?.startCapture(this.stream_port);
     } catch (error) {
       console.error("Error: ", error);
       return false;
@@ -188,20 +212,19 @@ export class PacketSender implements Actuator {
     this.param = param;
   }
 
-  async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
+  async start(streamBackend: TrafficBackend): Promise<boolean> {
     try {
       if (this.param.wait_time == null) {
         this.param.wait_time = 1000 * 2;
       }
       await sleep(this.param.wait_time);
-      let packet_buffer = packet_thrift_buffer_build(
-        this.param.packet.getFields(),
-      );
-      await streamBackendApi?.streamPacketUserdefineSend(
-        packet_buffer,
+      await streamBackend?.sendPacket(
         this.param.port,
-        this.param.modifier_param,
-        this.param.transmit_param,
+        this.param.packet.toSpec(),
+        {
+          modifiers: this.param.modifier_param,
+          transmit: this.param.transmit_param,
+        },
       );
     } catch (error) {
       console.error("PacketSender Error:", error);
@@ -215,13 +238,13 @@ export class PacketSender implements Actuator {
 }
 
 export class StopStream implements Actuator {
-  private stream_port: StreamPort;
-  constructor(stream_port: StreamPort) {
+  private stream_port: TrafficPort;
+  constructor(stream_port: TrafficPort) {
     this.stream_port = stream_port;
   }
-  async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
+  async start(streamBackend: TrafficBackend): Promise<boolean> {
     try {
-      await streamBackendApi?.streamPacketStreamStop(this.stream_port);
+      await streamBackend?.stopTransmit(this.stream_port);
     } catch (error) {
       console.error("Error: ", error);
       return false;
@@ -317,6 +340,9 @@ export class PacketChecker implements Actuator {
       case 12: // SNMP
         return matchSNMP(field, actualField);
 
+      case 13: // SNAP
+        return matchSNAP(field, actualField);
+
       default:
         return false;
     }
@@ -364,35 +390,35 @@ export class PacketChecker implements Actuator {
     return false;
   }
 
-  async start(streamBackendApi: StreamBackendApi): Promise<boolean> {
+  async start(streamBackend: TrafficBackend): Promise<boolean> {
     let result;
 
     try {
-      await streamBackendApi?.streamPacketCaptureStop(this.param.port);
-      result = await streamBackendApi?.streamPacketCaptureGet(this.param.port);
+      await streamBackend?.stopCapture(this.param.port);
+      result = await streamBackend?.readCapture(this.param.port);
     } catch (error) {
       console.error("PacketChecker Error:", error);
       return false;
     }
 
-    if (!result || !Array.isArray(result.pkt_list)) {
+    if (!result || !Array.isArray(result)) {
       console.error("❌ No packets captured, result: ", result);
       return false;
     }
 
-    console.log(`📦 Captured ${result.pkt_list.length} packet(s)`);
-    console.log(formatPktList(result.pkt_list));
+    console.log(`📦 Captured ${result.length} packet(s)`);
+    console.log(formatPktList(result.map((p) => ({ field_list: p.layers }))));
 
     // 获取期望的字段列表
     const expectedFields = this.param.packet.getFields();
 
     // 遍历捕获的包，检查是否有匹配的
     let matchCount = 0;
-    for (let i = 0; i < result.pkt_list.length; i++) {
-      const packet = result.pkt_list[i];
+    for (let i = 0; i < result.length; i++) {
+      const packet = result[i];
       if (
-        packet.field_list &&
-        this.fieldListMatches(expectedFields, packet.field_list)
+        packet.layers &&
+        this.fieldListMatches(expectedFields, packet.layers)
       ) {
         matchCount++;
         console.log(
@@ -536,87 +562,8 @@ export class ExecCustom implements Actuator {
   }
 }
 
-export enum ModifierField {
-  EthernetII_MAC_SRC = 0,
-  EthernetII_MAC_DST,
-  IPv4_IP_SRC,
-  IPv4_IP_DST,
-  TCP_PORT_SRC,
-  TCP_PORT_DST,
-  UDP_PORT_SRC,
-  UDP_PORT_DST,
-  Dot3_MAC_SRC,
-  Dot3_MAC_DST,
-}
-
-export enum TransmitMode {
-  CONTINUOUS = "Continuous",
-  BURST = "Burst",
-  STEP = "Step",
-  TIME = "Time",
-}
-
-export enum BurstGapUnit {
-  NS = "NS",
-  US = "US",
-  MS = "MS",
-  SEC = "SEC",
-  BYTES = "BYTES",
-}
-
-export enum BurstRateUnit {
-  FRAME_PER_SEC = "FRAME_PER_SEC",
-  BYTE_PER_SEC = "BYTE_PER_SEC",
-  PERCENT = "PERCENT",
-}
-
-export enum ModifierMode {
-  Increment = "Increment",
-  Decrement = "Decrement",
-  Random = "Random",
-}
-
-export interface PacketModifierParam {
-  modifier_field: ModifierField;
-  mode: ModifierMode;
-  start_value: string;
-  step?: number;
-  count: number;
-}
-
-export interface TransmitBurstParam {
-  burst_size?: number;
-  burst_count?: number;
-  gap?: number;
-  gap_unit?: BurstGapUnit;
-  rate?: number;
-  rate_unit?: BurstRateUnit;
-}
-
-export interface TransmitStepParam {
-  step_count: number;
-}
-
-export interface TransmitContinuousParam {
-  percent_rate: number;
-}
-
-export interface TransmitTimeParam {
-  time_seconds: number;
-}
-
-export interface PacketTransmitModeParam {
-  mode: TransmitMode;
-  param?:
-    | TransmitBurstParam
-    | TransmitStepParam
-    | TransmitContinuousParam
-    | TransmitTimeParam;
-  fixed_len?: number;
-}
-
 export interface PacketSendParam {
-  port: StreamPort;
+  port: TrafficPort;
   packet: PacketBuilder;
   modifier_param?: PacketModifierParam[];
   transmit_param: PacketTransmitModeParam;
@@ -647,7 +594,7 @@ export function EqualTo(cnt: number): NumberCompare {
 }
 
 export interface PacketCheckParam {
-  port: StreamPort;
+  port: TrafficPort;
   expected_count: NumberCompare | number;
   packet: PacketBuilder;
 }

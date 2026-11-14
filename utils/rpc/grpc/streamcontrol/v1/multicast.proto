@@ -1,0 +1,123 @@
+// PIM / IGMP / MLD / 组播
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+enum PimMode {
+  PIM_MODE_UNSPECIFIED = 0;
+  PIM_MODE_SM = 1;
+  PIM_MODE_SSM = 2;
+  PIM_MODE_ASM = 3;
+}
+
+message MulticastGroup {
+  string group_base = 1;
+  uint32 group_step = 2;
+  uint32 group_count = 3;
+  string source_base = 4;
+  uint32 source_step = 5;
+  uint32 source_count = 6;
+  string group_list = 7;
+  uint32 join_delay_ms = 8;
+  uint32 leave_delay_ms = 9;
+  uint32 rate_pps = 10;
+}
+
+message PimConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  PimMode mode = 4;
+  string hello_interval = 5;
+  string join_prune_interval = 6;
+  string bootstrap_interval = 7;
+  string register_interval = 8;
+  repeated MulticastGroup groups = 9;
+  PropertyBag properties = 10;
+}
+
+message IgmpConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  uint32 version = 4;
+  repeated MulticastGroup groups = 5;
+  string source_filter = 6;
+  PropertyBag properties = 7;
+}
+
+message IgmpQuerierConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  uint32 version = 4;
+  string query_interval = 5;
+  uint32 query_response_interval_ms = 6;
+  uint32 robustness = 7;
+  PropertyBag properties = 8;
+}
+
+message MldConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  uint32 version = 4;
+  repeated MulticastGroup groups = 5;
+  string source_filter = 6;
+  PropertyBag properties = 7;
+}
+
+message MldQuerierConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  uint32 version = 4;
+  string query_interval = 5;
+  uint32 query_response_interval_ms = 6;
+  uint32 robustness = 7;
+  PropertyBag properties = 8;
+}
+
+message MulticastActionRequest {
+  ResourceRef config = 1;
+  repeated string groups = 2;
+  repeated string sources = 3;
+  string idempotency_key = 4;
+}
+
+message MulticastConfigRequest {
+  ResourceRef ref = 1;
+}
+
+service MulticastService {
+  rpc CreatePim(PimConfig) returns (ResourceReply);                    // operator
+  rpc CreateIgmp(IgmpConfig) returns (ResourceReply);                  // operator
+  rpc CreateIgmpQuerier(IgmpQuerierConfig) returns (ResourceReply);    // operator
+  rpc CreateMld(MldConfig) returns (ResourceReply);                    // operator
+  rpc CreateMldQuerier(MldQuerierConfig) returns (ResourceReply);      // operator
+  rpc Get(MulticastConfigRequest) returns (ResourceReply);             // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);         // viewer
+  rpc Update(UpdateResourceRequest) returns (ResourceReply);           // operator
+  rpc Delete(MulticastConfigRequest) returns (JobReply);               // operator
+  rpc PimStart(MulticastActionRequest) returns (JobReply);             // operator
+  rpc PimJoin(MulticastActionRequest) returns (JobReply);              // operator
+  rpc PimLeave(MulticastActionRequest) returns (JobReply);             // operator
+  rpc PimBootstrap(MulticastActionRequest) returns (JobReply);         // operator
+  rpc PimRegister(MulticastActionRequest) returns (JobReply);          // operator
+  rpc IgmpApply(MulticastActionRequest) returns (JobReply);            // operator
+  rpc IgmpJoin(MulticastActionRequest) returns (JobReply);             // operator
+  rpc IgmpLeave(MulticastActionRequest) returns (JobReply);            // operator
+  rpc IgmpSendReport(MulticastActionRequest) returns (JobReply);       // operator
+  rpc MldApply(MulticastActionRequest) returns (JobReply);             // operator
+  rpc MldSendReport(MulticastActionRequest) returns (JobReply);        // operator
+}

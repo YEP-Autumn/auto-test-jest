@@ -1,0 +1,105 @@
+// stream-linux 公开 gRPC 契约（streamcontrol.v1）
+//
+// 本文件是公开契约的一部分；引擎内部 SLNX/2 不是公开接口。
+// 规则：
+//   * 字段号只增不改；删除字段必须 reserved；枚举 0 值必须是 UNSPECIFIED 类语义。
+//   * 单位写在字段名里：_ms/_us/_ns、_frames/_bytes/_bps/_pps、_x100。
+//   * 时间戳：墙钟用 *_wall_us 或 google.protobuf.Timestamp；单调时钟用 *_mono_us。
+//   * 业务失败用 Result（code != 0）；传输/鉴权失败用 gRPC status。
+//   * 角色：viewer < operator < admin；每个 RPC 注释里写所需角色。
+//   * 只定义已实现或明确排期的能力；不存在的 RPC 不放进公开契约。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+
+// ---------------------------------------------------------------- 测试与运行
+
+message StartTestRequest {
+  string name = 1;              // 运行显示名（引擎 RUN_NAME）
+  uint64 duration_ms = 2;       // 0 = 一直跑到 StopTest
+  uint64 frames = 3;            // 0 = 不限帧数
+  string idempotency_key = 4;   // 非空时，10 分钟内重复请求返回同一 run
+}
+
+message StartTestReply {
+  Result result = 1;
+  uint64 run_id = 2;
+}
+
+message StopTestRequest {
+  reserved 2, 3;
+  reserved "force", "idempotency_key";
+
+  uint64 run_id = 1;
+}
+
+message RunRef {
+  uint64 run_id = 1;
+}
+
+enum RunState {
+  RUN_STATE_UNSPECIFIED = 0;
+  RUN_IDLE = 1;
+  RUN_STARTING = 2;
+  RUN_RUNNING = 3;
+  RUN_PAUSED = 4;
+  RUN_STOPPING = 5;
+  RUN_DONE = 6;
+  RUN_FAILED = 7;
+  RUN_ABORTED = 8;
+}
+
+message RunSummary {
+  reserved 10, 11, 12;
+  reserved "started_wall_us", "ended_wall_us", "planned_frames";
+
+  uint64 tx_frames = 1;
+  uint64 rx_frames = 2;
+  uint64 tx_bytes = 3;
+  uint64 rx_bytes = 4;
+  uint64 loss = 5;
+  uint32 loss_rate_x100 = 6;
+  uint64 duration_actual_ms = 7;
+  uint64 run_id = 8;            // 0 = 聚合值
+  RunState state = 9;
+}
+
+message RunStatus {
+  reserved 5, 7, 9;
+  reserved "ended_wall_us", "streams", "streams_total";
+
+  uint64 run_id = 1;
+  string name = 2;              // 运行显示名
+  RunState state = 3;
+  uint64 started_wall_us = 4;
+  RunSummary summary = 6;
+  Result result = 8;            // 业务失败时填充；成功时 code=0
+}
+
+message RunListRequest {}
+
+message RunList {
+  reserved 3, 4;
+  reserved "next_page_token", "total";
+
+  Result result = 1;
+  repeated RunStatus runs = 2;
+}
+
+service RunService {
+  rpc StartTest(StartTestRequest) returns (StartTestReply);   // operator
+  rpc StopTest(StopTestRequest) returns (JobReply);           // operator
+  rpc PauseTest(RunRef) returns (RunStatus);                  // operator
+  rpc ResumeTest(RunRef) returns (RunStatus);                 // operator
+  rpc GetRun(RunRef) returns (RunStatus);                     // viewer
+  rpc ListRuns(RunListRequest) returns (RunList);             // viewer
+}

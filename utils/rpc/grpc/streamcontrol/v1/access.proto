@@ -1,0 +1,346 @@
+// DHCPv4/v6 / PPPoE / L2TP / IPTV / 802.1X
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+enum DhcpMode {
+  DHCP_MODE_UNSPECIFIED = 0;
+  DHCP_MODE_CLIENT = 1;
+  DHCP_MODE_SERVER = 2;
+  DHCP_MODE_RELAY = 3;
+}
+
+enum DhcpClientState {
+  DHCP_CLIENT_STATE_UNSPECIFIED = 0;
+  DHCP_CLIENT_STATE_NOT_READY = 1;
+  DHCP_CLIENT_STATE_IDLE = 2;
+  DHCP_CLIENT_STATE_BINDING = 3;
+  DHCP_CLIENT_STATE_BOUND = 4;
+  DHCP_CLIENT_STATE_RELEASING = 5;
+  DHCP_CLIENT_STATE_RENEWING = 6;
+  DHCP_CLIENT_STATE_REBINDING = 7;
+  DHCP_CLIENT_STATE_REBOOTING = 8;
+}
+
+enum PppoeState {
+  PPPOE_STATE_UNSPECIFIED = 0;
+  PPPOE_STATE_NONE = 1;
+  PPPOE_STATE_IDLE = 2;
+  PPPOE_STATE_CONNECTED = 3;
+  PPPOE_STATE_CONNECTING = 4;
+  PPPOE_STATE_DISCONNECTING = 5;
+}
+
+message DhcpOption {
+  uint32 tag = 1;
+  string type = 2;
+  uint32 message_type = 3;
+  string value = 4;
+  bytes hex_payload = 5;
+}
+
+message Dhcpv4ClientConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string host_name = 4;
+  repeated uint32 parameter_request_list = 5;
+  string vendor_class = 6;
+  bool broadcast = 7;
+  bool enable_renew = 8;
+  bool enable_rebind = 9;
+  bool enable_dad = 10;
+  uint32 dad_timeout_ms = 11;
+  uint32 retry_attempts = 12;
+  repeated DhcpOption options = 13;
+  PropertyBag properties = 14;
+}
+
+message Dhcpv4AddressPool {
+  string start = 1;
+  string end = 2;
+  string gateway = 3;
+  string dns = 4;
+  uint32 lease_s = 5;
+}
+
+message Dhcpv4ServerConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string server_ip = 4;
+  uint32 lease_s = 5;
+  uint32 renew_s = 6;
+  uint32 rebind_s = 7;
+  bool enable_dad = 8;
+  string allocation_policy = 9;
+  repeated Dhcpv4AddressPool pools = 10;
+  repeated DhcpOption options = 11;
+  PropertyBag properties = 12;
+}
+
+message Dhcpv4RelayConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string relay_address = 4;
+  string server_address = 5;
+  string circuit_id = 6;
+  string remote_id = 7;
+  string link_selection = 8;
+  bool option82 = 9;
+  PropertyBag properties = 10;
+}
+
+message Dhcpv6ClientConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string duid_type = 4;
+  uint32 enterprise_number = 5;
+  string duid = 6;
+  uint32 t1_s = 7;
+  uint32 t2_s = 8;
+  uint32 preferred_lifetime_s = 9;
+  uint32 valid_lifetime_s = 10;
+  bool rapid_commit = 11;
+  bool reconfigure_accept = 12;
+  bool request_address = 13;
+  bool request_prefix = 14;
+  bool request_srv6_locator = 15;
+  uint32 ia_pd_length = 16;
+  repeated DhcpOption options = 17;
+  PropertyBag properties = 18;
+}
+
+message Dhcpv6ServerConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string server_address = 4;
+  uint32 preferred_lifetime_s = 5;
+  uint32 valid_lifetime_s = 6;
+  repeated string address_pools = 7;
+  repeated string prefix_pools = 8;
+  repeated string locator_pools = 9;
+  repeated DhcpOption options = 10;
+  PropertyBag properties = 11;
+}
+
+message DhcpActionRequest {
+  ResourceRef config = 1;
+  ResourceRef interface = 2;
+  string state = 3;
+  uint32 timeout_ms = 4;
+  string idempotency_key = 5;
+}
+
+message DhcpStateReply {
+  Result result = 1;
+  DhcpClientState state = 2;
+  string address = 3;
+  string prefix = 4;
+}
+
+message DhcpConfigRequest {
+  ResourceRef ref = 1;
+}
+
+message PppoeClientConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string ip_version = 4;
+  uint32 padi_timeout_ms = 5;
+  uint32 padi_retries = 6;
+  uint32 padr_timeout_ms = 7;
+  uint32 padr_retries = 8;
+  string relay_agent_destination_mac = 9;
+  uint32 chap_timeout_ms = 10;
+  uint32 chap_retries = 11;
+  uint32 pap_timeout_ms = 12;
+  uint32 pap_retries = 13;
+  uint32 lcp_delay_ms = 14;
+  bool ipv6_auto_fill = 15;
+  string host_unique = 16;
+  uint32 rs_timeout_ms = 17;
+  uint32 rs_count = 18;
+  PropertyBag properties = 19;
+}
+
+message PppoeServerConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string ip_version = 4;
+  string address = 5;
+  string gateway = 6;
+  string dns = 7;
+  string auth = 8;
+  PropertyBag properties = 9;
+}
+
+message PppoeActionRequest {
+  ResourceRef config = 1;
+  ResourceRef interface = 2;
+  string state = 3;
+  uint32 timeout_ms = 4;
+  string idempotency_key = 5;
+}
+
+message PppoeStateReply {
+  Result result = 1;
+  PppoeState state = 2;
+  string address = 3;
+  string gateway = 4;
+}
+
+message L2tpConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  string role = 3;              // LAC / LNS
+  string local_address = 4;
+  string peer_address = 5;
+  string auth = 6;
+  uint32 tunnel_count = 7;
+  uint32 session_count = 8;
+  PropertyBag properties = 9;
+}
+
+message L2tpActionRequest {
+  ResourceRef config = 1;
+  string tunnel = 2;
+  string session = 3;
+  string state = 4;
+  uint32 timeout_ms = 5;
+  string idempotency_key = 6;
+}
+
+message IptvChannelGroup {
+  string name = 1;
+  string group_base = 2;
+  uint32 group_step = 3;
+  uint32 group_count = 4;
+  uint32 join_delay_ms = 5;
+  uint32 leave_delay_ms = 6;
+}
+
+message IptvConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  repeated IptvChannelGroup channels = 4;
+  string behavior = 5;
+  PropertyBag properties = 6;
+}
+
+message IptvActionRequest {
+  ResourceRef config = 1;
+  string channel = 2;
+  string action = 3;             // join / leave / start / stop
+  uint32 timeout_ms = 4;
+  string idempotency_key = 5;
+}
+
+message Dot1xConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string auth_method = 4;
+  string certificate = 5;
+  string eap_method = 6;
+  string identity = 7;
+  string password = 8;
+  PropertyBag properties = 9;
+}
+
+message Dot1xActionRequest {
+  ResourceRef config = 1;
+  string certificate = 2;
+  string state = 3;
+  uint32 timeout_ms = 4;
+  string idempotency_key = 5;
+}
+
+service DhcpService {
+  rpc CreateV4Client(Dhcpv4ClientConfig) returns (ResourceReply);          // operator
+  rpc CreateV4Server(Dhcpv4ServerConfig) returns (ResourceReply);          // operator
+  rpc CreateV4Relay(Dhcpv4RelayConfig) returns (ResourceReply);            // operator
+  rpc CreateV6Client(Dhcpv6ClientConfig) returns (ResourceReply);          // operator
+  rpc CreateV6Server(Dhcpv6ServerConfig) returns (ResourceReply);          // operator
+  rpc Get(DhcpConfigRequest) returns (ResourceReply);                      // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);             // viewer
+  rpc Delete(DhcpConfigRequest) returns (JobReply);                        // operator
+  rpc Bind(DhcpActionRequest) returns (DhcpStateReply);                    // operator
+  rpc Renew(DhcpActionRequest) returns (DhcpStateReply);                   // operator
+  rpc Rebind(DhcpActionRequest) returns (DhcpStateReply);                  // operator
+  rpc Release(DhcpActionRequest) returns (JobReply);                       // operator
+  rpc Reboot(DhcpActionRequest) returns (DhcpStateReply);                  // operator
+  rpc Inform(DhcpActionRequest) returns (JobReply);                        // operator
+  rpc ForceRenew(DhcpActionRequest) returns (DhcpStateReply);              // operator
+  rpc WaitForState(DhcpActionRequest) returns (DhcpStateReply);            // operator
+  rpc StartServer(DhcpActionRequest) returns (JobReply);                   // operator
+  rpc StopServer(DhcpActionRequest) returns (JobReply);                    // operator
+  rpc StartReplyingNak(DhcpActionRequest) returns (JobReply);              // operator
+  rpc StopReplyingNak(DhcpActionRequest) returns (JobReply);               // operator
+  rpc LeaseQuery(DhcpActionRequest) returns (JobReply);                    // viewer
+  rpc BulkLeaseQuery(DhcpActionRequest) returns (JobReply);                // viewer
+  rpc ActiveLeaseQuery(DhcpActionRequest) returns (JobReply);              // viewer
+  rpc StartTls(DhcpActionRequest) returns (JobReply);                      // operator
+}
+
+service PppoeService {
+  rpc CreateClient(PppoeClientConfig) returns (ResourceReply);             // operator
+  rpc CreateServer(PppoeServerConfig) returns (ResourceReply);             // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                            // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);             // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                              // operator
+  rpc Connect(PppoeActionRequest) returns (PppoeStateReply);               // operator
+  rpc Disconnect(PppoeActionRequest) returns (JobReply);                   // operator
+  rpc Abort(PppoeActionRequest) returns (JobReply);                        // operator
+  rpc ChangeMode(PppoeActionRequest) returns (JobReply);                   // operator
+  rpc WaitForState(PppoeActionRequest) returns (PppoeStateReply);          // operator
+  rpc SessionInfo(PppoeActionRequest) returns (PppoeStateReply);           // viewer
+}
+
+service L2tpService {
+  rpc Create(L2tpConfig) returns (ResourceReply);                          // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                            // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);             // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                              // operator
+  rpc Connect(L2tpActionRequest) returns (JobReply);                       // operator
+  rpc Disconnect(L2tpActionRequest) returns (JobReply);                    // operator
+  rpc Abort(L2tpActionRequest) returns (JobReply);                         // operator
+  rpc WaitForState(L2tpActionRequest) returns (JobReply);                  // operator
+}
+
+service IptvService {
+  rpc Create(IptvConfig) returns (ResourceReply);                          // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                            // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);             // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                              // operator
+  rpc StartTest(IptvActionRequest) returns (JobReply);                     // operator
+  rpc StopTest(IptvActionRequest) returns (JobReply);                      // operator
+  rpc WaitForCompletion(IptvActionRequest) returns (JobReply);             // operator
+}
+
+service Dot1xService {
+  rpc Create(Dot1xConfig) returns (ResourceReply);                         // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                            // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);             // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                              // operator
+  rpc UploadCertificate(Dot1xActionRequest) returns (JobReply);            // operator
+  rpc DeleteCertificate(Dot1xActionRequest) returns (JobReply);            // operator
+  rpc Abort(Dot1xActionRequest) returns (JobReply);                        // operator
+  rpc WaitForAuthState(Dot1xActionRequest) returns (JobReply);             // operator
+}

@@ -1,0 +1,171 @@
+// 报文结构与字段编辑模型
+//
+// 设计目标：
+//   1. 覆盖引擎当前 11 种协议 / 75 个字段；
+//   2. 字段值类型化，避免 PropertyBag 字符串解析；
+//   3. 支持 Renix XetModifier 的 Type/Start/Step/Count/Offset/Mask/Seed/Repeat；
+//   4. HeaderInstance 同时用于配置持久化与 gRPC 读回；
+//   5. 计算字段默认只读，错误注入走 ErrorInjectionSpec。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+// 报文头类型。
+// 1-9 与旧 extension.proto 保持数值兼容；10+ 为新增。
+enum HeaderType {
+  HEADER_TYPE_UNSPECIFIED = 0;
+  HEADER_TYPE_ETHERNET = 1;
+  HEADER_TYPE_VLAN = 2;
+  HEADER_TYPE_IPV4 = 3;
+  HEADER_TYPE_IPV6 = 4;
+  HEADER_TYPE_TCP = 5;
+  HEADER_TYPE_UDP = 6;
+  HEADER_TYPE_GRE = 7;
+  HEADER_TYPE_MPLS = 8;
+  HEADER_TYPE_CUSTOM = 9;
+  HEADER_TYPE_ARP = 10;
+  HEADER_TYPE_ICMP = 11;
+  HEADER_TYPE_ICMPV6 = 12;
+  HEADER_TYPE_RAW = 13;
+  HEADER_TYPE_DOT3 = 14;        // IEEE 802.3（dst/src/length）
+  HEADER_TYPE_LLC = 15;         // IEEE 802.2 LLC
+  HEADER_TYPE_SNAP = 16;        // LLC SNAP
+  HEADER_TYPE_SNMP = 17;        // SNMP v1/v2c 固定报文模板（UDP 之上）
+}
+
+enum PacketFieldType {
+  PACKET_FIELD_TYPE_UNSPECIFIED = 0;
+  PACKET_FIELD_TYPE_U8 = 1;
+  PACKET_FIELD_TYPE_U16 = 2;       // 网络序
+  PACKET_FIELD_TYPE_U32 = 3;       // 网络序
+  PACKET_FIELD_TYPE_U64 = 4;
+  PACKET_FIELD_TYPE_BITS = 5;      // 位域，配合 shift/mask
+  PACKET_FIELD_TYPE_MAC = 6;       // 6 字节
+  PACKET_FIELD_TYPE_IPV4 = 7;      // 4 字节
+  PACKET_FIELD_TYPE_IPV6 = 8;      // 16 字节
+  PACKET_FIELD_TYPE_BYTES = 9;     // 裸字节，长度 = width
+}
+
+enum PacketFieldFlag {
+  PACKET_FIELD_FLAG_NONE = 0;
+  PACKET_FIELD_FLAG_COMPUTED = 1;  // 校验和，由 seal 重算
+  PACKET_FIELD_FLAG_DERIVED = 2;   // 长度，由 seal 重算
+  PACKET_FIELD_FLAG_READONLY = 4;  // 语义只读；引擎默认不强制拦截
+}
+
+// 一个字段值。
+// 整数/位域用 u64；MAC/IPv4/IPv6/BYTES 用 raw（网络序）。
+message PacketFieldValue {
+  oneof value {
+    uint64 u64 = 1;
+    bytes raw = 2;
+  }
+}
+
+enum PacketModifierKind {
+  PACKET_MODIFIER_KIND_UNSPECIFIED = 0;
+  PACKET_MODIFIER_KIND_FIXED = 1;
+  PACKET_MODIFIER_KIND_INCREMENT = 2;
+  PACKET_MODIFIER_KIND_DECREMENT = 3;
+  PACKET_MODIFIER_KIND_RANDOM = 4;
+  PACKET_MODIFIER_KIND_LIST = 5;
+}
+
+enum PacketModifierScope {
+  PACKET_MODIFIER_SCOPE_UNSPECIFIED = 0;
+  PACKET_MODIFIER_SCOPE_FRAME = 1;   // 每帧递增（默认，Renix 行为）
+  PACKET_MODIFIER_SCOPE_BURST = 2;   // 每 burst 递增
+  PACKET_MODIFIER_SCOPE_STREAM = 3;  // 每流恒定（i = stream index）
+}
+
+// 字段跳变。
+// kind=INCREMENT/DECREMENT：value = start + step * i（count>0 时序号 i 对 count 取模）。
+// kind=RANDOM：在 [start, end] 内按 seed 生成；count/repeat 控制序列。
+// kind=LIST：value = list[(offset + i) % len(list)]。
+message PacketFieldModifier {
+  PacketModifierKind kind = 1;
+  PacketModifierScope scope = 2;
+
+  PacketFieldValue start = 3;
+  PacketFieldValue step = 4;
+  PacketFieldValue end = 5;    // RANDOM 的上界
+  repeated PacketFieldValue list = 6;
+
+  uint32 count = 7;            // INCR/DECR: 序号 i 对 count 取模；RANDOM: 值数量
+  uint32 offset = 8;           // Renix XetModifier.Offset；LIST: 起始下标
+  uint64 mask = 9;             // 整数/位域掩码
+  bytes mask_raw = 10;         // MAC/IPv6/bytes 掩码（网络序）
+
+  uint32 seed = 11;            // RANDOM 种子
+  bool repeat = 12;            // RANDOM/LIST 是否循环
+  bool contain_repeat = 13;    // RANDOM 是否允许重复值
+}
+
+// 一个字段的配置。
+// name 相对 header 实例；允许点分嵌套路径，兼容 Renix 自定义头。
+message PacketField {
+  string name = 1;             // 引擎名：src / ttl / src_port
+  string legacy_name = 2;      // Renix 名：source / sourcePort
+
+  oneof setting {
+    PacketFieldValue fixed = 3;
+    PacketFieldModifier modifier = 4;
+  }
+}
+
+// IP/TCP 选项。
+// type 使用 IANA 编号：0=EOL、1=NOP、7=Record Route、68=Timestamp、
+// 131=LSRR、137=SSRR、148=Router Alert；TCP：2=MSS、3=WScale、
+// 4=SACK permitted、5=SACK、8=Timestamps。
+// data 不含 type/length；EOL/NOP 的 data 必须为空。
+// 整组选项由引擎按 4 字节对齐，并把 IHL / TCP data offset 一起修正。
+message HeaderOption {
+  uint32 type = 1;
+  bytes data = 2;
+}
+
+// 一个具体的报文头实例。
+// repeated HeaderInstance 的顺序就是报文层顺序；index 仅用于显示/定位。
+message HeaderInstance {
+  HeaderType type = 1;
+  string name = 2;             // 唯一实例名，例如 ipv4_1；空 = 自动生成
+  uint32 index = 3;            // 0-based；列表顺序优先
+  uint32 header_length = 4;    // 0 = 默认；>默认值用于 options 预留
+  repeated PacketField fields = 5;
+  repeated HeaderOption options = 6;  // 仅 IPv4/TCP；需要完整层栈模式
+  // 引擎层名。动态类（HeaderType.CUSTOM）必填，其他头留空。
+  string proto_name = 7;
+}
+
+// 字段元数据，供 GUI 生成编辑器和做校验。
+message HeaderProperty {
+  string name = 1;             // 引擎名
+  string legacy_name = 2;      // Renix 名
+  string path = 3;             // 具体路径，例如 ipv4_1.src；无上下文时为空
+  PacketFieldType type = 4;
+  uint32 offset = 5;           // 相对头起始
+  uint32 width = 6;            // 字节宽度
+  uint32 shift = 7;            // BITS 专用
+  uint64 mask = 8;             // BITS 专用；地址字段用 mask_raw
+  bytes mask_raw = 9;          // 地址/字节字段掩码
+  repeated PacketFieldFlag flags = 10;
+  PacketFieldValue default_value = 11;
+  string display_name = 12;
+}
+
+message HeaderTypeInfo {
+  HeaderType type = 1;
+  string type_name = 2;        // Renix 类型名：Ethernet.ethernetII / IPv4.ipv4
+  string display_name = 3;
+  uint32 default_length = 4;
+  uint32 min_length = 5;
+  uint32 max_length = 6;
+  repeated PacketModifierScope supported_scopes = 7;
+  repeated HeaderProperty properties = 8;
+}

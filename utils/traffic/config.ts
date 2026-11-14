@@ -1,0 +1,204 @@
+/**
+ * 流量端口解析。
+ *
+ * Phase 1 不改现有 `Config.Renix.portList` 的数据结构，而是把它当作
+ * “逻辑端口 -> 主 provider 落点 + topology” 的来源，再结合环境变量解析出
+ * 当前要使用的 `TrafficPort`。
+ *
+ * 解析优先级（provider）：
+ *   TRAFFIC_PROVIDER_<A-F> > TRAFFIC_PROVIDER
+ *   > 旧 STREAM_BACKEND_KIND=streamcontrol-grpc > Config 中的 port.type
+ *
+ * 解析优先级（address）：
+ *   TRAFFIC_ADDRESS_<A-F>
+ *   > stream-linux: STREAM_CONTROL_PORT_MAP / 默认 eth<N>
+ *   > Config 中同 provider 的 port.name
+ */
+
+import { Config, StreamBackendConfig } from "../comm/config";
+import type { StreamPort } from "../comm/config";
+import type { PortMapping } from "../topo/types";
+import type { TrafficPort, TrafficPortId, TrafficProvider } from "./model";
+
+/** 逻辑端口 A-F，与 Config.Renix.portList 的下标一一对应 */
+export const TRAFFIC_PORT_IDS: readonly TrafficPortId[] = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+];
+
+interface LegacyPortEntry {
+  port: StreamPort;
+  portMapping: PortMapping;
+}
+
+/** 把环境变量/配置里的 provider 字符串归一化 */
+export function parseTrafficProvider(value: string): TrafficProvider {
+  switch (value.trim().toLowerCase()) {
+    case "renix":
+      return "renix";
+    case "scapy":
+      return "scapy";
+    case "stream-linux":
+    case "streamlinux":
+    case "streamcontrol-grpc":
+    case "grpc":
+      return "stream-linux";
+    default:
+      throw new Error(
+        `未知的流量后端 "${value}"，可选值：renix / scapy / stream-linux`,
+      );
+  }
+}
+
+/**
+ * 解析 STREAM_CONTROL_PORT_MAP，例如 "A=eth1,B=eth2"。
+ *
+ * 只解析环境变量，不访问 Config，避免与 utils/comm/config 的循环引用在
+ * 模块初始化阶段触发 TDZ。
+ */
+function parseEnginePortMap(raw: string | undefined): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const item of (raw ?? "").split(",")) {
+    const [key, value] = item.split("=").map((part) => part.trim());
+    if (key && value) map[key.toUpperCase()] = value;
+  }
+  return map;
+}
+
+function isTrafficPort(port: StreamPort | TrafficPort): port is TrafficPort {
+  const candidate = port as TrafficPort;
+  return (
+    typeof candidate.provider === "string" &&
+    typeof candidate.address === "string"
+  );
+}
+
+export class TrafficConfig {
+  /** stream-linux 的逻辑端口 -> 引擎网卡名 */
+  private static readonly enginePortMap = parseEnginePortMap(
+    process.env.STREAM_CONTROL_PORT_MAP,
+  );
+
+  /**
+   * 解析逻辑端口 A-F。
+   *
+   * 返回的 `TrafficPort` 同时填充 name/type，兼容现有 components 和 backend。
+   */
+  static resolvePort(id: TrafficPortId): TrafficPort {
+    const index = TRAFFIC_PORT_IDS.indexOf(id);
+    const entry = Config.Renix.portList[index] as LegacyPortEntry | undefined;
+    if (!entry) {
+      throw new Error(
+        `逻辑端口 ${id} 未在 Config.Renix.portList 中配置（索引 ${index}）`,
+      );
+    }
+
+    const provider = this.providerFor(id, entry);
+    const address = this.addressFor(id, index, provider, entry);
+    const topology = entry.portMapping;
+
+    return {
+      id,
+      provider,
+      address,
+      topology,
+    };
+  }
+
+  /**
+   * 只解析逻辑端口的拓扑落点，不依赖当前 provider 的地址配置。
+   *
+   * 拓扑控制只需要知道“接在哪个 SDN 设备接口”，即使该端口当前没有配置
+   * 任何流量后端地址，也不应该影响拓扑创建。
+   */
+  static resolveTopology(id: TrafficPortId): PortMapping {
+    const index = TRAFFIC_PORT_IDS.indexOf(id);
+    const entry = Config.Renix.portList[index] as LegacyPortEntry | undefined;
+    if (!entry) {
+      throw new Error(
+        `逻辑端口 ${id} 未在 Config.Renix.portList 中配置（索引 ${index}）`,
+      );
+    }
+    return entry.portMapping;
+  }
+
+  /**
+   * 把旧 StreamPort 或新 TrafficPort 归一化为 TrafficPort。
+   *
+   * - 已经是 TrafficPort：补齐可选 topology 后返回；
+   * - 旧的 { name, type }：如果能在 Config.Renix.portList 找到，就补上
+   *   逻辑端口号和 topology；找不到则作为自定义端口处理。
+   */
+  static normalizePort(port: StreamPort | TrafficPort): TrafficPort {
+    if (isTrafficPort(port)) {
+      return port;
+    }
+
+    const provider = parseTrafficProvider(port.type);
+    const index = Config.Renix.portList.findIndex(
+      (entry) => entry.port.name === port.name,
+    );
+
+    if (index >= 0) {
+      const entry = Config.Renix.portList[index] as LegacyPortEntry;
+      return {
+        id: TRAFFIC_PORT_IDS[index],
+        provider,
+        address: port.name,
+        topology: entry.portMapping,
+      };
+    }
+
+    return {
+      provider,
+      address: port.name,
+    };
+  }
+
+  private static providerFor(
+    id: TrafficPortId,
+    entry: LegacyPortEntry,
+  ): TrafficProvider {
+    const perPort = process.env[`TRAFFIC_PROVIDER_${id}`]?.trim();
+    if (perPort) return parseTrafficProvider(perPort);
+
+    const global = process.env.TRAFFIC_PROVIDER?.trim();
+    if (global) return parseTrafficProvider(global);
+
+    // 兼容旧的全局后端开关
+    if (StreamBackendConfig.kind === "streamcontrol-grpc") {
+      return "stream-linux";
+    }
+
+    return parseTrafficProvider(entry.port.type);
+  }
+
+  private static addressFor(
+    id: TrafficPortId,
+    index: number,
+    provider: TrafficProvider,
+    entry: LegacyPortEntry,
+  ): string {
+    const override = process.env[`TRAFFIC_ADDRESS_${id}`]?.trim();
+    if (override) return override;
+
+    if (provider === "stream-linux") {
+      return this.enginePortMap[id] ?? `eth${index + 1}`;
+    }
+
+    if (provider === parseTrafficProvider(entry.port.type)) {
+      return entry.port.name;
+    }
+
+    throw new Error(
+      `逻辑端口 ${id} 没有 ${provider} 后端地址。` +
+        `当前 Config.Renix.portList 中该端口是 ${entry.port.type}` +
+        `（${entry.port.name}）。请设置 TRAFFIC_ADDRESS_${id}，` +
+        `或在 Config 中补该 provider 的地址。`,
+    );
+  }
+}

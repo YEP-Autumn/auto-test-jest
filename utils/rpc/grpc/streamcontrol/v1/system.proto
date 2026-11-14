@@ -1,0 +1,287 @@
+// stream-linux 公开 gRPC 契约（streamcontrol.v1）
+//
+// 本文件是公开契约的一部分；引擎内部 SLNX/2 不是公开接口。
+// 规则：
+//   * 字段号只增不改；删除字段必须 reserved；枚举 0 值必须是 UNSPECIFIED 类语义。
+//   * 单位写在字段名里：_ms/_us/_ns、_frames/_bytes/_bps/_pps、_x100。
+//   * 时间戳：墙钟用 *_wall_us 或 google.protobuf.Timestamp；单调时钟用 *_mono_us。
+//   * 业务失败用 Result（code != 0）；传输/鉴权失败用 gRPC status。
+//   * 角色：viewer < operator < admin；每个 RPC 注释里写所需角色。
+//   * 只定义已实现或明确排期的能力；不存在的 RPC 不放进公开契约。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+
+// ---------------------------------------------------------------- 会话
+
+message HelloRequest {
+  string client = 1;        // "avalonia-gui/1.2.0"
+  uint32 protocol_major = 2;
+  uint32 protocol_minor = 3;
+}
+
+message HelloReply {
+  Result result = 1;
+  string engine_version = 2;
+  string gateway_version = 3;
+  bytes boot_id = 4;        // 引擎启动实例标识（重连后用于判断引擎是否重启）
+  uint64 revision = 5;      // 当前生效配置修订
+  Limits limits = 6;        // GUI 必须以此为准，不要硬编码
+  repeated string features = 7;
+  Clock clock = 8;
+  uint32 tick_ms = 9;       // 统计聚合 tick；订阅间隔会被夹到 >= tick
+  string schema_hash = 10;  // 当前契约/schema 版本哈希；gateway/客户端校验兼容
+}
+
+message ShutdownRequest {
+  reserved 2;
+  reserved "idempotency_key";
+
+  uint32 drain_ms = 1;
+}
+
+service SystemService {
+  rpc Hello(HelloRequest) returns (HelloReply);              // viewer
+  rpc GetSystemInfo(SystemInfoRequest) returns (SystemInfoReply); // viewer
+  rpc SetLogLevel(SetLogLevelRequest) returns (SetLogLevelReply); // admin
+  rpc Shutdown(ShutdownRequest) returns (JobReply);          // admin
+}
+
+
+// ---------------------------------------------------------------- 系统/机框/硬件
+
+enum ProductType {
+  PRODUCT_TYPE_UNSPECIFIED = 0;
+  PRODUCT_TYPE_VIRTUAL = 1;       // 通用 Linux 主机
+  PRODUCT_TYPE_CHASSIS = 2;       // 专用机框
+  PRODUCT_TYPE_APPLIANCE = 3;     // 一体机
+}
+
+enum LogLevel {
+  LOG_LEVEL_UNSPECIFIED = 0;
+  LOG_LEVEL_DEBUG = 1;
+  LOG_LEVEL_INFO = 2;
+  LOG_LEVEL_WARNING = 3;
+  LOG_LEVEL_ERROR = 4;
+}
+
+message SystemInfoRequest {}
+
+message SystemInfoReply {
+  Result result = 1;
+  ProductType product_type = 2;
+  string version = 3;
+  string config_file_version = 4;
+  string version_type = 5;
+  Limits limits = 6;
+  repeated Capability capabilities = 7;
+}
+
+message SetLogLevelRequest {
+  repeated ResourceRef targets = 1;   // 空 = 全局
+  LogLevel level = 2;
+}
+
+message SetLogLevelReply {
+  Result result = 1;
+}
+
+message Chassis {
+  ResourceRef ref = 1;
+  string address = 2;
+  string model = 3;
+  string serial = 4;
+  uint32 slot_count = 5;
+  bool online = 6;
+  repeated HardwareCard cards = 7;
+}
+
+message HardwareCard {
+  ResourceRef ref = 1;
+  uint32 slot = 2;
+  string model = 3;
+  string serial = 4;
+  string mode = 5;
+  string firmware = 6;
+  bool online = 7;
+  repeated HardwarePort ports = 8;
+}
+
+message HardwarePort {
+  ResourceRef ref = 1;
+  uint32 index = 2;
+  string location = 3;        // //<chassis>/<slot>/<port>
+  string media = 4;
+  uint64 line_speed_mbps = 5;
+  bool online = 6;
+  SfpInfo sfp = 7;
+}
+
+message SfpInfo {
+  string vendor = 1;
+  string model = 2;
+  string serial = 3;
+  string revision = 4;
+  string date = 5;
+  string transceiver_type = 6;
+  uint32 distance_m = 7;
+  string connector = 8;
+  double wavelength_nm = 9;
+  double temperature_c = 10;
+  double temperature_high_c = 11;
+  double temperature_low_c = 12;
+  double voltage_v = 13;
+  double voltage_high_v = 14;
+  double voltage_low_v = 15;
+  double bias_current_ma = 16;
+  double tx_power_dbm = 17;
+  double tx_power_high_dbm = 18;
+  double tx_power_low_dbm = 19;
+  double rx_power_dbm = 20;
+  double rx_power_high_dbm = 21;
+  double rx_power_low_dbm = 22;
+}
+
+message SfpRawData {
+  uint32 i2c_address = 1;
+  uint32 page = 2;
+  uint32 offset = 3;
+  bytes data = 4;
+}
+
+message CardCapability {
+  string name = 1;
+  string value = 2;
+}
+
+message HardwareListRequest {
+  ResourceRef chassis = 1;
+  ResourceRef card = 2;
+  PageRequest page = 3;
+}
+
+message ChassisList {
+  Result result = 1;
+  repeated Chassis chassis = 2;
+  PageInfo page = 3;
+}
+
+message CardList {
+  Result result = 1;
+  repeated HardwareCard cards = 2;
+  PageInfo page = 3;
+}
+
+message HardwarePortList {
+  Result result = 1;
+  repeated HardwarePort ports = 2;
+  PageInfo page = 3;
+}
+
+message GetSfpRequest {
+  ResourceRef port = 1;
+  string location = 2;
+}
+
+message GetSfpReply {
+  Result result = 1;
+  SfpInfo sfp = 2;
+}
+
+message GetSfpRawRequest {
+  ResourceRef port = 1;
+  uint32 i2c_address = 2;
+  uint32 page = 3;
+  uint32 offset = 4;
+  uint32 length = 5;
+}
+
+message GetSfpRawReply {
+  Result result = 1;
+  SfpRawData data = 2;
+}
+
+message RegisterRequest {
+  ResourceRef port = 1;
+  uint32 address = 2;
+  uint32 value = 3;
+}
+
+message RegisterReply {
+  Result result = 1;
+  uint32 value = 2;
+}
+
+message HardwareActionRequest {
+  ResourceRef chassis = 1;
+  ResourceRef card = 2;
+  string mode = 3;
+  string file_path = 4;
+  uint32 delay_ms = 5;
+}
+
+message HardwareActionReply {
+  Result result = 1;
+  uint64 job_id = 2;
+}
+
+message QueryCardCapabilityRequest {
+  ResourceRef card = 1;
+}
+
+message QueryCardCapabilityReply {
+  Result result = 1;
+  repeated CardCapability capabilities = 2;
+  string mode = 3;
+  string hardware_id = 4;
+}
+
+message LicenseInfo {
+  string feature = 1;
+  string version = 2;
+  string expires_at = 3;
+  bool valid = 4;
+  uint64 value = 5;
+}
+
+message LicenseRequest {
+  string file_path = 1;
+  string feature = 2;
+}
+
+message LicenseReply {
+  Result result = 1;
+  repeated LicenseInfo licenses = 2;
+  uint64 job_id = 3;
+}
+
+service HardwareService {
+  rpc ListChassis(HardwareListRequest) returns (ChassisList);          // viewer
+  rpc ListCards(HardwareListRequest) returns (CardList);               // viewer
+  rpc ListPorts(HardwareListRequest) returns (HardwarePortList);       // viewer
+  rpc GetSfp(GetSfpRequest) returns (GetSfpReply);                     // viewer
+  rpc GetSfpRaw(GetSfpRawRequest) returns (GetSfpRawReply);            // viewer
+  rpc ReadRegister(RegisterRequest) returns (RegisterReply);           // admin
+  rpc WriteRegister(RegisterRequest) returns (RegisterReply);          // admin
+  rpc Reboot(HardwareActionRequest) returns (HardwareActionReply);     // admin
+  rpc Upgrade(HardwareActionRequest) returns (HardwareActionReply);    // admin
+  rpc SwitchMode(HardwareActionRequest) returns (HardwareActionReply); // admin
+  rpc QueryCapabilities(QueryCardCapabilityRequest) returns (QueryCardCapabilityReply); // viewer
+}
+
+service LicenseService {
+  rpc Get(LicenseRequest) returns (LicenseReply);          // viewer
+  rpc Install(LicenseRequest) returns (LicenseReply);      // admin
+  rpc Remove(LicenseRequest) returns (LicenseReply);       // admin
+  rpc Download(LicenseRequest) returns (LicenseReply);     // admin
+  rpc ClearExpired(LicenseRequest) returns (LicenseReply); // admin
+}

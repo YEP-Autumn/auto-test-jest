@@ -1,0 +1,91 @@
+// Segment Routing / SRv6 / Segment List
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+message SrConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  uint32 algorithm = 3;
+  uint32 sid_label_base = 4;
+  uint32 sid_range = 5;
+  uint32 node_sid_index = 6;
+  uint32 node_sid_step = 7;
+  PropertyBag properties = 8;
+}
+
+message Srv6Locator {
+  string base = 1;
+  uint32 block_length = 2;
+  uint32 node_length = 3;
+  uint32 function_length = 4;
+  uint32 argument_length = 5;
+  uint32 step = 6;
+  uint32 count = 7;
+}
+
+message Srv6Sid {
+  string sid = 1;
+  uint32 function = 2;
+  uint32 argument = 3;
+  string behavior = 4;
+}
+
+message SegmentList {
+  string name = 1;
+  repeated string sids = 2;
+  string outer_ipv6 = 3;
+  uint32 segment_left = 4;
+}
+
+message Srv6Config {
+  ResourceRef ref = 1;
+  string name = 2;
+  Srv6Locator locator = 3;
+  repeated Srv6Sid sids = 4;
+  repeated SegmentList segment_lists = 5;
+  PropertyBag properties = 6;
+}
+
+message SrActionRequest {
+  ResourceRef config = 1;
+  repeated string sids = 2;
+  string idempotency_key = 3;
+}
+
+message SegmentListRequest {
+  ResourceRef config = 1;
+  SegmentList segment_list = 2;
+}
+
+message Srv6OamRequest {
+  ResourceRef config = 1;
+  string target_sid = 2;
+  uint32 hop_limit = 3;
+  uint32 count = 4;
+}
+
+service SrService {
+  rpc CreateSr(SrConfig) returns (ResourceReply);                       // operator
+  rpc CreateSrv6(Srv6Config) returns (ResourceReply);                   // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                         // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);          // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                           // operator
+  rpc SegmentListImport(SegmentListRequest) returns (JobReply);         // operator
+  rpc SegmentListExport(SegmentListRequest) returns (JobReply);         // operator
+  rpc SegmentListPreview(SegmentListRequest) returns (ResourceReply);   // viewer
+  rpc SegmentListValidate(SegmentListRequest) returns (ResourceReply);  // viewer
+  rpc PreviewTunnelSid(SrActionRequest) returns (ResourceReply);        // viewer
+  rpc Srv6OamStart(Srv6OamRequest) returns (JobReply);                  // operator
+  rpc Srv6OamStop(Srv6OamRequest) returns (JobReply);                   // operator
+}

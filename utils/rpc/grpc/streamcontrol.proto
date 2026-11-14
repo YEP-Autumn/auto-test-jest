@@ -1,0 +1,50 @@
+// stream-linux 公开 gRPC 契约入口（manifest）
+//
+// 真正的定义在 api/streamcontrol/v1/ 下，按域拆分。保留本文件是为了让
+// grpcurl / buf / 代码生成工具有一个稳定的入口：
+//
+//   grpcurl -import-path api -proto streamcontrol.proto ...
+//
+// 规则见 api/streamcontrol/v1/common.proto 文件头；本文件不定义消息/RPC。
+// 本 manifest 覆盖完整目标契约（55 个 service / 561 个 RPC）；实现状态见 api/README.md。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import public "streamcontrol/v1/common.proto";
+import public "streamcontrol/v1/packet.proto";
+import public "streamcontrol/v1/system.proto";
+import public "streamcontrol/v1/config.proto";
+import public "streamcontrol/v1/run.proto";
+import public "streamcontrol/v1/job.proto";
+import public "streamcontrol/v1/stats.proto";
+import public "streamcontrol/v1/event.proto";
+import public "streamcontrol/v1/port.proto";
+import public "streamcontrol/v1/ospf.proto";
+import public "streamcontrol/v1/resource.proto";
+import public "streamcontrol/v1/interface.proto";
+import public "streamcontrol/v1/traffic.proto";
+import public "streamcontrol/v1/capture.proto";
+import public "streamcontrol/v1/protocol.proto";
+import public "streamcontrol/v1/bgp.proto";
+import public "streamcontrol/v1/isis.proto";
+import public "streamcontrol/v1/rip.proto";
+import public "streamcontrol/v1/multicast.proto";
+import public "streamcontrol/v1/mpls.proto";
+import public "streamcontrol/v1/sr.proto";
+import public "streamcontrol/v1/bfd.proto";
+import public "streamcontrol/v1/switching.proto";
+import public "streamcontrol/v1/tunnel.proto";
+import public "streamcontrol/v1/controller.proto";
+import public "streamcontrol/v1/access.proto";
+import public "streamcontrol/v1/oam.proto";
+import public "streamcontrol/v1/benchmark.proto";
+import public "streamcontrol/v1/l47.proto";
+import public "streamcontrol/v1/scenario.proto";
+import public "streamcontrol/v1/extension.proto";

@@ -6,7 +6,7 @@
  * Jest 报错：Cannot find module '../rpc/gen-nodejs/packet_types'。
  *
  * 用法：
- *   node script/gen-thrift.js          # 仅在缺失时生成
+ *   node script/gen-thrift.js          # 缺失或 thrift 源文件更新时生成
  *   node script/gen-thrift.js --force  # 强制重新生成
  */
 const fs = require("fs");
@@ -15,10 +15,27 @@ const { spawnSync } = require("child_process");
 
 const rpcDir = path.resolve(__dirname, "../utils/rpc");
 const thriftFile = "thrift/packet.thrift";
+const thriftSource = path.join(rpcDir, thriftFile);
 const outputFile = path.join(rpcDir, "gen-nodejs", "packet_types.js");
 const force = process.argv.includes("--force");
 
-if (!force && fs.existsSync(outputFile)) {
+/**
+ * 仅在缺失、源文件更新或 --force 时生成。
+ * 只判断"文件是否存在"会留下旧的生成代码：packet.thrift 新增 SNMP/Dot3/LLC
+ * 等结构后，旧的 Field/FieldType 不认识这些层，序列化时会静默丢字段。
+ */
+function needsGenerate() {
+  if (force || !fs.existsSync(outputFile)) return true;
+  try {
+    return (
+      fs.statSync(thriftSource).mtimeMs > fs.statSync(outputFile).mtimeMs
+    );
+  } catch {
+    return true;
+  }
+}
+
+if (!needsGenerate()) {
   process.exit(0);
 }
 

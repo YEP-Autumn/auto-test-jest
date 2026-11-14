@@ -1,0 +1,350 @@
+// stream-linux 公开 gRPC 契约（streamcontrol.v1）
+//
+// 本文件是公开契约的一部分；引擎内部 SLNX/2 不是公开接口。
+// 规则：
+//   * 字段号只增不改；删除字段必须 reserved；枚举 0 值必须是 UNSPECIFIED 类语义。
+//   * 单位写在字段名里：_ms/_us/_ns、_frames/_bytes/_bps/_pps、_x100。
+//   * 时间戳：墙钟用 *_wall_us 或 google.protobuf.Timestamp；单调时钟用 *_mono_us。
+//   * 业务失败用 Result（code != 0）；传输/鉴权失败用 gRPC status。
+//   * 角色：viewer < operator < admin；每个 RPC 注释里写所需角色。
+//   * 只定义已实现或明确排期的能力；不存在的 RPC 不放进公开契约。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/run.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+// ---------------------------------------------------------------- 统计
+
+message StatsRequest {
+  reserved 7, 9;
+  reserved "fields", "include_names";
+
+  uint64 select = 1;         // bit0 端口，bit1 流，bit2 run 摘要
+  uint64 run_id = 2;         // 0 = 全部
+  uint32 interval_ms = 3;    // 0 = 网关缺省；实际值会被夹到 [tick_ms, 5000]
+  uint32 window_ms = 4;      // 0 = 引擎缺省
+  uint32 topk = 5;           // 0 = 引擎缺省（不裁剪）
+  bool only_changed = 6;
+  AlertThresholds alert = 8; // 订阅级覆盖；缺省继承引擎全局
+}
+
+message StatsSnapshotRequest {
+  reserved 5, 6;
+  reserved "fields", "include_names";
+
+  uint64 select = 1;         // bit0 端口，bit1 流，bit2 run
+  uint64 run_id = 2;
+  uint32 window_ms = 3;
+  uint32 topk = 4;
+}
+
+message StatsSnapshotReply {
+  Result result = 1;
+  StatsFrame frame = 2;
+}
+
+message AlertThresholds {
+  optional uint32 warn_x100 = 1;
+  optional uint32 fail_x100 = 2;
+  optional uint32 warn_windows = 3;
+  optional uint32 fail_windows = 4;
+  optional uint32 clear_windows = 5;
+  optional uint32 no_data_windows = 6;
+}
+
+message GetAlertRequest {}
+
+message SetAlertRequest {
+  AlertThresholds thresholds = 1;   // 只改出现的字段
+}
+
+message AlertReply {
+  Result result = 1;
+  AlertThresholds thresholds = 2;   // 生效后的完整值
+  bool changed = 3;
+}
+
+message StatsFrame {
+  uint32 sub_id = 1;
+  uint64 seq = 2;
+  uint64 dropped = 3;        // 网关累计丢帧
+  uint64 snapshot_id = 4;    // 跳号 = 丢过批
+  uint64 ts_mono_us = 5;
+  uint64 ts_wall_us = 6;
+  bool gap = 7;              // seq 不连续 / 引擎重连
+  bool stale = 8;            // 引擎断开，等待重建订阅
+  repeated StreamRow streams = 9;
+  repeated PortRow ports = 10;
+  RunSummary run = 11;       // 单 run 视图（第一条）
+  repeated RunSummary runs = 12;
+}
+
+enum StreamState {
+  STREAM_STATE_UNKNOWN = 0;
+  STREAM_STATE_OK = 1;
+  STREAM_STATE_WARN = 2;
+  STREAM_STATE_FAIL = 3;
+  STREAM_STATE_NO_DATA = 4;
+}
+
+message StreamRow {
+  reserved 13, 14;
+  reserved "name", "block";
+
+  uint64 stream_id = 1;
+  optional uint64 tx_frames = 2;
+  optional uint64 rx_frames = 3;
+  optional uint64 loss = 4;
+  optional uint64 reorder = 5;
+  optional uint64 dup = 6;
+  optional uint32 loss_rate_x100 = 7;
+  optional uint32 loss_rate_ewma_x100 = 8;
+  optional uint32 latency_us = 9;
+  optional uint32 jitter_us = 10;
+  optional StreamState state = 11;
+  optional uint32 flags = 12; // bit0 provisional, bit1 latency_unsynced, bit2 no_data
+  uint64 run_id = 15;         // 所属 run；0 = 聚合视图
+
+  optional uint64 tx_bytes = 16;
+  optional uint64 rx_bytes = 17;
+  optional uint32 latency_min_us = 18;
+  optional uint32 latency_max_us = 19;
+  optional uint32 latency_p50_us = 20;
+  optional uint32 latency_p99_us = 21;
+}
+
+message PortRow {
+  reserved 8, 9;
+  reserved "name", "ifindex";
+
+  uint64 port_id = 1;
+  optional uint32 tx_fps_x100 = 2;
+  optional uint32 rx_fps_x100 = 3;
+  optional uint64 tx_l1_bps = 4;
+  optional uint64 rx_l1_bps = 5;
+  optional uint32 loss_rate_x100 = 6;
+  optional uint32 flags = 7;  // bit0 no_loss, bit1 no_data
+
+  optional uint64 tx_bytes = 10;
+  optional uint64 rx_bytes = 11;
+  optional uint64 fcs_err = 12;
+  optional uint64 dropped = 13;
+}
+
+service StatsService {
+  rpc Subscribe(StatsRequest) returns (stream StatsFrame);             // viewer
+  rpc Snapshot(StatsSnapshotRequest) returns (StatsSnapshotReply);     // viewer
+  rpc GetAlert(GetAlertRequest) returns (AlertReply);                  // viewer
+  rpc SetAlert(SetAlertRequest) returns (AlertReply);                  // operator
+}
+
+
+// ---------------------------------------------------------------- 结果视图/导出/报告
+
+enum ResultQueryState {
+  RESULT_QUERY_STATE_UNSPECIFIED = 0;
+  RESULT_QUERY_STATE_STOPPED = 1;
+  RESULT_QUERY_STATE_RUNNING = 2;
+  RESULT_QUERY_STATE_PAUSED = 3;
+}
+
+enum ResultViewType {
+  RESULT_VIEW_TYPE_UNSPECIFIED = 0;
+  RESULT_VIEW_TYPE_TABLE = 1;
+  RESULT_VIEW_TYPE_CHART = 2;
+  RESULT_VIEW_TYPE_CUSTOM = 3;
+}
+
+enum ResultFormat {
+  RESULT_FORMAT_UNSPECIFIED = 0;
+  RESULT_FORMAT_CSV = 1;
+  RESULT_FORMAT_DB = 2;
+  RESULT_FORMAT_JSON = 3;
+  RESULT_FORMAT_PCAP = 4;
+}
+
+enum WriteMode {
+  WRITE_MODE_UNSPECIFIED = 0;
+  WRITE_MODE_OVERWRITE = 1;
+  WRITE_MODE_APPEND = 2;
+  WRITE_MODE_AUTOCREATE = 3;
+}
+
+message ResultView {
+  ResourceRef ref = 1;
+  string view_name = 2;
+  string data_class_name = 3;
+  ResultViewType view_type = 4;
+  string folder = 5;
+  repeated ResultColumn columns = 6;
+  ResultQuery query = 7;
+}
+
+message ResultColumn {
+  string name = 1;
+  string data_class = 2;
+  string group = 3;
+  string formula = 4;
+  bool boolean = 5;
+}
+
+message ResultQuery {
+  uint32 interval_ms = 1;
+  string sql = 2;
+  repeated string columns = 3;
+  string result_mode = 4;
+  ResultQueryState state = 5;
+}
+
+message CreateResultViewRequest {
+  ResultView view = 1;
+  string idempotency_key = 2;
+}
+
+message CreateResultColumnRequest {
+  ResourceRef view = 1;
+  ResultColumn column = 2;
+}
+
+message SubscribeResultRequest {
+  repeated ResourceRef views = 1;
+  uint32 interval_ms = 2;
+}
+
+message UnsubscribeResultRequest {
+  repeated ResourceRef views = 1;
+}
+
+message RefreshResultRequest {
+  repeated ResourceRef views = 1;
+}
+
+message ClearResultRequest {
+  repeated ResourceRef views = 1;
+  ResourceRef source = 2;
+  bool all = 3;
+}
+
+message ResultRow {
+  uint64 primary_key = 1;
+  PropertyBag values = 2;
+}
+
+message ResultPage {
+  Result result = 1;
+  repeated ResultRow rows = 2;
+  PageInfo page = 3;
+  uint64 snapshot_id = 4;
+}
+
+message GetResultByKeyRequest {
+  string view_name = 1;
+  uint64 primary_key = 2;
+}
+
+message ExportResultRequest {
+  string view_name = 1;
+  string file_name = 2;
+  WriteMode write_mode = 3;
+  ResultFormat format = 4;
+}
+
+message ExportResultReply {
+  Result result = 1;
+  string file_path = 2;
+  uint64 job_id = 3;
+}
+
+message ChartSeries {
+  string data_class = 1;
+  string data_source = 2;
+  string object_type = 3;
+  string object_name = 4;
+  string statistic = 5;
+  string unit = 6;
+  uint32 position = 7;
+}
+
+message ChartView {
+  ResourceRef ref = 1;
+  string view_name = 2;
+  repeated string data_classes = 3;
+  repeated ChartSeries series = 4;
+}
+
+message HistoryChartSettings {
+  ResourceRef view = 1;
+  uint32 interval_ms = 2;
+  string file_path = 3;
+  bool enabled = 4;
+}
+
+message GenerateReportRequest {
+  repeated ResourceRef test_results = 1;
+  string path = 2;
+}
+
+message ReportReply {
+  Result result = 1;
+  string file_path = 2;
+  uint64 job_id = 3;
+}
+
+message EmptyRequest {}
+
+message TestResultRef {
+  ResourceRef ref = 1;
+}
+
+message ExportTestResultRequest {
+  repeated ResourceRef test_results = 1;
+  string path = 2;
+  ResultFormat format = 3;
+}
+
+message ImportTestResultRequest {
+  string path = 1;
+  string name = 2;
+}
+
+service ResultService {
+  rpc CreateView(CreateResultViewRequest) returns (ResourceReply);          // operator
+  rpc CreateColumn(CreateResultColumnRequest) returns (ResourceReply);      // operator
+  rpc GetView(ResourceRef) returns (ResourceReply);                         // viewer
+  rpc ListViews(ListResourcesRequest) returns (ListResourcesReply);         // viewer
+  rpc Subscribe(SubscribeResultRequest) returns (JobReply);                 // operator
+  rpc Unsubscribe(UnsubscribeResultRequest) returns (JobReply);             // operator
+  rpc UnsubscribeAll(EmptyRequest) returns (JobReply);                             // operator
+  rpc Refresh(RefreshResultRequest) returns (JobReply);                     // operator
+  rpc Pause(RefreshResultRequest) returns (JobReply);                       // operator
+  rpc Resume(RefreshResultRequest) returns (JobReply);                      // operator
+  rpc Clear(ClearResultRequest) returns (JobReply);                         // operator
+  rpc GetByKey(GetResultByKeyRequest) returns (ResultRow);                  // viewer
+  rpc Export(ExportResultRequest) returns (ExportResultReply);              // operator
+}
+
+service ChartService {
+  rpc Create(ChartView) returns (ResourceReply);                            // operator
+  rpc Update(ChartView) returns (ResourceReply);                            // operator
+  rpc RemoveSeries(ResourceRef) returns (JobReply);                         // operator
+  rpc StartHistory(HistoryChartSettings) returns (JobReply);                // operator
+  rpc StopHistory(HistoryChartSettings) returns (JobReply);                 // operator
+  rpc ListHistory(ListResourcesRequest) returns (ListResourcesReply);       // viewer
+}
+
+service ReportService {
+  rpc Generate(GenerateReportRequest) returns (ReportReply);                // operator
+  rpc ExportResult(ExportTestResultRequest) returns (ReportReply);          // operator
+  rpc ImportResult(ImportTestResultRequest) returns (ResourceReply);        // operator
+  rpc DeleteResult(TestResultRef) returns (JobReply);                       // operator
+}

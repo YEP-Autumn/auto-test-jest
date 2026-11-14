@@ -1,0 +1,205 @@
+// 通用对象资源（Renix 对象模型 / 通用对象操作）
+//
+// 这是长尾能力的统一入口：任何未在领域 service 中单独建模的对象，都可以
+// 用 Resource + PropertyBag 表达。核心对象仍优先使用强类型领域消息。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+
+enum ResourceState {
+  RESOURCE_STATE_UNSPECIFIED = 0;
+  RESOURCE_STATE_ENABLED = 1;
+  RESOURCE_STATE_DISABLED = 2;
+  RESOURCE_STATE_ERROR = 3;
+  RESOURCE_STATE_DEGRADED = 4;
+}
+
+enum ConditionStatus {
+  CONDITION_STATUS_UNSPECIFIED = 0;
+  CONDITION_STATUS_TRUE = 1;
+  CONDITION_STATUS_FALSE = 2;
+  CONDITION_STATUS_UNKNOWN = 3;
+}
+
+enum ConditionType {
+  CONDITION_TYPE_UNSPECIFIED = 0;
+  CONDITION_TYPE_READY = 1;
+  CONDITION_TYPE_PROGRESSING = 2;
+  CONDITION_TYPE_DEGRADED = 3;
+}
+
+message ResourceCondition {
+  ConditionType type = 1;
+  ConditionStatus status = 2;
+  string reason = 3;
+  string message = 4;
+  int64 last_transition_us = 5;
+}
+
+message ResourceStatus {
+  uint64 observed_revision = 1;
+  uint64 status_epoch = 2;
+  repeated ResourceCondition conditions = 3;
+  google.protobuf.Struct raw = 4;        // 冷对象状态序列化视图
+}
+
+message ResourceMeta {
+  ResourceRef ref = 1;
+  uint64 created_revision = 2;
+  uint64 updated_revision = 3 [deprecated = true];  // 用 revision(8)；字段号保留到 v2
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  string owner = 6;
+  map<string, string> labels = 7;
+  uint64 revision = 8;          // 最后一次修改的全局 commit 号
+  uint64 status_epoch = 9;      // 运行态修订
+}
+
+message Resource {
+  ResourceMeta meta = 1;
+  ResourceState state = 2;
+  google.protobuf.Struct spec = 3;      // 配置态
+  google.protobuf.Struct status = 4;    // 冷状态 raw 视图；判定 Ready 用 status_detail
+  repeated ResourceRef children = 5;
+  repeated ResourceLink links = 6;
+  ResourceStatus status_detail = 7;     // typed：observed_revision + conditions
+}
+
+message ResourceLink {
+  string name = 1;          // SrcEndPoint / LoadProfile / lower / upper ...
+  ResourceRef target = 2;
+  bool source_direction = 3;
+}
+
+message ResourceEvent {
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    ADDED = 1;
+    MODIFIED = 2;
+    DELETED = 3;
+  }
+  Type type = 1;
+  Resource resource = 2;
+  uint64 resource_version = 3;
+}
+
+message GetResourceRequest {
+  ResourceRef ref = 1;
+  bool include_status = 2;
+}
+
+message ResourceReply {
+  Result result = 1;
+  Resource resource = 2;
+}
+
+message ListResourcesRequest {
+  string kind = 1;
+  ResourceRef parent = 2;
+  PageRequest page = 3;
+  string filter = 4;
+  bool include_status = 5;
+}
+
+message ListResourcesReply {
+  Result result = 1;
+  repeated Resource resources = 2;
+  PageInfo page = 3;
+  uint64 revision = 4;
+}
+
+message CreateResourceRequest {
+  string kind = 1;
+  ResourceRef parent = 2;
+  string name = 3;
+  google.protobuf.Struct spec = 4;
+  repeated ResourceLink links = 5;
+  string idempotency_key = 6;
+}
+
+message UpdateResourceRequest {
+  ResourceRef ref = 1;
+  google.protobuf.Struct patch = 2;     // JSON merge patch
+  repeated string update_mask = 3;
+  uint64 expected_revision = 4;
+}
+
+message DeleteResourceRequest {
+  ResourceRef ref = 1;
+  uint64 expected_revision = 2;
+  bool force = 3;
+  bool delete_linked_streams = 4;
+}
+
+message CloneResourceRequest {
+  ResourceRef source = 1;
+  ResourceRef parent = 2;
+  uint32 count = 3;
+  string name_prefix = 4;
+  string idempotency_key = 5;
+}
+
+message ResetResourceRequest {
+  repeated ResourceRef refs = 1;
+  bool all_properties = 2;
+  repeated string properties = 3;
+}
+
+message WatchResourcesRequest {
+  string kind = 1;
+  ResourceRef parent = 2;
+  string filter = 3;
+  uint64 since_version = 4;
+}
+
+message BatchResourceRequest {
+  repeated CreateResourceRequest creates = 1;
+  repeated UpdateResourceRequest updates = 2;
+  repeated DeleteResourceRequest deletes = 3;
+  string idempotency_key = 4;
+}
+
+message BatchResourceReply {
+  Result result = 1;
+  repeated Resource resources = 2;
+  uint64 revision = 3;
+  uint64 job_id = 4;
+}
+
+message QueryResourcesRequest {
+  string kind = 1;
+  ResourceRef parent = 2;
+  string filter = 3;
+  repeated string properties = 4;
+  PageRequest page = 5;
+}
+
+message QueryResourcesReply {
+  Result result = 1;
+  repeated PropertyBag rows = 2;
+  PageInfo page = 3;
+}
+
+service ResourceService {
+  rpc Get(GetResourceRequest) returns (ResourceReply);              // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);      // viewer
+  rpc Watch(WatchResourcesRequest) returns (stream ResourceEvent);  // viewer
+  rpc Create(CreateResourceRequest) returns (ResourceReply);        // operator
+  rpc Update(UpdateResourceRequest) returns (ResourceReply);        // operator
+  rpc Delete(DeleteResourceRequest) returns (JobReply);             // operator
+  rpc Clone(CloneResourceRequest) returns (BatchResourceReply);     // operator
+  rpc Reset(ResetResourceRequest) returns (JobReply);               // operator
+  rpc Batch(BatchResourceRequest) returns (BatchResourceReply);     // operator
+  rpc Query(QueryResourcesRequest) returns (QueryResourcesReply);   // viewer
+}

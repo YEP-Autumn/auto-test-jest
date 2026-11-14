@@ -1,0 +1,73 @@
+// STP/RSTP/MSTP / LACP / SRP
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+message MstInstanceConfig {
+  uint32 instance_id = 1;
+  uint32 priority = 2;
+  repeated uint32 vlans = 3;
+}
+
+message StpConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string mode = 4;              // STP / RSTP / MSTP
+  uint32 bridge_priority = 5;
+  uint32 hello_time_s = 6;
+  uint32 max_age_s = 7;
+  uint32 forward_delay_s = 8;
+  repeated MstInstanceConfig instances = 9;
+  PropertyBag properties = 10;
+}
+
+message LacpConfig {
+  ResourceRef ref = 1;
+  uint32 lag_id = 2;
+  string mode = 3;              // active / passive
+  string rate = 4;              // fast / slow
+  uint32 system_priority = 5;
+  bytes system_id = 6;
+  uint32 port_priority = 7;
+  PropertyBag properties = 8;
+}
+
+message SrpConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  string control = 3;
+  PropertyBag properties = 4;
+}
+
+message SwitchingActionRequest {
+  ResourceRef config = 1;
+  uint32 instance_id = 2;
+  string idempotency_key = 3;
+}
+
+service SwitchingService {
+  rpc CreateStp(StpConfig) returns (ResourceReply);                  // operator
+  rpc CreateLacp(LacpConfig) returns (ResourceReply);                // operator
+  rpc CreateSrp(SrpConfig) returns (ResourceReply);                  // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                      // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);       // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                        // operator
+  rpc StpStartCist(SwitchingActionRequest) returns (JobReply);       // operator
+  rpc StpStartMsti(SwitchingActionRequest) returns (JobReply);       // operator
+  rpc StpStartBridge(SwitchingActionRequest) returns (JobReply);     // operator
+  rpc StpStop(SwitchingActionRequest) returns (JobReply);            // operator
+  rpc StpSendTopoChange(SwitchingActionRequest) returns (JobReply);  // operator
+  rpc StartAllLacp(SwitchingActionRequest) returns (JobReply);       // operator
+  rpc SrpControl(SwitchingActionRequest) returns (JobReply);         // operator
+}

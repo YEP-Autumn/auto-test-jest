@@ -1,0 +1,61 @@
+// RIP v1/v2
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+message RipRouteBlock {
+  string prefix_base = 1;
+  uint32 prefix_len = 2;
+  uint32 count = 3;
+  uint32 metric = 4;
+  string next_hop = 5;
+}
+
+message RipConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  uint32 version = 4;
+  string update_type = 5;
+  uint32 update_interval_s = 6;
+  uint32 update_jitter_s = 7;
+  uint32 routes_per_packet = 8;
+  string auth = 9;
+  bool split_horizon = 10;
+  repeated RipRouteBlock routes = 11;
+  PropertyBag properties = 12;
+}
+
+message RipActionRequest {
+  ResourceRef config = 1;
+  repeated string prefixes = 2;
+  string idempotency_key = 3;
+}
+
+message RipConfigRequest {
+  ResourceRef ref = 1;
+}
+
+service RipService {
+  rpc Create(RipConfig) returns (ResourceReply);                    // operator
+  rpc Get(RipConfigRequest) returns (ResourceReply);                // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);      // viewer
+  rpc Update(UpdateResourceRequest) returns (ResourceReply);        // operator
+  rpc Delete(RipConfigRequest) returns (JobReply);                  // operator
+  rpc Start(RipActionRequest) returns (JobReply);                   // operator
+  rpc Stop(RipActionRequest) returns (JobReply);                    // operator
+  rpc Advertise(RipActionRequest) returns (JobReply);               // operator
+  rpc Withdraw(RipActionRequest) returns (JobReply);                // operator
+  rpc Suspend(RipActionRequest) returns (JobReply);                 // operator
+  rpc Resume(RipActionRequest) returns (JobReply);                  // operator
+}

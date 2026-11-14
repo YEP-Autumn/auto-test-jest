@@ -1,0 +1,84 @@
+// OpenFlow / NETCONF / OVSDB / PCEP
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+message OpenFlowConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  string controller = 3;
+  uint32 port = 4;
+  string version = 5;
+  PropertyBag properties = 6;
+}
+
+message NetconfConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  string host = 3;
+  uint32 port = 4;
+  string username = 5;
+  string password = 6;
+  PropertyBag properties = 7;
+}
+
+message OvsdbConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  string host = 3;
+  uint32 port = 4;
+  string database = 5;
+  PropertyBag properties = 6;
+}
+
+message PcepConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  string peer = 3;
+  uint32 port = 4;
+  string local_address = 5;
+  PropertyBag properties = 6;
+}
+
+message ControllerActionRequest {
+  ResourceRef config = 1;
+  string command = 2;
+  string argument = 3;
+  string idempotency_key = 4;
+}
+
+message ControllerReply {
+  Result result = 1;
+  string output = 2;
+  uint64 job_id = 3;
+}
+
+service ControllerService {
+  rpc CreateOpenFlow(OpenFlowConfig) returns (ResourceReply);            // operator
+  rpc CreateNetconf(NetconfConfig) returns (ResourceReply);              // operator
+  rpc CreateOvsdb(OvsdbConfig) returns (ResourceReply);                  // operator
+  rpc CreatePcep(PcepConfig) returns (ResourceReply);                    // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                          // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);           // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                            // operator
+  rpc OpenFlowStart(ControllerActionRequest) returns (JobReply);         // operator
+  rpc OpenFlowStop(ControllerActionRequest) returns (JobReply);          // operator
+  rpc OpenFlowExecute(ControllerActionRequest) returns (ControllerReply);// operator
+  rpc NetconfStart(ControllerActionRequest) returns (JobReply);          // operator
+  rpc NetconfGetYang(ControllerActionRequest) returns (ControllerReply); // viewer
+  rpc OvsdbQuery(ControllerActionRequest) returns (ControllerReply);     // viewer
+  rpc OvsdbStartRefresh(ControllerActionRequest) returns (JobReply);     // operator
+  rpc PcepEstablish(ControllerActionRequest) returns (JobReply);         // operator
+  rpc PcepInitiateLsp(ControllerActionRequest) returns (JobReply);       // operator
+  rpc PcepReportLsp(ControllerActionRequest) returns (JobReply);         // operator
+}

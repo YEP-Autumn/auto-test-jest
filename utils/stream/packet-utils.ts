@@ -1,10 +1,3 @@
-import {
-  ThriftFullProtocolType,
-  ThriftPresets,
-  ThriftProtocolFactory,
-} from "./thrift-protocol.factory";
-import { IFieldMeta, Packet, thrift } from "./thrift-packet";
-
 /**
  * 将IP地址字符串转换为32位整数
  * 例如: "192.168.1.1" -> 3232235777
@@ -25,99 +18,6 @@ export function ipStringToNumber(ipString: string): number {
 
   return (octets[0] << 24) | (octets[1] << 16) | (octets[2] << 8) | octets[3];
 }
-
-/**
- * 获取构建的报文
- * 使用配置的 Thrift 协议类型序列化报文
- */
-export function packet_thrift_buffer_build(
-  fieldList: IFieldMeta[],
-  protocolType: ThriftFullProtocolType = ThriftPresets.DEFAULT,
-): Buffer {
-  let capturedFlushBuffer: Buffer | null = null;
-  const factory = new ThriftProtocolFactory(thrift);
-  const { transport, protocol } = factory.createByFullType(
-    protocolType,
-    (msg: Buffer) => {
-      capturedFlushBuffer = msg;
-    },
-  );
-
-  const packet = new Packet({
-    field_list: fieldList,
-  });
-
-  // 执行写入操作
-  packet.write(protocol);
-  if (typeof transport.flush === "function") {
-    transport.flush();
-  }
-
-  return capturedFlushBuffer || Buffer.alloc(0);
-}
-
-/**
- * 解析策略定义
- */
-interface IParseStrategy {
-  /** 策略名称 */
-  name: string;
-  /** 协议类型 */
-  protocolType: ThriftFullProtocolType;
-  /** 是否需要剥离帧头 */
-  stripFrame: boolean;
-  /** 帧头字节序 */
-  byteOrder?: "big" | "little";
-  /** 帧头长度 */
-  framePrefixLen?: number;
-}
-
-export const PARSE_STRATEGIES: IParseStrategy[] = [
-  // 策略 1: Framed + Compact (big-endian)
-  {
-    name: "compact-framed-be-4byte",
-    protocolType: ThriftFullProtocolType.FRAMED_COMPACT,
-    stripFrame: true,
-    byteOrder: "big",
-    framePrefixLen: 4,
-  },
-  // 策略 2: Framed + Compact (little-endian)
-  {
-    name: "compact-framed-le-4byte",
-    protocolType: ThriftFullProtocolType.FRAMED_COMPACT,
-    stripFrame: true,
-    byteOrder: "little",
-    framePrefixLen: 4,
-  },
-  // 策略 3: Framed + Binary (big-endian)
-  {
-    name: "binary-framed-be-4byte",
-    protocolType: ThriftFullProtocolType.FRAMED_BINARY,
-    stripFrame: true,
-    byteOrder: "big",
-    framePrefixLen: 4,
-  },
-  // 策略 4: Framed + Binary (little-endian)
-  {
-    name: "binary-framed-le-4byte",
-    protocolType: ThriftFullProtocolType.FRAMED_BINARY,
-    stripFrame: true,
-    byteOrder: "little",
-    framePrefixLen: 4,
-  },
-  // 策略 5: Buffered + Compact (无帧)
-  {
-    name: "compact-as-is",
-    protocolType: ThriftFullProtocolType.BUFFERED_COMPACT,
-    stripFrame: false,
-  },
-  // 策略 6: Buffered + Binary (无帧)
-  {
-    name: "binary-as-is",
-    protocolType: ThriftFullProtocolType.BUFFERED_BINARY,
-    stripFrame: false,
-  },
-];
 
 /** 比较单个字段的期望值与实际值；不一致时输出单行提示。仅当期望值已设置时才比较(与原逻辑一致) */
 function fieldEq(label: string, expected: any, actual: any): boolean {
@@ -360,6 +260,20 @@ export function matchLLC(field: any, actualField: any): boolean {
     fieldEq("LLC.dsap", field.llc.dsap, actualField.llc.dsap) &&
     fieldEq("LLC.ssap", field.llc.ssap, actualField.llc.ssap) &&
     fieldEq("LLC.ctrl", field.llc.ctrl, actualField.llc.ctrl)
+  );
+}
+
+/**
+ * 比较 SNAP 字段是否匹配
+ */
+export function matchSNAP(field: any, actualField: any): boolean {
+  if (field.snap == null || actualField.snap == null) {
+    console.log("SNAP field is null.");
+    return false;
+  }
+  return (
+    fieldEq("SNAP.oui", field.snap.oui, actualField.snap.oui) &&
+    fieldEq("SNAP.pid", field.snap.pid, actualField.snap.pid)
   );
 }
 

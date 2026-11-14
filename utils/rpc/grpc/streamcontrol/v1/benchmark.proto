@@ -1,0 +1,342 @@
+// 性能与基准测试（RFC2544 / 2889 / 3918 / Y.1564 / 非对称 / 流量组 / Smart Scripter）
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+enum BenchmarkType {
+  BENCHMARK_TYPE_UNSPECIFIED = 0;
+  BENCHMARK_TYPE_RFC2544 = 1;
+  BENCHMARK_TYPE_RFC2889 = 2;
+  BENCHMARK_TYPE_RFC3918 = 3;
+  BENCHMARK_TYPE_Y1564 = 4;
+  BENCHMARK_TYPE_ASYMMETRIC = 5;
+}
+
+enum BenchmarkTestItem {
+  BENCHMARK_TEST_ITEM_UNSPECIFIED = 0;
+  BENCHMARK_TEST_ITEM_THROUGHPUT = 1;
+  BENCHMARK_TEST_ITEM_BACK_TO_BACK = 2;
+  BENCHMARK_TEST_ITEM_FRAME_LOSS = 3;
+  BENCHMARK_TEST_ITEM_LATENCY = 4;
+  BENCHMARK_TEST_ITEM_ADDRESS_CACHE_CAPACITY = 5;
+  BENCHMARK_TEST_ITEM_ADDRESS_LEARNING_RATE = 6;
+  BENCHMARK_TEST_ITEM_BROADCAST_FORWARDING = 7;
+  BENCHMARK_TEST_ITEM_BROADCAST_LATENCY = 8;
+  BENCHMARK_TEST_ITEM_CONGESTION_CONTROL = 9;
+  BENCHMARK_TEST_ITEM_ERROR_FRAME_FILTERING = 10;
+  BENCHMARK_TEST_ITEM_FORWARDING = 11;
+  BENCHMARK_TEST_ITEM_FORWARDING_PRESSURE = 12;
+  BENCHMARK_TEST_ITEM_MAX_FORWARDING_RATE = 13;
+  BENCHMARK_TEST_ITEM_MULTICAST_THROUGHPUT = 14;
+  BENCHMARK_TEST_ITEM_MULTICAST_GROUP_CAPACITY = 15;
+  BENCHMARK_TEST_ITEM_MULTICAST_LATENCY = 16;
+  BENCHMARK_TEST_ITEM_MULTICAST_JOIN_LEAVE = 17;
+  BENCHMARK_TEST_ITEM_CIR_EIR = 18;
+  BENCHMARK_TEST_ITEM_Y1564_PERFORMANCE = 19;
+  BENCHMARK_TEST_ITEM_Y1564_POLICY = 20;
+  BENCHMARK_TEST_ITEM_Y1564_BURST = 21;
+  BENCHMARK_TEST_ITEM_ASYMMETRIC_THROUGHPUT = 22;
+  BENCHMARK_TEST_ITEM_ASYMMETRIC_FRAME_LOSS = 23;
+  BENCHMARK_TEST_ITEM_ASYMMETRIC_LATENCY = 24;
+  BENCHMARK_TEST_ITEM_ASYMMETRIC_BACK_TO_BACK = 25;
+}
+
+enum SearchMode {
+  SEARCH_MODE_UNSPECIFIED = 0;
+  SEARCH_MODE_STEP = 1;
+  SEARCH_MODE_BINARY = 2;
+  SEARCH_MODE_COMBO = 3;
+  SEARCH_MODE_OPTIMIZE_STEP = 4;
+}
+
+enum DurationMode {
+  DURATION_MODE_UNSPECIFIED = 0;
+  DURATION_MODE_SECOND = 1;
+  DURATION_MODE_BURST = 2;
+}
+
+enum AddressLearningFrequency {
+  ADDRESS_LEARNING_FREQUENCY_UNSPECIFIED = 0;
+  ADDRESS_LEARNING_FREQUENCY_ONCE = 1;
+  ADDRESS_LEARNING_FREQUENCY_PER_TRIAL = 2;
+  ADDRESS_LEARNING_FREQUENCY_PER_FRAME_SIZE = 3;
+  ADDRESS_LEARNING_FREQUENCY_PER_ITERATION = 4;
+}
+
+enum TransportHeaderType {
+  TRANSPORT_HEADER_TYPE_UNSPECIFIED = 0;
+  TRANSPORT_HEADER_TYPE_NONE = 1;
+  TRANSPORT_HEADER_TYPE_TCP = 2;
+  TRANSPORT_HEADER_TYPE_UDP = 3;
+}
+
+enum BenchmarkResultStatus {
+  BENCHMARK_RESULT_STATUS_UNSPECIFIED = 0;
+  BENCHMARK_RESULT_STATUS_NONE = 1;
+  BENCHMARK_RESULT_STATUS_PASSED = 2;
+  BENCHMARK_RESULT_STATUS_FAILED = 3;
+}
+
+message SearchConfig {
+  SearchMode mode = 1;
+  double lowest_rate = 2;
+  double uppermost_rate = 3;
+  double init_rate = 4;
+  double rate_step = 5;
+  double rate_resolution = 6;
+  double backoff = 7;
+  double acceptable_frame_loss = 8;
+  bool ignore_min_max_limit = 9;
+  uint32 max_latency_us = 10;
+  bool enable_max_latency_threshold = 11;
+  uint32 out_of_seq_threshold = 12;
+}
+
+message FrameSizeLoop {
+  string loop_type = 1;         // fixed/step/custom/random/imix
+  uint32 fixed = 2;
+  uint32 min = 3;
+  uint32 max = 4;
+  uint32 start = 5;
+  uint32 end = 6;
+  uint32 step = 7;
+  repeated uint32 custom = 8;
+  string imix = 9;
+}
+
+message LoadLoop {
+  string unit = 1;
+  string mode = 2;              // fixed/step/custom/random
+  double fixed = 3;
+  double min = 4;
+  double max = 5;
+  double start = 6;
+  double end = 7;
+  double step = 8;
+  repeated double custom = 9;
+}
+
+message BenchmarkCommonConfig {
+  uint32 trial_num = 1;
+  DurationMode duration_mode = 2;
+  uint32 max_duration_s = 3;
+  uint64 max_duration_burst = 4;
+  AddressLearningFrequency address_learning_frequency = 5;
+  TransportHeaderType transport_header = 6;
+  bool use_random_ports = 7;
+  uint32 source_port_base = 8;
+  uint32 source_port_step = 9;
+  uint32 source_port_count = 10;
+  uint32 destination_port_base = 11;
+  uint32 destination_port_step = 12;
+  uint32 destination_port_count = 13;
+  bool enable_traffic_group = 14;
+  string group_load_mode = 15;
+}
+
+message Rfc2544Config {
+  BenchmarkCommonConfig common = 1;
+  SearchConfig throughput = 2;
+  SearchConfig back_to_back = 3;
+  SearchConfig frame_loss = 4;
+  SearchConfig latency = 5;
+  PropertyBag properties = 6;
+}
+
+message Rfc2889Config {
+  BenchmarkCommonConfig common = 1;
+  SearchConfig address_cache_capacity = 2;
+  SearchConfig address_learning_rate = 3;
+  SearchConfig broadcast_forwarding = 4;
+  SearchConfig congestion_control = 5;
+  SearchConfig error_frame_filtering = 6;
+  SearchConfig forwarding = 7;
+  SearchConfig forwarding_pressure = 8;
+  SearchConfig max_forwarding_rate = 9;
+  PropertyBag properties = 10;
+}
+
+message Rfc3918Config {
+  BenchmarkCommonConfig common = 1;
+  SearchConfig mixed_class_throughput = 2;
+  SearchConfig scaled_group_forwarding = 3;
+  SearchConfig multicast_group_capacity = 4;
+  SearchConfig multicast_latency = 5;
+  SearchConfig aggregate_multicast_throughput = 6;
+  SearchConfig join_leave_delay = 7;
+  string group_base = 8;
+  uint32 group_step = 9;
+  uint32 group_count = 10;
+  PropertyBag properties = 11;
+}
+
+message Y1564Config {
+  BenchmarkCommonConfig common = 1;
+  string cir = 2;
+  string eir = 3;
+  string cbs = 4;
+  string ebs = 5;
+  repeated BenchmarkTestItem items = 6;
+  PropertyBag properties = 7;
+}
+
+message AsymmetricConfig {
+  BenchmarkCommonConfig common = 1;
+  ResourceRef upstream_port = 2;
+  ResourceRef downstream_port = 3;
+  string allocation_mode = 4;   // PerSide/PerPort/Manual
+  string fallback_mode = 5;
+  bool use_throughput = 6;
+  repeated BenchmarkTestItem items = 7;
+  PropertyBag properties = 8;
+}
+
+message BenchmarkConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  BenchmarkType type = 3;
+  FrameSizeLoop frame_size = 4;
+  LoadLoop load = 5;
+  SearchConfig search = 6;
+  BenchmarkCommonConfig common = 7;
+  oneof family {
+    Rfc2544Config rfc2544 = 8;
+    Rfc2889Config rfc2889 = 9;
+    Rfc3918Config rfc3918 = 10;
+    Y1564Config y1564 = 11;
+    AsymmetricConfig asymmetric = 12;
+  }
+  string result_path = 13;
+  string result_file_name = 14;
+  PropertyBag properties = 15;
+}
+
+message TrafficGroup {
+  ResourceRef ref = 1;
+  string name = 2;
+  repeated ResourceRef streams = 3;
+  repeated uint32 weights = 4;
+  FrameSizeLoop frame_size = 5;
+  LoadLoop load = 6;
+}
+
+message BenchmarkWizardRequest {
+  BenchmarkType type = 1;
+  repeated BenchmarkTestItem items = 2;
+  bool enable_traffic_group = 3;
+}
+
+message BenchmarkWizardReply {
+  Result result = 1;
+  BenchmarkConfig config = 2;
+  repeated TrafficGroup groups = 3;
+}
+
+message BenchmarkStartRequest {
+  ResourceRef config = 1;
+  string idempotency_key = 2;
+}
+
+message BenchmarkStartReply {
+  Result result = 1;
+  uint64 run_id = 2;
+  uint64 job_id = 3;
+}
+
+message BenchmarkResult {
+  uint64 run_id = 1;
+  string test_name = 2;
+  BenchmarkTestItem item = 3;
+  BenchmarkResultStatus status = 4;
+  double rate = 5;
+  string rate_unit = 6;
+  uint32 frame_size = 7;
+  uint64 tx_frames = 8;
+  uint64 rx_frames = 9;
+  uint64 loss_frames = 10;
+  double loss_pct = 11;
+  uint32 latency_min_us = 12;
+  uint32 latency_avg_us = 13;
+  uint32 latency_max_us = 14;
+}
+
+message BenchmarkIteration {
+  uint32 iteration = 1;
+  double rate = 2;
+  uint64 tx_frames = 3;
+  uint64 rx_frames = 4;
+  uint64 loss_frames = 5;
+  uint32 latency_avg_us = 6;
+  BenchmarkResultStatus status = 7;
+}
+
+message BenchmarkResultListRequest {
+  uint64 run_id = 1;
+  PageRequest page = 2;
+}
+
+message BenchmarkResultList {
+  Result result = 1;
+  repeated BenchmarkResult results = 2;
+  repeated BenchmarkIteration iterations = 3;
+  PageInfo page = 4;
+}
+
+message SmartScripterCommand {
+  string type = 1;              // command/loop/while/if/else/wait/sleep/set/...
+  string text = 2;
+  repeated SmartScripterCommand children = 3;
+  PropertyBag properties = 4;
+}
+
+message SmartScripterConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  repeated SmartScripterCommand commands = 3;
+}
+
+message SmartScripterState {
+  ResourceRef ref = 1;
+  string state = 2;
+  uint32 current_command = 3;
+  string last_error = 4;
+}
+
+service BenchmarkService {
+  rpc GetWizard(BenchmarkWizardRequest) returns (BenchmarkWizardReply);        // viewer
+  rpc Create(BenchmarkConfig) returns (ResourceReply);                        // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                               // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);                // viewer
+  rpc Update(UpdateResourceRequest) returns (ResourceReply);                  // operator
+  rpc Delete(ResourceRef) returns (JobReply);                                 // operator
+  rpc Start(BenchmarkStartRequest) returns (BenchmarkStartReply);             // operator
+  rpc Stop(ResourceRef) returns (JobReply);                                   // operator
+  rpc UpdateConfig(BenchmarkConfig) returns (ResourceReply);                  // operator
+  rpc Expand(ResourceRef) returns (JobReply);                                 // operator
+  rpc WriteDb(ResourceRef) returns (JobReply);                                // operator
+  rpc ListResults(BenchmarkResultListRequest) returns (BenchmarkResultList);  // viewer
+  rpc CreateTrafficGroup(TrafficGroup) returns (ResourceReply);               // operator
+  rpc AssignTrafficGroup(ResourceRef) returns (JobReply);                     // operator
+  rpc ParallelSearch(BenchmarkStartRequest) returns (BenchmarkStartReply);    // operator
+}
+
+service SmartScripterService {
+  rpc Create(SmartScripterConfig) returns (ResourceReply);                    // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                               // viewer
+  rpc Update(SmartScripterConfig) returns (ResourceReply);                    // operator
+  rpc Delete(ResourceRef) returns (JobReply);                                 // operator
+  rpc Start(ResourceRef) returns (JobReply);                                  // operator
+  rpc Stop(ResourceRef) returns (JobReply);                                   // operator
+  rpc Pause(ResourceRef) returns (JobReply);                                  // operator
+  rpc GetState(ResourceRef) returns (SmartScripterState);                     // viewer
+}

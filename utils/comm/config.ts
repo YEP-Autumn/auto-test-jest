@@ -1,20 +1,47 @@
+import * as path from "path";
+import { TrafficConfig } from "../traffic/config";
+import type { TrafficPort, TrafficProvider } from "../traffic/model";
+
+/**
+ * 流量端口的最小兼容形状（旧 Config / 旧脚本使用）。
+ *
+ * - `name`：provider 内部的物理地址（机框端口 / NPF 设备 / eth1）；
+ * - `type`：流量后端类型。
+ *
+ * 新代码请使用 `TrafficPort` 的 `address` / `provider` 字段。
+ *
+ * @deprecated 使用 `TrafficPort`
+ */
 export interface StreamPort {
   name: string;
-  type: "renix" | "scapy";
+  type: TrafficProvider;
 }
 
+/** 打流/抓包后端类型（旧接口，保留兼容） */
+export type StreamBackendKind = "renix-http" | "streamcontrol-grpc";
+
+/**
+ * 逻辑流量端口 A-D 的兼容入口。
+ *
+ * 返回值由 `TrafficConfig.resolvePort()` 根据当前流量后端解析：
+ * - 默认（renix-http）：返回 Config.Renix.portList 中的 Renix/Scapy 地址；
+ * - TRAFFIC_PROVIDER=stream-linux 或 STREAM_BACKEND_KIND=streamcontrol-grpc：
+ *   返回 eth1/eth2/... 等引擎端口。
+ *
+ * 新代码建议直接使用 `TrafficConfig.resolvePort("A")`。
+ */
 export class RenixPort {
-  static get A(): StreamPort {
-    return Config.Renix.portList[0].port;
+  static get A(): TrafficPort {
+    return TrafficConfig.resolvePort("A");
   }
-  static get B(): StreamPort {
-    return Config.Renix.portList[1].port;
+  static get B(): TrafficPort {
+    return TrafficConfig.resolvePort("B");
   }
-  static get C(): StreamPort {
-    return Config.Renix.portList[2].port;
+  static get C(): TrafficPort {
+    return TrafficConfig.resolvePort("C");
   }
-  static get D(): StreamPort {
-    return Config.Renix.portList[3].port;
+  static get D(): TrafficPort {
+    return TrafficConfig.resolvePort("D");
   }
 }
 
@@ -27,6 +54,14 @@ export class RenixPort {
  * STREAM_BACKEND_USERNAME / STREAM_BACKEND_PASSWORD。
  */
 export class StreamBackendConfig {
+  /**
+   * 选择后端实现：
+   * - renix-http：原信而泰/HTTP 后端（默认，行为不变）
+   * - streamcontrol-grpc：stream-linux 公开 gRPC 契约
+   */
+  static readonly kind: StreamBackendKind =
+    (process.env.STREAM_BACKEND_KIND as StreamBackendKind) || "renix-http";
+
   static readonly host = process.env.STREAM_BACKEND_HOST || "172.16.9.1";
   static readonly port = process.env.STREAM_BACKEND_PORT || "8001";
   /** 默认登录账号 */
@@ -46,6 +81,53 @@ export class StreamBackendConfig {
   /** 登录接口完整地址，如 http://172.16.9.1:8001/api/auth/login/ */
   static get loginURL(): string {
     return `${this.origin}/api/auth/login/`;
+  }
+}
+
+/**
+ * streamcontrol gRPC 网关配置（对应 utils/rpc/grpc/streamcontrol.proto）。
+ *
+ * 契约里没有 login RPC：鉴权通过 TLS/mTLS 或 metadata 完成，
+ * Hello 只做握手与能力发现。可通过环境变量覆盖：
+ * STREAM_CONTROL_HOST / STREAM_CONTROL_PORT / STREAM_CONTROL_TLS /
+ * STREAM_CONTROL_CA / STREAM_CONTROL_CERT / STREAM_CONTROL_KEY /
+ * STREAM_CONTROL_TOKEN。
+ */
+export class StreamControlConfig {
+  static readonly host = process.env.STREAM_CONTROL_HOST || "127.0.0.1";
+  static readonly port = process.env.STREAM_CONTROL_PORT || "5443";
+
+  /** 是否启用 TLS；默认关闭，生产网关（README 示例 5443）通常开启 */
+  static readonly tls = (process.env.STREAM_CONTROL_TLS || "false") === "true";
+  /** 自签证书联调时可跳过证书校验（仅限测试环境） */
+  static readonly tlsInsecure =
+    (process.env.STREAM_CONTROL_TLS_INSECURE || "false") === "true";
+  static readonly ca = process.env.STREAM_CONTROL_CA;
+  static readonly cert = process.env.STREAM_CONTROL_CERT;
+  static readonly key = process.env.STREAM_CONTROL_KEY;
+
+  /** 可选的鉴权 token；网关要求 Bearer 前缀时自动补齐 */
+  static readonly token = process.env.STREAM_CONTROL_TOKEN;
+
+  /** 实际发送的 authorization metadata 值 */
+  static get authorization(): string | undefined {
+    const token = this.token?.trim();
+    if (!token) return undefined;
+    return /^(Bearer|Token)\s+/i.test(token) ? token : `Bearer ${token}`;
+  }
+
+  /** gRPC 地址，如 127.0.0.1:5443 */
+  static get address(): string {
+    return `${this.host}:${this.port}`;
+  }
+
+  /** proto 根目录（manifest: streamcontrol.proto） */
+  static get protoRoot(): string {
+    return path.resolve(__dirname, "../rpc/grpc");
+  }
+
+  static get protoFile(): string {
+    return path.resolve(this.protoRoot, "streamcontrol.proto");
   }
 }
 

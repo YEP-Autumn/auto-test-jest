@@ -1,0 +1,69 @@
+// VXLAN / GRE / TRILL
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+message VxlanConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  ResourceRef interface = 3;
+  string vtep = 4;
+  uint32 vni = 5;
+  string vm = 6;
+  string multicast_group = 7;
+  uint32 udp_port = 8;
+  PropertyBag properties = 9;
+}
+
+message GreConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  ResourceRef interface = 3;
+  string local = 4;
+  string remote = 5;
+  uint32 key = 6;
+  bool checksum = 7;
+  PropertyBag properties = 8;
+}
+
+message TrillConfig {
+  ResourceRef ref = 1;
+  string name = 2;
+  ResourceRef interface = 3;
+  string nickname = 4;
+  uint32 tree_root_priority = 5;
+  PropertyBag properties = 6;
+}
+
+message TunnelActionRequest {
+  ResourceRef config = 1;
+  string target = 2;
+  string idempotency_key = 3;
+}
+
+service TunnelService {
+  rpc CreateVxlan(VxlanConfig) returns (ResourceReply);                 // operator
+  rpc CreateGre(GreConfig) returns (ResourceReply);                     // operator
+  rpc CreateTrill(TrillConfig) returns (ResourceReply);                 // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                         // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);          // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                           // operator
+  rpc VxlanSelectVtep(TunnelActionRequest) returns (JobReply);          // operator
+  rpc VxlanSelectVm(TunnelActionRequest) returns (JobReply);            // operator
+  rpc VxlanSelectMulticastGroup(TunnelActionRequest) returns (JobReply);// operator
+  rpc VxlanStartPing(TunnelActionRequest) returns (JobReply);           // operator
+  rpc VxlanPing(TunnelActionRequest) returns (JobReply);                // operator
+  rpc TrillStart(TunnelActionRequest) returns (JobReply);               // operator
+  rpc TrillStop(TunnelActionRequest) returns (JobReply);                // operator
+  rpc TrillReadvertiseLsps(TunnelActionRequest) returns (JobReply);     // operator
+}

@@ -1,0 +1,263 @@
+// 802.1ag / Y.1731 / 802.3ah / 802.1AS gPTP / TWAMP / SAA / SRv6 OAM
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+enum CcmInterval {
+  CCM_INTERVAL_UNSPECIFIED = 0;
+  CCM_INTERVAL_3_3MS = 1;
+  CCM_INTERVAL_10MS = 2;
+  CCM_INTERVAL_100MS = 3;
+  CCM_INTERVAL_1S = 4;
+  CCM_INTERVAL_10S = 5;
+  CCM_INTERVAL_60S = 6;
+  CCM_INTERVAL_600S = 7;
+}
+
+message CfmMpConfig {
+  string name = 1;
+  string md_name = 2;
+  string ma_name = 3;
+  uint32 md_level = 4;
+  uint32 mp_id = 5;
+  string target_mac = 6;
+  uint32 vlan = 7;
+  CcmInterval ccm_interval = 8;
+}
+
+message CfmConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  repeated CfmMpConfig mps = 4;
+  PropertyBag properties = 5;
+}
+
+message CfmActionRequest {
+  ResourceRef config = 1;
+  string mp = 2;
+  string target_mac = 3;
+  uint32 count = 4;
+  uint32 timeout_ms = 5;
+  string idempotency_key = 6;
+}
+
+message Y1731Config {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string meg = 4;
+  string mep = 5;
+  string measurement_type = 6;
+  uint32 frame_interval_ms = 7;
+  uint32 priority = 8;
+  repeated string tlvs = 9;
+  PropertyBag properties = 10;
+}
+
+message Y1731ActionRequest {
+  ResourceRef config = 1;
+  string mep = 2;
+  string target = 3;
+  uint32 count = 4;
+  uint32 interval_ms = 5;
+  string idempotency_key = 6;
+}
+
+message EfmConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string mode = 4;              // active / passive
+  bool loopback = 5;
+  string variables = 6;
+  PropertyBag properties = 7;
+}
+
+message EfmActionRequest {
+  ResourceRef config = 1;
+  string action = 2;            // discovery / loopback / linktrace / var-req / event / org-spec
+  string target = 3;
+  uint32 timeout_ms = 4;
+  string idempotency_key = 5;
+}
+
+message GptpConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  uint32 priority1 = 4;
+  uint32 priority2 = 5;
+  uint32 clock_class = 6;
+  uint32 accuracy = 7;
+  uint32 announce_interval = 8;
+  uint32 sync_interval = 9;
+  uint32 announce_receipt_timeout = 10;
+  uint32 propagation_delay = 11;
+  string port_role = 12;
+  PropertyBag properties = 13;
+}
+
+message GptpActionRequest {
+  ResourceRef config = 1;
+  string packet_type = 2;
+  string action = 3;            // send / stop / resume
+  uint32 count = 4;
+  string idempotency_key = 5;
+}
+
+message TwampConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string role = 4;              // client / server
+  string local_address = 5;
+  string remote_address = 6;
+  uint32 control_port = 7;
+  uint32 test_port = 8;
+  uint32 interval_ms = 9;
+  uint32 count = 10;
+  PropertyBag properties = 11;
+}
+
+message TwampActionRequest {
+  ResourceRef config = 1;
+  string session = 2;
+  string action = 3;            // request / start / stop / pause / resume
+  uint32 timeout_ms = 4;
+  string idempotency_key = 5;
+}
+
+message SaaConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string probe_type = 4;
+  string target = 5;
+  uint32 interval_ms = 6;
+  uint32 timeout_ms = 7;
+  PropertyBag properties = 8;
+}
+
+message SaaActionRequest {
+  ResourceRef config = 1;
+  string action = 2;            // start / stop
+  string idempotency_key = 3;
+}
+
+message Srv6OamConfig {
+  ResourceRef ref = 1;
+  ResourceRef interface = 2;
+  string name = 3;
+  string target_sid = 4;
+  string source = 5;
+  uint32 hop_limit = 6;
+  uint32 count = 7;
+  string mode = 8;              // ping / tracert
+  PropertyBag properties = 9;
+}
+
+service CfmService {
+  rpc Create(CfmConfig) returns (ResourceReply);                      // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                       // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);        // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                         // operator
+  rpc StartCc(CfmActionRequest) returns (JobReply);                   // operator
+  rpc StopCc(CfmActionRequest) returns (JobReply);                    // operator
+  rpc StartLinkTrace(CfmActionRequest) returns (JobReply);            // operator
+  rpc StopLinkTrace(CfmActionRequest) returns (JobReply);             // operator
+  rpc StartLoopBack(CfmActionRequest) returns (JobReply);             // operator
+  rpc StopLoopBack(CfmActionRequest) returns (JobReply);              // operator
+  rpc ExpandWizard(ResourceRef) returns (JobReply);                   // operator
+}
+
+service Y1731Service {
+  rpc Create(Y1731Config) returns (ResourceReply);                    // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                       // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);        // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                         // operator
+  rpc StartCcm(Y1731ActionRequest) returns (JobReply);                // operator
+  rpc StartLbm(Y1731ActionRequest) returns (JobReply);                // operator
+  rpc StartLtm(Y1731ActionRequest) returns (JobReply);                // operator
+  rpc StartDmm(Y1731ActionRequest) returns (JobReply);                // operator
+  rpc StartLmm(Y1731ActionRequest) returns (JobReply);                // operator
+  rpc Start1Dm(Y1731ActionRequest) returns (JobReply);                // operator
+  rpc StartAis(Y1731ActionRequest) returns (JobReply);                // operator
+  rpc StartLck(Y1731ActionRequest) returns (JobReply);                // operator
+  rpc StartCfm(Y1731ActionRequest) returns (JobReply);                // operator
+  rpc Stop(Y1731ActionRequest) returns (JobReply);                    // operator
+}
+
+service EfmService {
+  rpc Create(EfmConfig) returns (ResourceReply);                      // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                       // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);        // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                         // operator
+  rpc Apply(EfmActionRequest) returns (JobReply);                     // operator
+  rpc StartLoopBack(EfmActionRequest) returns (JobReply);             // operator
+  rpc StartLinkTrace(EfmActionRequest) returns (JobReply);            // operator
+  rpc StartVarReq(EfmActionRequest) returns (JobReply);               // operator
+  rpc StartEventNotification(EfmActionRequest) returns (JobReply);    // operator
+  rpc StartOrgSpec(EfmActionRequest) returns (JobReply);              // operator
+  rpc Stop(EfmActionRequest) returns (JobReply);                      // operator
+}
+
+service GptpService {
+  rpc Create(GptpConfig) returns (ResourceReply);                     // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                       // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);        // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                         // operator
+  rpc SendPacket(GptpActionRequest) returns (JobReply);               // operator
+  rpc SendSignaling(GptpActionRequest) returns (JobReply);            // operator
+  rpc SendErrorSync(GptpActionRequest) returns (JobReply);            // operator
+  rpc ResumeAnnounce(GptpActionRequest) returns (JobReply);           // operator
+  rpc ResumeSync(GptpActionRequest) returns (JobReply);               // operator
+  rpc ResumeFollowUp(GptpActionRequest) returns (JobReply);           // operator
+  rpc StopAnnounce(GptpActionRequest) returns (JobReply);             // operator
+  rpc StopSync(GptpActionRequest) returns (JobReply);                 // operator
+  rpc StopFollowUp(GptpActionRequest) returns (JobReply);             // operator
+  rpc ConfigureClockSync(GptpActionRequest) returns (JobReply);       // operator
+}
+
+service TwampService {
+  rpc Create(TwampConfig) returns (ResourceReply);                    // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                       // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);        // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                         // operator
+  rpc Control(TwampActionRequest) returns (JobReply);                 // operator
+  rpc RequestSession(TwampActionRequest) returns (JobReply);          // operator
+  rpc StartSession(TwampActionRequest) returns (JobReply);            // operator
+  rpc StopSession(TwampActionRequest) returns (JobReply);             // operator
+  rpc PauseSession(TwampActionRequest) returns (JobReply);            // operator
+  rpc ResumeSession(TwampActionRequest) returns (JobReply);           // operator
+  rpc Start(TwampActionRequest) returns (JobReply);                   // operator
+  rpc Stop(TwampActionRequest) returns (JobReply);                    // operator
+}
+
+service SaaService {
+  rpc Create(SaaConfig) returns (ResourceReply);                      // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                       // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);        // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                         // operator
+  rpc Start(SaaActionRequest) returns (JobReply);                     // operator
+  rpc Stop(SaaActionRequest) returns (JobReply);                      // operator
+}
+
+service Srv6OamService {
+  rpc Create(Srv6OamConfig) returns (ResourceReply);                  // operator
+  rpc Get(ResourceRef) returns (ResourceReply);                       // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);        // viewer
+  rpc Delete(ResourceRef) returns (JobReply);                         // operator
+  rpc Start(Srv6OamConfig) returns (JobReply);                        // operator
+  rpc Stop(Srv6OamConfig) returns (JobReply);                         // operator
+}

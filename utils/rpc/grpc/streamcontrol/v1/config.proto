@@ -1,0 +1,355 @@
+// stream-linux 公开 gRPC 契约（streamcontrol.v1）
+//
+// 本文件是公开契约的一部分；引擎内部 SLNX/2 不是公开接口。
+// 规则：
+//   * 字段号只增不改；删除字段必须 reserved；枚举 0 值必须是 UNSPECIFIED 类语义。
+//   * 单位写在字段名里：_ms/_us/_ns、_frames/_bytes/_bps/_pps、_x100。
+//   * 时间戳：墙钟用 *_wall_us 或 google.protobuf.Timestamp；单调时钟用 *_mono_us。
+//   * 业务失败用 Result（code != 0）；传输/鉴权失败用 gRPC status。
+//   * 角色：viewer < operator < admin；每个 RPC 注释里写所需角色。
+//   * 只定义已实现或明确排期的能力；不存在的 RPC 不放进公开契约。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+
+// ---------------------------------------------------------------- 配置工作流
+//
+// 配置载体只有 YAML 文本：Draft* 在网关进程内编辑文本，ConfigApply 才把文本
+// 交给引擎。结构化模型（Config/Stream/Interface 等）已删除——它与 YAML 是
+// 两份真相，且引擎只接受 YAML。
+
+message DraftOpenRequest {
+  uint64 base_revision = 1;  // 0 = 当前生效修订；非 0 时必须是当前修订（CAS）
+}
+
+message DraftReply {
+  reserved 4;
+  reserved "config";
+
+  Result result = 1;
+  uint32 draft_id = 2;
+  uint64 base_revision = 3;
+  string yaml = 5;          // 完整 YAML 文本
+}
+
+message DraftGetRequest {
+  uint32 draft_id = 1;
+}
+
+message DraftPutRequest {
+  reserved 2;
+  reserved "config";
+
+  uint32 draft_id = 1;
+  string yaml = 3;          // 整份替换
+}
+
+message DraftValidateRequest {
+  uint32 draft_id = 1;
+}
+
+// 结构化编辑：网关在 YAML DOM 上按路径增删改，引擎仍只收 YAML 文本。
+// kind 取值：port | iface | block | stream（与引擎 YAML 段一致）。
+message DraftCreateRequest {
+  uint32 draft_id = 1;
+  string kind = 2;
+  string path = 3;          // 例如 port[p1]
+  string yaml = 4;          // 该资源的 YAML 片段
+}
+
+message DraftUpdateRequest {
+  uint32 draft_id = 1;
+  string path = 2;
+  string field = 3;         // 空 = 整体替换
+  string yaml = 4;
+}
+
+message DraftDeleteRequest {
+  uint32 draft_id = 1;
+  string path = 2;
+}
+
+message DraftDiffRequest {
+  reserved 2;
+  reserved "against_revision";
+
+  uint32 draft_id = 1;
+}
+
+message DiffReply {
+  Result result = 1;
+  repeated Change changes = 2;
+}
+
+enum ChangeOp {
+  CHANGE_OP_UNSPECIFIED = 0;
+  CHANGE_CREATE = 1;
+  CHANGE_UPDATE = 2;
+  CHANGE_DELETE = 3;
+}
+
+message Change {
+  ChangeOp op = 1;
+  string path = 2;
+  string kind = 3;
+}
+
+message Impact {
+  bool requires_restart = 1;
+  repeated uint64 affected_runs = 2;
+}
+
+message ConfigPlan {
+  uint32 creates = 1;
+  uint32 updates = 2;
+  uint32 deletes = 3;
+  uint32 ports = 4;
+  uint32 interfaces = 5;
+  uint32 streams = 6;
+  uint32 blocks = 7;
+  bool requires_restart = 8;
+  uint32 affected_runs = 9;
+}
+
+message ValidationReply {
+  reserved 2, 4;
+  reserved "changes", "fields";
+
+  Result result = 1;
+  repeated string warnings = 3;
+  Impact impact = 5;
+  ConfigPlan plan = 6;
+}
+
+message ConfigApplyRequest {
+  uint32 draft_id = 1;
+  uint64 expected_revision = 2;
+  bool dry_run = 3;
+  string idempotency_key = 4;
+}
+
+message ConfigApplyReply {
+  Result result = 1;
+  uint64 job_id = 2;
+  uint64 revision = 3;      // dry_run 时为 0
+}
+
+message ConfigGetRequest {}
+
+message ConfigGetReply {
+  reserved 3;
+  reserved "config";
+
+  Result result = 1;
+  uint64 revision = 2;
+  string yaml = 4;
+}
+
+// 只读资源视图：按路径读取当前生效配置（YAML 派生），不返回运行态。
+message ResGetRequest {
+  string path = 1;          // 例如 port[p1] / streams[3]
+}
+
+message ResReply {
+  reserved 4;
+  reserved "config";
+
+  Result result = 1;
+  string kind = 2;
+  string yaml = 3;
+}
+
+message ResListRequest {
+  string path = 1;          // 空 = 根
+  uint32 depth = 2;         // 0 = 引擎缺省
+}
+
+message ResListReply {
+  Result result = 1;
+  repeated ResourceRef resources = 2;
+}
+
+message ConfigRevertRequest {
+  uint64 target_revision = 1;
+  uint64 expected_revision = 2;
+}
+
+service ConfigService {
+  rpc DraftOpen(DraftOpenRequest) returns (DraftReply);              // operator
+  rpc DraftGet(DraftGetRequest) returns (DraftReply);                // viewer
+  rpc DraftPut(DraftPutRequest) returns (DraftReply);                // operator
+  rpc DraftDiscard(DraftGetRequest) returns (DraftReply);            // operator
+  rpc DraftValidate(DraftValidateRequest) returns (ValidationReply); // operator
+  rpc DraftCreate(DraftCreateRequest) returns (DraftReply);          // operator
+  rpc DraftUpdate(DraftUpdateRequest) returns (DraftReply);          // operator
+  rpc DraftDelete(DraftDeleteRequest) returns (DraftReply);          // operator
+  rpc DraftDiff(DraftDiffRequest) returns (DiffReply);               // viewer
+
+  rpc ConfigApply(ConfigApplyRequest) returns (ConfigApplyReply);    // operator
+  rpc ConfigGet(ConfigGetRequest) returns (ConfigGetReply);          // viewer
+  rpc ConfigRevert(ConfigRevertRequest) returns (ConfigApplyReply);  // operator
+  rpc ResGet(ResGetRequest) returns (ResReply);                      // viewer
+  rpc ResList(ResListRequest) returns (ResListReply);                // viewer
+}
+
+
+// ---------------------------------------------------------------- 用例/套件/工作区/文件
+
+enum TestCaseFileType {
+  TEST_CASE_FILE_TYPE_UNSPECIFIED = 0;
+  TEST_CASE_FILE_TYPE_XCFG = 1;
+  TEST_CASE_FILE_TYPE_YAML = 2;
+  TEST_CASE_FILE_TYPE_JSON = 3;
+}
+
+message TestCase {
+  ResourceRef ref = 1;
+  string name = 2;
+  string path = 3;
+  TestCaseFileType file_type = 4;
+  string product_type = 5;
+  string description = 6;
+}
+
+message SaveTestCaseRequest {
+  string path = 1;
+  string product_type = 2;
+  TestCaseFileType file_type = 3;
+  string name = 4;
+}
+
+message LoadTestCaseRequest {
+  string path = 1;
+  TestCaseFileType file_type = 2;
+}
+
+message TestCaseReply {
+  Result result = 1;
+  TestCase test_case = 2;
+  ResourceRef root = 3;
+}
+
+message ListTestCaseRequest {
+  string directory = 1;
+  PageRequest page = 2;
+}
+
+message ListTestCaseReply {
+  Result result = 1;
+  repeated TestCase test_cases = 2;
+  PageInfo page = 3;
+}
+
+enum TestSuiteState {
+  TEST_SUITE_STATE_UNSPECIFIED = 0;
+  TEST_SUITE_STATE_LOADED = 1;
+  TEST_SUITE_STATE_RUNNING = 2;
+  TEST_SUITE_STATE_PAUSED = 3;
+  TEST_SUITE_STATE_STOPPED = 4;
+  TEST_SUITE_STATE_COMPLETED = 5;
+}
+
+message TestSuite {
+  ResourceRef ref = 1;
+  string name = 2;
+  repeated ResourceRef test_cases = 3;
+  TestSuiteState state = 4;
+  uint32 current_case = 5;
+}
+
+message TestSuiteRequest {
+  string path = 1;
+  repeated ResourceRef suites = 2;
+}
+
+message TestSuiteList {
+  Result result = 1;
+  repeated TestSuite suites = 2;
+}
+
+message WorkspaceRequest {
+  string path = 1;
+}
+
+message WorkspaceReply {
+  Result result = 1;
+  string path = 2;
+}
+
+message FileInfo {
+  string name = 1;
+  string path = 2;
+  uint64 size = 3;
+  uint64 modified_wall_us = 4;
+  bool directory = 5;
+  uint32 crc32c = 6;
+}
+
+message FileChunk {
+  string path = 1;
+  uint64 offset = 2;
+  bytes data = 3;
+  bool eof = 4;
+  uint32 crc32c = 5;
+}
+
+message ListFilesRequest {
+  string directory = 1;
+  string pattern = 2;
+  PageRequest page = 3;
+}
+
+message ListFilesReply {
+  Result result = 1;
+  repeated FileInfo files = 2;
+  PageInfo page = 3;
+}
+
+message FileOperationRequest {
+  repeated string paths = 1;
+}
+
+message FileOperationReply {
+  Result result = 1;
+  repeated FileInfo files = 2;
+}
+
+service TestCaseService {
+  rpc Save(SaveTestCaseRequest) returns (TestCaseReply);                 // operator
+  rpc Load(LoadTestCaseRequest) returns (TestCaseReply);                 // operator
+  rpc List(ListTestCaseRequest) returns (ListTestCaseReply);             // viewer
+  rpc Delete(TestCase) returns (JobReply);                               // operator
+}
+
+service TestSuiteService {
+  rpc Load(TestSuiteRequest) returns (TestSuiteList);                    // operator
+  rpc Start(TestSuiteRequest) returns (JobReply);                        // operator
+  rpc Stop(TestSuiteRequest) returns (JobReply);                         // operator
+  rpc Pause(TestSuiteRequest) returns (JobReply);                        // operator
+  rpc Resume(TestSuiteRequest) returns (JobReply);                       // operator
+  rpc Skip(TestSuiteRequest) returns (JobReply);                         // operator
+  rpc Unload(TestSuiteRequest) returns (JobReply);                       // operator
+  rpc List(TestSuiteRequest) returns (TestSuiteList);                    // viewer
+}
+
+service WorkspaceService {
+  rpc Save(WorkspaceRequest) returns (WorkspaceReply);                   // operator
+  rpc Load(WorkspaceRequest) returns (WorkspaceReply);                   // operator
+}
+
+service FileService {
+  rpc List(ListFilesRequest) returns (ListFilesReply);                   // viewer
+  rpc Delete(FileOperationRequest) returns (JobReply);                   // operator
+  rpc Stat(FileOperationRequest) returns (FileOperationReply);          // viewer
+  rpc Upload(stream FileChunk) returns (FileOperationReply);            // operator
+  rpc Download(FileOperationRequest) returns (stream FileChunk);        // viewer
+}

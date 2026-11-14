@@ -1,0 +1,95 @@
+// stream-linux 公开 gRPC 契约（streamcontrol.v1）
+//
+// 本文件是公开契约的一部分；引擎内部 SLNX/2 不是公开接口。
+// 规则：
+//   * 字段号只增不改；删除字段必须 reserved；枚举 0 值必须是 UNSPECIFIED 类语义。
+//   * 单位写在字段名里：_ms/_us/_ns、_frames/_bytes/_bps/_pps、_x100。
+//   * 时间戳：墙钟用 *_wall_us 或 google.protobuf.Timestamp；单调时钟用 *_mono_us。
+//   * 业务失败用 Result（code != 0）；传输/鉴权失败用 gRPC status。
+//   * 角色：viewer < operator < admin；每个 RPC 注释里写所需角色。
+//   * 本文是完整目标契约；未实现的能力由网关返回 UNIMPLEMENTED，状态见 api/README.md。
+
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+// ---------------------------------------------------------------- 通用
+
+message Result {
+  uint32 code = 1;          // 0 = OK；其余见 include/sl/error.h（引擎错误码）
+  uint32 subcode = 2;
+  bool retryable = 3;
+  string message = 4;
+  string path = 5;
+  repeated FieldError fields = 6;
+  uint32 retry_after_ms = 7;  // 可重试错误建议的退避时间
+}
+
+message FieldError {
+  string path = 1;          // 例如 streams[3].rate
+  string message = 2;
+}
+
+// ---------------------------------------------------------------- 限额与时钟
+
+message Limits {
+  uint32 max_frame_body = 1;
+  uint32 max_req_body = 2;
+  uint32 max_conn = 3;
+  uint32 max_streams = 4;   // 引擎当前实际可承载的流数
+  uint32 max_runs = 5;
+  uint32 max_subs = 6;
+  uint32 topk_max = 7;
+  uint32 interval_min_ms = 8;
+  uint32 interval_max_ms = 9;
+  uint32 config_max_bytes = 10;
+}
+
+message Clock {
+  int64 mono_us = 1;
+  int64 wall_us = 2;
+}
+
+// ---------------------------------------------------------------- 资源引用
+
+// 人读路径；当前以 path 为主键，后续引入稳定 id 时保持 path 可读。
+message ResourceRef {
+  string path = 1;
+  string kind = 2;
+  string id = 3;          // 稳定主键的十进制字符串（内部 uint64）；空 = path 模式
+  uint64 revision = 4;    // 读取时的修订；写操作用它做 CAS
+}
+
+// 通用分页。page_token 不透明，客户端不得解析。
+message PageRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message PageInfo {
+  string next_page_token = 1;
+  uint64 total_size = 2;
+}
+
+// 长尾属性：用于 Renix 2000+ 配置属性中未逐个建模的部分。
+message Property {
+  string name = 1;
+  google.protobuf.Value value = 2;
+}
+
+message PropertyBag {
+  repeated Property properties = 1;
+}
+
+message Capability {
+  string name = 1;       // "bgp", "capture.filter", "tsn.qbv"
+  string version = 2;    // "1.0"
+  bool enabled = 3;
+}

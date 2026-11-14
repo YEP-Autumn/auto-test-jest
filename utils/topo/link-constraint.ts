@@ -10,7 +10,8 @@
  *   2. `LinkConstraint`：静态 getter，既是拓扑定义，也是既有测试文件的访问入口；
  *   3. `Topologies`：由 getter 自动派生的注册表，供遍历/校验使用。
  *
- * 端点（dut/renix）与共享类型分别位于 `./endpoints` 与 `./types`。
+ * 端点（dut/traffic）与共享类型分别位于 `./endpoints` 与 `./types`。
+ * 旧的 `renix("A")` 仍可用，等价于 `traffic("A")`。
  */
 import { dut, Endpoint, renix, resolveEndpoint } from "./endpoints";
 import { Link, REVERSE_STREAM_ID_BASE, TopoLinks } from "./types";

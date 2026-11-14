@@ -19,7 +19,10 @@ import {
 } from "./comm/components";
 import { Config, StreamPort } from "./comm/config";
 import { Dut } from "./comm/dut";
-import { StreamBackendApi } from "./stream/stream-backend-api";
+import { createTrafficManager } from "./traffic/factory";
+import { TrafficConfig } from "./traffic/config";
+import type { TrafficManager } from "./traffic/manager";
+import type { TrafficPort } from "./traffic/model";
 import { TopoApi } from "./topo/topo-backend-api";
 import { TopoLinks } from "./topo/types";
 
@@ -49,12 +52,12 @@ export class TestHelper {
   private actuator: Actuator[] = [];
   private testResult: boolean = true;
   private topo: TopoLinks | undefined;
-  private streamBackendApi: StreamBackendApi | undefined;
+  private trafficManager: TrafficManager | undefined;
   private topoApi: TopoApi;
   private topoId?: number;
   private _inner_debug_preserve_scene_when_failed: boolean = false;
 
-  private streamPortSet: Map<string, StreamPort> = new Map();
+  private trafficPorts: Map<string, TrafficPort> = new Map();
 
   constructor(topo?: TopoLinks) {
     this.topoApi = new TopoApi();
@@ -130,10 +133,13 @@ export class TestHelper {
       promise.push(dut.disconnect());
     });
 
-    if (this.streamBackendApi) {
-      for (const port of this.streamPortSet.values()) {
-        promise.push(this.streamBackendApi.port_release(port));
-      }
+    if (this.trafficManager) {
+      const manager = this.trafficManager;
+      const releases = Array.from(this.trafficPorts.values()).map((port) =>
+        manager.releasePort(port),
+      );
+      // 单个端口释放失败也要继续关闭后端，避免测试进程残留连接
+      promise.push(Promise.allSettled(releases).then(() => manager.close()));
     }
 
     if (
@@ -174,21 +180,21 @@ export class TestHelper {
           continue;
         }
 
-        if (this.streamBackendApi == undefined) {
+        if (this.trafficManager == undefined) {
           try {
-            this.streamBackendApi = new StreamBackendApi();
-            await this.streamBackendApi.login();
-            /** 预约Renix端口 */
-            for (const port of this.streamPortSet.values()) {
-              await this.streamBackendApi.port_reserve(port);
+            this.trafficManager = createTrafficManager();
+            await this.trafficManager.init(this.trafficPorts.values());
+            /** 预约端口（Renix: port_reserve；gRPC: OpenPort） */
+            for (const port of this.trafficPorts.values()) {
+              await this.trafficManager.reservePort(port);
             }
           } catch (err) {
-            console.error("StreamBackendApi init or port_reserve error:", err);
+            console.error("TrafficManager init or port_reserve error:", err);
             this.testResult = false;
             continue;
           }
         }
-        this.testResult = await act.start(this.streamBackendApi);
+        this.testResult = await act.start(this.trafficManager);
       } else {
         this.testResult = this.testResult ? await act.start() : this.testResult;
       }
@@ -203,21 +209,45 @@ export class TestHelper {
     return this.testResult;
   }
 
-  startCapture(stream_port: StreamPort) {
-    this.streamPortSet.set(stream_port.name, stream_port);
-    this.actuator.push(new StartCapture(stream_port));
+  /**
+   * 注册逻辑端口并返回解析后的 TrafficPort。
+   *
+   * 同一逻辑端口只允许一个 provider；自定义端口没有逻辑端口号时，
+   * 用 provider + address 作为稳定 key。
+   */
+  private registerTrafficPort(
+    stream_port: StreamPort | TrafficPort,
+  ): TrafficPort {
+    const port = TrafficConfig.normalizePort(stream_port);
+    const key = port.id ?? `${port.provider}:${port.address}`;
+    const existing = this.trafficPorts.get(key);
+    if (existing && existing.provider !== port.provider) {
+      throw new Error(
+        `端口 ${key} 已注册为 ${existing.provider}，不能再作为 ${port.provider} 使用`,
+      );
+    }
+    this.trafficPorts.set(key, port);
+    return port;
+  }
+
+  startCapture(stream_port: StreamPort | TrafficPort) {
+    const port = this.registerTrafficPort(stream_port);
+    this.actuator.push(new StartCapture(port));
     return this;
   }
 
   addPktSender(packetSendParam: PacketSendParam) {
-    this.streamPortSet.set(packetSendParam.port.name, packetSendParam.port);
-    this.actuator.push(new PacketSender(packetSendParam));
+    const param: PacketSendParam = {
+      ...packetSendParam,
+      port: this.registerTrafficPort(packetSendParam.port),
+    };
+    this.actuator.push(new PacketSender(param));
     return this;
   }
 
-  stopStream(stream_port: StreamPort) {
-    this.streamPortSet.set(stream_port.name, stream_port);
-    this.actuator.push(new StopStream(stream_port));
+  stopStream(stream_port: StreamPort | TrafficPort) {
+    const port = this.registerTrafficPort(stream_port);
+    this.actuator.push(new StopStream(port));
     return this;
   }
 
@@ -227,8 +257,11 @@ export class TestHelper {
    * @returns
    */
   addPktChecker(packetCheckParam: PacketCheckParam) {
-    this.streamPortSet.set(packetCheckParam.port.name, packetCheckParam.port);
-    this.actuator.push(new PacketChecker(packetCheckParam));
+    const param: PacketCheckParam = {
+      ...packetCheckParam,
+      port: this.registerTrafficPort(packetCheckParam.port),
+    };
+    this.actuator.push(new PacketChecker(param));
     return this;
   }
 

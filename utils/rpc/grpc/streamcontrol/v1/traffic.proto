@@ -1,0 +1,361 @@
+// 流量配置与发送（Renix StreamTemplate / StreamChannel / LoadProfile）
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/packet.proto";
+import "streamcontrol/v1/resource.proto";
+
+enum FrameLengthType {
+  FRAME_LENGTH_TYPE_UNSPECIFIED = 0;
+  FRAME_LENGTH_TYPE_FIXED = 1;
+  FRAME_LENGTH_TYPE_INCREMENT = 2;
+  FRAME_LENGTH_TYPE_DECREMENT = 3;
+  FRAME_LENGTH_TYPE_RANDOM = 4;
+  FRAME_LENGTH_TYPE_IMIX = 5;
+  FRAME_LENGTH_TYPE_AUTO = 6;
+}
+
+enum PayloadType {
+  PAYLOAD_TYPE_UNSPECIFIED = 0;
+  PAYLOAD_TYPE_CYCLE = 1;
+  PAYLOAD_TYPE_INCREMENT = 2;
+  PAYLOAD_TYPE_DECREMENT = 3;
+  PAYLOAD_TYPE_RANDOM = 4;
+  PAYLOAD_TYPE_CUSTOM = 5;
+  PAYLOAD_TYPE_PRBS = 6;
+}
+
+// Renix EnumPayloadValueType：单字节/双字节填充单位。
+enum PayloadValueType {
+  PAYLOAD_VALUE_TYPE_UNSPECIFIED = 0;
+  PAYLOAD_VALUE_TYPE_SINGLE_BYTE = 1;
+  PAYLOAD_VALUE_TYPE_DOUBLE_BYTE = 2;
+}
+
+enum TrafficSendMode {
+  TRAFFIC_SEND_MODE_UNSPECIFIED = 0;
+  TRAFFIC_SEND_MODE_CONTINUOUS = 1;
+  TRAFFIC_SEND_MODE_BURST = 2;
+  TRAFFIC_SEND_MODE_TIME = 3;
+  TRAFFIC_SEND_MODE_STEP = 4;
+  TRAFFIC_SEND_MODE_ON_STREAM = 5;
+}
+
+enum TrafficMeshMode {
+  TRAFFIC_MESH_MODE_UNSPECIFIED = 0;
+  TRAFFIC_MESH_MODE_ONE_TO_ONE = 1;
+  TRAFFIC_MESH_MODE_MANY_TO_MANY = 2;
+  TRAFFIC_MESH_MODE_FULL_MESH = 3;
+  TRAFFIC_MESH_MODE_CONGESTION = 4;
+  TRAFFIC_MESH_MODE_LEARNING = 5;
+  TRAFFIC_MESH_MODE_BACKBONE = 6;
+  TRAFFIC_MESH_MODE_PAIR = 7;
+}
+
+enum TrafficLoadUnit {
+  TRAFFIC_LOAD_UNIT_UNSPECIFIED = 0;
+  TRAFFIC_LOAD_UNIT_PERCENT = 1;
+  TRAFFIC_LOAD_UNIT_FPS = 2;
+  TRAFFIC_LOAD_UNIT_IFG = 3;
+  TRAFFIC_LOAD_UNIT_BPS = 4;
+  TRAFFIC_LOAD_UNIT_KBPS = 5;
+  TRAFFIC_LOAD_UNIT_MBPS = 6;
+  TRAFFIC_LOAD_UNIT_BYTES_PER_SEC = 7;
+}
+
+enum SignatureMode {
+  SIGNATURE_MODE_UNSPECIFIED = 0;
+  SIGNATURE_MODE_NONE = 1;
+  SIGNATURE_MODE_8B = 2;
+  SIGNATURE_MODE_12B = 3;
+}
+
+enum FrameErrorType {
+  FRAME_ERROR_TYPE_UNSPECIFIED = 0;
+  FRAME_ERROR_TYPE_CRC = 1;
+  FRAME_ERROR_TYPE_UNDERSIZE = 2;
+  FRAME_ERROR_TYPE_OVERSIZE = 3;
+  FRAME_ERROR_TYPE_VLAN_MALFORMED = 4;
+  FRAME_ERROR_TYPE_IPV4_CHECKSUM = 5;
+  FRAME_ERROR_TYPE_TTL_ZERO = 6;
+  FRAME_ERROR_TYPE_IP_OPTION = 7;
+}
+
+enum TunnelType {
+  TUNNEL_TYPE_UNSPECIFIED = 0;
+  TUNNEL_TYPE_MPLS = 1;
+  TUNNEL_TYPE_SRV6 = 2;
+  TUNNEL_TYPE_GRE = 3;
+  TUNNEL_TYPE_VXLAN = 4;
+}
+
+message TrafficRate {
+  double value = 1;
+  TrafficLoadUnit unit = 2;
+  bool per_port = 3;          // true = PORT_BASE，false = STREAM_BASE
+  uint32 weight = 4;
+  bool line_rate = 5;
+}
+
+message ImixEntry {
+  uint32 length = 1;
+  uint32 weight = 2;
+}
+
+message FrameLengthSpec {
+  FrameLengthType type = 1;
+  uint32 fixed = 2;
+  uint32 min = 3;
+  uint32 max = 4;
+  uint32 step = 5;
+  uint32 random_seed = 6;
+  string imix = 7;
+  repeated uint32 custom = 8;          // 旧字段：仅长度，兼容保留
+  repeated ImixEntry custom_imix = 9;  // 长度 + 权重
+}
+
+message PayloadSpec {
+  PayloadType type = 1;
+  uint32 value = 2;
+  PayloadValueType value_type = 3;     // 原 uint32，当前未实现，按 enum 定稿
+  uint32 seed = 4;
+  bytes custom = 5;
+}
+
+message SignatureSpec {
+  SignatureMode mode = 1;
+  uint32 stream_id = 2;
+  string position = 3;        // head / tail / offset / ethertype
+  uint32 offset = 4;
+  uint32 front_count = 5;
+  uint32 vlan_depth = 6;
+}
+
+message ErrorInjectionSpec {
+  FrameErrorType type = 1;
+  uint32 count = 2;           // 0 = 全部
+  uint32 interval = 3;
+  bool fcs_override = 4;
+}
+
+message BurstSpec {
+  uint64 frames = 1;
+  uint64 gap_us = 2;
+  string gap_unit = 3;
+}
+
+message StreamTemplate {
+  ResourceRef ref = 1;
+  string name = 2;
+  ResourceRef port = 3;
+  string top_layer_type = 4;
+  TrafficMeshMode mesh_mode = 5;
+  string hosts_mesh = 6;
+  uint32 repeat_count = 7;
+  bool enable_signature = 8;
+  SignatureSpec signature = 9;
+  FrameLengthSpec frame_length = 10;
+  PayloadSpec payload = 11;
+  string template_string = 12;
+  bool enable_nd_response = 13;
+  string address_learning_mode = 14;
+  bool stream_only = 15;
+  ErrorInjectionSpec error_injection = 16;
+  PropertyBag properties = 17;
+
+  // 结构化报文头。非空时优先于 template_string / top_layer_type。
+  repeated HeaderInstance headers = 18;
+}
+
+message StreamChannel {
+  ResourceRef ref = 1;
+  ResourceRef template = 2;
+  string template_string = 3;
+  repeated ResourceRef source_endpoints = 4;
+  repeated ResourceRef destination_endpoints = 5;
+  TunnelBinding tunnel = 6;
+}
+
+message TunnelBinding {
+  TunnelType type = 1;
+  repeated uint32 mpls_labels = 2;
+  repeated string srv6_sids = 3;
+  uint32 insert_position = 4;
+  string tunnel_string = 5;
+}
+
+message StreamPortConfig {
+  TrafficSendMode transmit_mode = 1;
+  bool generate_error = 2;
+  string load_profile_type = 3;
+  bool ignore_link_state = 4;
+  string timestamp_position_tx = 5;
+  string timestamp_position_rx = 6;
+  uint32 latency_compensation = 7;
+  uint32 inter_frame_gap = 8;
+  string inter_frame_gap_unit = 9;
+  uint64 burst_size = 10;
+  uint32 latency_seg_threshold = 11;
+  uint32 port_start_delay_ms = 12;
+}
+
+message StreamTransmitConfig {
+  TrafficSendMode mode = 1;
+  uint32 frames_per_burst = 2;
+  uint32 burst_count = 3;
+  uint32 burst_gap = 4;
+  string burst_gap_unit = 5;
+}
+
+message StreamGlobalConfig {
+  TrafficSendMode port_send_mode = 1;
+  string result_mode = 2;
+  string mesh_creation_mode = 3;
+}
+
+message StreamBlock {
+  ResourceRef ref = 1;
+  string name = 2;
+  ResourceRef tx_port = 3;
+  ResourceRef rx_port = 4;
+  bool port_based_rate = 5;
+  TrafficRate rate = 6;
+  TrafficSendMode send_mode = 7;
+  uint64 frames = 8;
+  uint64 duration_ms = 9;
+  uint32 stream_count = 10;
+  repeated StreamTemplate streams = 11;
+}
+
+message TrafficRef {
+  ResourceRef ref = 1;
+}
+
+message CreateStreamTemplateRequest {
+  StreamTemplate template = 1;
+  string idempotency_key = 2;
+}
+
+message CreateStreamChannelRequest {
+  StreamChannel channel = 1;
+  string idempotency_key = 2;
+}
+
+message UpdateEndpointRequest {
+  ResourceRef stream = 1;
+  ResourceRef source = 2;
+  ResourceRef destination = 3;
+  string destination_mac = 4;
+}
+
+message CreateLoadProfileRequest {
+  ResourceRef owner = 1;
+  TrafficRate rate = 2;
+  string type = 3;
+}
+
+message SetStreamPortConfigRequest {
+  repeated ResourceRef ports = 1;
+  StreamPortConfig config = 2;
+  bool apply = 3;
+  string idempotency_key = 4;
+}
+
+message StartStreamRequest {
+  repeated ResourceRef streams = 1;
+  uint64 duration_ms = 2;
+  string idempotency_key = 3;
+}
+
+message StopStreamRequest {
+  repeated ResourceRef streams = 1;
+  bool force = 2;
+}
+
+message WaitTrafficRequest {
+  repeated ResourceRef streams = 1;
+  uint32 timeout_ms = 2;
+  string state = 3;           // STARTED / STOPPED
+}
+
+message CalculateStreamRateRequest {
+  repeated ResourceRef streams = 1;
+  ResourceRef port = 2;
+  TrafficRate load = 3;
+}
+
+message CalculateStreamRateReply {
+  Result result = 1;
+  double pps = 2;
+  uint64 l1_bps = 3;
+  uint64 l2_bps = 4;
+  uint64 l3_bps = 5;
+}
+
+message EncodeStreamRequest {
+  ResourceRef stream = 1;
+  string template = 2;
+  repeated HeaderInstance headers = 3;  // 可选：预览未保存的报文
+}
+
+message EncodeStreamReply {
+  Result result = 1;
+  bytes frame = 2;
+  uint32 frame_length = 3;
+}
+
+message ImportPcapRequest {
+  bytes pcap = 1;
+  string file_path = 2;
+  ResourceRef port = 3;
+  uint32 max_streams = 4;
+  string idempotency_key = 5;
+}
+
+message ImportPcapReply {
+  Result result = 1;
+  repeated ResourceRef streams = 2;
+}
+
+message AddStreamTunnelRequest {
+  repeated ResourceRef channels = 1;
+  TunnelBinding tunnel = 2;
+  uint32 insert_position = 3;
+}
+
+message TrafficStartReply {
+  Result result = 1;
+  repeated uint64 run_ids = 2;
+  uint64 job_id = 3;
+}
+
+service TrafficService {
+  rpc CreateTemplate(CreateStreamTemplateRequest) returns (ResourceReply);        // operator
+  rpc GetTemplate(TrafficRef) returns (ResourceReply);                           // viewer
+  rpc ListTemplates(ListResourcesRequest) returns (ListResourcesReply);          // viewer
+  rpc UpdateTemplate(UpdateResourceRequest) returns (ResourceReply);             // operator
+  rpc DeleteTemplate(TrafficRef) returns (JobReply);                             // operator
+  rpc CreateChannel(CreateStreamChannelRequest) returns (ResourceReply);         // operator
+  rpc UpdateEndpoint(UpdateEndpointRequest) returns (ResourceReply);             // operator
+  rpc CreateLoadProfile(CreateLoadProfileRequest) returns (ResourceReply);       // operator
+  rpc SetPortConfig(SetStreamPortConfigRequest) returns (JobReply);              // operator
+  rpc Start(StartStreamRequest) returns (TrafficStartReply);                     // operator
+  rpc Stop(StopStreamRequest) returns (JobReply);                                // operator
+  rpc Restart(StartStreamRequest) returns (TrafficStartReply);                   // operator
+  rpc StartAll(StartStreamRequest) returns (TrafficStartReply);                  // operator
+  rpc StopAll(StopStreamRequest) returns (JobReply);                             // operator
+  rpc Wait(WaitTrafficRequest) returns (JobReply);                               // operator
+  rpc CalculateRate(CalculateStreamRateRequest) returns (CalculateStreamRateReply); // viewer
+  rpc Encode(EncodeStreamRequest) returns (EncodeStreamReply);                   // viewer
+  rpc ImportPcap(ImportPcapRequest) returns (ImportPcapReply);                   // operator
+  rpc AddTunnel(AddStreamTunnelRequest) returns (JobReply);                      // operator
+}

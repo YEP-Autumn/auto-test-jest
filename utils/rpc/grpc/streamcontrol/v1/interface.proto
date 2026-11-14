@@ -1,0 +1,401 @@
+// 接口与协议栈构造（Renix Interface / Layer / Link）
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+
+enum InterfaceMode {
+  INTERFACE_MODE_UNSPECIFIED = 0;
+  INTERFACE_MODE_L2 = 1;
+  INTERFACE_MODE_L3 = 2;
+}
+
+enum InterfaceLayerType {
+  INTERFACE_LAYER_TYPE_UNSPECIFIED = 0;
+  INTERFACE_LAYER_TYPE_ETH = 1;
+  INTERFACE_LAYER_TYPE_VLAN = 2;
+  INTERFACE_LAYER_TYPE_IPV4 = 3;
+  INTERFACE_LAYER_TYPE_IPV6 = 4;
+  INTERFACE_LAYER_TYPE_PPPOE = 5;
+  INTERFACE_LAYER_TYPE_GRE = 6;
+}
+
+enum AddressFamily {
+  ADDRESS_FAMILY_UNSPECIFIED = 0;
+  ADDRESS_FAMILY_IPV4 = 1;
+  ADDRESS_FAMILY_IPV6 = 2;
+}
+
+enum NeighborState {
+  NEIGHBOR_STATE_UNSPECIFIED = 0;
+  NEIGHBOR_STATE_INCOMPLETE = 1;
+  NEIGHBOR_STATE_REACHABLE = 2;
+  NEIGHBOR_STATE_STALE = 3;
+  NEIGHBOR_STATE_DELAY = 4;
+  NEIGHBOR_STATE_PROBE = 5;
+  NEIGHBOR_STATE_FAILED = 6;
+}
+
+enum RouteType {
+  ROUTE_TYPE_UNSPECIFIED = 0;
+  ROUTE_TYPE_CONNECTED = 1;
+  ROUTE_TYPE_STATIC = 2;
+  ROUTE_TYPE_OSPF = 3;
+  ROUTE_TYPE_BGP = 4;
+  ROUTE_TYPE_ISIS = 5;
+  ROUTE_TYPE_RIP = 6;
+}
+
+enum InterfaceLinkType {
+  INTERFACE_LINK_TYPE_UNSPECIFIED = 0;
+  INTERFACE_LINK_TYPE_NORMAL = 1;
+  INTERFACE_LINK_TYPE_PROVIDER = 2;
+  INTERFACE_LINK_TYPE_CUSTOMER = 3;
+}
+
+enum InterfaceAddMode {
+  INTERFACE_ADD_MODE_UNSPECIFIED = 0;
+  INTERFACE_ADD_MODE_NORMAL = 1;
+  INTERFACE_ADD_MODE_CASCADE = 2;
+  INTERFACE_ADD_MODE_ROUND_ROBIN = 3;
+}
+
+message AddressGenerator {
+  string base = 1;          // IPv4/IPv6 文本
+  string step = 2;
+  uint32 count = 3;
+  uint32 prefix_len = 4;
+  repeated string list = 5;
+  string gateway = 6;
+  string gateway_step = 7;
+  uint32 gateway_count = 8;
+  string gateway_mac = 9;
+}
+
+message EthLayer {
+  string address = 1;
+  string step = 2;
+  repeated string address_list = 3;
+  bool enable_random_mac = 4;
+  uint32 random_seed = 5;
+}
+
+message VlanLayer {
+  uint32 vlan_id = 1;
+  uint32 step = 2;
+  repeated uint32 vlan_id_list = 3;
+  uint32 priority = 4;
+  uint32 priority_step = 5;
+  uint32 cfi = 6;
+  uint32 tpid = 7;
+}
+
+message Ipv4Layer {
+  AddressGenerator addresses = 1;
+  string gateway = 2;
+  string gateway_step = 3;
+  uint32 gateway_count = 4;
+  string gateway_mac = 5;
+}
+
+message Ipv6Layer {
+  AddressGenerator addresses = 1;
+  string link_local_gen_type = 2;
+  string link_local = 3;
+  string link_local_step = 4;
+  repeated string link_local_list = 5;
+}
+
+message PppoeLayer {
+  string session = 1;
+  string service_name = 2;
+  string ac_name = 3;
+  string host_unique = 4;
+}
+
+message GreLayer {
+  string local = 1;
+  string remote = 2;
+  uint32 key = 3;
+  bool checksum = 4;
+}
+
+message InterfaceLayer {
+  InterfaceLayerType type = 1;
+  oneof layer {
+    EthLayer eth = 2;
+    VlanLayer vlan = 3;
+    Ipv4Layer ipv4 = 4;
+    Ipv6Layer ipv6 = 5;
+    PppoeLayer pppoe = 6;
+    GreLayer gre = 7;
+  }
+}
+
+message InterfaceSpec {
+  string name = 1;
+  ResourceRef port = 2;
+  InterfaceMode mode = 3;
+  uint32 count = 4;
+  bool enable_interface_count = 5;
+  string router_id = 6;
+  string router_id_step = 7;
+  string ipv6_router_id = 8;
+  string ipv6_router_id_step = 9;
+  bool enable_vlans_association = 10;
+  bool enable_learning_gateway_mac = 11;
+  repeated InterfaceLayer layers = 12;
+  repeated string top_layers = 13;
+  string mac = 14;
+  string mac_step = 15;
+  AddressFamily family = 16;
+}
+
+message InterfaceRef {
+  ResourceRef ref = 1;
+  string name = 2;
+}
+
+message InterfaceReply {
+  Result result = 1;
+  InterfaceSpec interface = 2;
+  repeated InterfaceSpec interfaces = 3;
+}
+
+message GetInterfaceRequest {
+  ResourceRef ref = 1;
+}
+
+message ListInterfacesRequest {
+  ResourceRef port = 1;
+  PageRequest page = 2;
+}
+
+message ListInterfacesReply {
+  Result result = 1;
+  repeated InterfaceSpec interfaces = 2;
+  PageInfo page = 3;
+}
+
+message DeleteInterfaceRequest {
+  repeated ResourceRef refs = 1;
+  uint64 expected_revision = 2;
+}
+
+message BuildInterfaceRequest {
+  repeated ResourceRef interfaces = 1;
+  repeated string network_layers = 2;
+  repeated string top_layers = 3;
+  string idempotency_key = 4;
+}
+
+message SelectInterfaceRequest {
+  repeated ResourceRef protocols = 1;
+  repeated ResourceRef interfaces = 2;
+}
+
+message UnselectInterfaceRequest {
+  repeated ResourceRef protocols = 1;
+}
+
+message InterfaceLinkSpec {
+  ResourceRef front = 1;
+  ResourceRef back = 2;
+  InterfaceAddMode how_to_add = 3;
+  InterfaceLinkType default_link_type = 4;
+  uint32 count = 5;
+}
+
+message CreateInterfaceLinkRequest {
+  repeated InterfaceLinkSpec links = 1;
+  string idempotency_key = 2;
+}
+
+message EditInterfaceLinkRequest {
+  ResourceRef link = 1;
+  InterfaceLinkSpec spec = 2;
+}
+
+message DeleteInterfaceLinkRequest {
+  repeated ResourceRef links = 1;
+  bool delete_all = 2;
+  ResourceRef port = 3;
+}
+
+message ReplaceInterfaceStackRequest {
+  ResourceRef interface = 1;
+  repeated InterfaceLayer layers = 2;
+}
+
+message InterfaceWizardConfig {
+  ResourceRef port = 1;
+  uint32 interfaces_per_port = 2;
+  uint32 interfaces_per_block = 3;
+  bool eth = 4;
+  bool vlan = 5;
+  bool ipv4 = 6;
+  bool ipv6 = 7;
+  bool pppoe = 8;
+  bool gre = 9;
+  uint32 vlan_headers = 10;
+  string router_id = 11;
+  uint32 router_id_step = 12;
+  uint32 vlan_step = 13;
+  string vlan_step_mode = 14;
+  string vlan_order = 15;
+}
+
+message ExpandWizardRequest {
+  oneof wizard {
+    InterfaceWizardConfig interface = 1;
+    InterfaceLinkSpec link = 2;
+  }
+  string idempotency_key = 3;
+}
+
+message ExpandWizardReply {
+  Result result = 1;
+  repeated ResourceRef resources = 2;
+  uint64 job_id = 3;
+}
+
+message NeighborEntry {
+  string address = 1;
+  bytes mac = 2;
+  ResourceRef interface = 3;
+  NeighborState state = 4;
+  uint32 age_s = 5;
+  uint32 remaining_s = 6;
+  string source = 7;         // static / dynamic
+  AddressFamily family = 8;
+}
+
+message NeighborListRequest {
+  ResourceRef interface = 1;
+  AddressFamily family = 2;
+  PageRequest page = 3;
+}
+
+message NeighborListReply {
+  Result result = 1;
+  repeated NeighborEntry neighbors = 2;
+  PageInfo page = 3;
+}
+
+message NeighborActionRequest {
+  ResourceRef interface = 1;
+  string address = 2;
+  bytes mac = 3;
+  string action = 4;         // resolve / add-static / clear / inject
+  AddressFamily family = 5;
+}
+
+message RouteEntry {
+  string prefix = 1;
+  uint32 prefix_len = 2;
+  string next_hop = 3;
+  ResourceRef interface = 4;
+  RouteType type = 5;
+  uint32 metric = 6;
+  uint32 preference = 7;
+  uint32 age_s = 8;
+}
+
+message RouteListRequest {
+  string prefix = 1;
+  RouteType type = 2;
+  PageRequest page = 3;
+}
+
+message RouteListReply {
+  Result result = 1;
+  repeated RouteEntry routes = 2;
+  PageInfo page = 3;
+}
+
+message RouteAddRequest {
+  RouteEntry route = 1;
+}
+
+message RouteDeleteRequest {
+  string prefix = 1;
+  uint32 prefix_len = 2;
+  RouteType type = 3;
+}
+
+message RouteLookupRequest {
+  string address = 1;
+}
+
+message RouteLookupReply {
+  Result result = 1;
+  RouteEntry route = 2;
+}
+
+message PingRequest {
+  string destination = 1;
+  ResourceRef interface = 2;
+  uint32 count = 3;
+  uint32 interval_ms = 4;
+  uint32 timeout_ms = 5;
+  uint32 size = 6;
+  string source = 7;
+  bool no_resolve = 8;
+  AddressFamily family = 9;
+}
+
+message PingReply {
+  Result result = 1;
+  uint32 sent = 2;
+  uint32 received = 3;
+  uint32 lost = 4;
+  double loss_pct = 5;
+  uint32 rtt_min_us = 6;
+  uint32 rtt_avg_us = 7;
+  uint32 rtt_max_us = 8;
+}
+
+service InterfaceService {
+  rpc Create(CreateInterfaceRequest) returns (InterfaceReply);          // operator
+  rpc Get(GetInterfaceRequest) returns (InterfaceReply);                // viewer
+  rpc List(ListInterfacesRequest) returns (ListInterfacesReply);        // viewer
+  rpc Delete(DeleteInterfaceRequest) returns (JobReply);                // operator
+  rpc BuildStack(BuildInterfaceRequest) returns (JobReply);              // operator
+  rpc SelectProtocol(SelectInterfaceRequest) returns (JobReply);         // operator
+  rpc UnselectProtocol(UnselectInterfaceRequest) returns (JobReply);     // operator
+  rpc CreateLink(CreateInterfaceLinkRequest) returns (JobReply);         // operator
+  rpc EditLink(EditInterfaceLinkRequest) returns (JobReply);             // operator
+  rpc DeleteLink(DeleteInterfaceLinkRequest) returns (JobReply);         // operator
+  rpc ReplaceStack(ReplaceInterfaceStackRequest) returns (JobReply);     // operator
+  rpc ExpandWizard(ExpandWizardRequest) returns (ExpandWizardReply);     // operator
+}
+
+message CreateInterfaceRequest {
+  InterfaceSpec spec = 1;
+  uint32 count = 2;
+  string idempotency_key = 3;
+}
+
+service NeighborService {
+  rpc List(NeighborListRequest) returns (NeighborListReply);             // viewer
+  rpc Action(NeighborActionRequest) returns (JobReply);                  // operator
+}
+
+service RouteService {
+  rpc List(RouteListRequest) returns (RouteListReply);                   // viewer
+  rpc Add(RouteAddRequest) returns (JobReply);                           // operator
+  rpc Delete(RouteDeleteRequest) returns (JobReply);                     // operator
+  rpc Lookup(RouteLookupRequest) returns (RouteLookupReply);             // viewer
+}
+
+service PingService {
+  rpc Ping(PingRequest) returns (PingReply);                             // operator
+}

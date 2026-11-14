@@ -1,0 +1,250 @@
+// BGP4 / BGP4+ / EVPN / FlowSpec / BGP-LS
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+enum BgpType {
+  BGP_TYPE_UNSPECIFIED = 0;
+  BGP_TYPE_EBGP = 1;
+  BGP_TYPE_IBGP = 2;
+}
+
+enum BgpState {
+  BGP_STATE_UNSPECIFIED = 0;
+  BGP_STATE_IDLE = 1;
+  BGP_STATE_CONNECT = 2;
+  BGP_STATE_ACTIVE = 3;
+  BGP_STATE_OPEN_SENT = 4;
+  BGP_STATE_OPEN_CONFIRM = 5;
+  BGP_STATE_ESTABLISHED = 6;
+}
+
+enum BgpAddressFamily {
+  BGP_ADDRESS_FAMILY_UNSPECIFIED = 0;
+  BGP_ADDRESS_FAMILY_IPV4_UNICAST = 1;
+  BGP_ADDRESS_FAMILY_IPV6_UNICAST = 2;
+  BGP_ADDRESS_FAMILY_IPV4_VPN = 3;
+  BGP_ADDRESS_FAMILY_IPV6_VPN = 4;
+  BGP_ADDRESS_FAMILY_EVPN = 5;
+  BGP_ADDRESS_FAMILY_FLOWSPEC = 6;
+  BGP_ADDRESS_FAMILY_LS = 7;
+}
+
+enum EvpnRouteType {
+  EVPN_ROUTE_TYPE_UNSPECIFIED = 0;
+  EVPN_ROUTE_TYPE_1 = 1;
+  EVPN_ROUTE_TYPE_2 = 2;
+  EVPN_ROUTE_TYPE_3 = 3;
+  EVPN_ROUTE_TYPE_4 = 4;
+  EVPN_ROUTE_TYPE_5 = 5;
+}
+
+message BgpPeerConfig {
+  string name = 1;
+  BgpType type = 2;
+  string local_as = 3;
+  string remote_as = 4;
+  string router_id = 5;
+  string local_address = 6;
+  string peer_address = 7;
+  uint32 hold_time_s = 8;
+  uint32 keepalive_s = 9;
+  uint32 connect_retry_s = 10;
+  uint32 ebgp_multihop = 11;
+  string update_source = 12;
+  bool passive = 13;
+  string auth_password = 14;
+  bool bfd = 15;
+  bool graceful_restart = 16;
+  bool route_refresh = 17;
+  bool add_path = 18;
+  repeated BgpAddressFamily families = 19;
+  string peer_group = 20;
+  PropertyBag properties = 21;
+}
+
+message BgpRouteBlock {
+  string name = 1;
+  BgpAddressFamily family = 2;
+  string prefix_base = 3;
+  uint32 prefix_len = 4;
+  uint32 count = 5;
+  string next_hop = 6;
+  string med = 7;
+  string local_pref = 8;
+  string communities = 9;
+  string origin = 10;
+  string rd = 11;
+  string rt = 12;
+  uint32 label = 13;
+  uint32 batch_size = 14;
+  uint32 batch_interval_ms = 15;
+}
+
+message BgpEvpnRoute {
+  string name = 1;
+  EvpnRouteType type = 2;
+  string rd = 3;
+  string rt = 4;
+  string esi = 5;
+  string mac = 6;
+  string ip = 7;
+  uint32 vni = 8;
+  string prefix = 9;
+  uint32 prefix_len = 10;
+  uint32 label = 11;
+  uint32 count = 12;
+  uint32 step = 13;
+}
+
+message BgpFlowSpec {
+  string name = 1;
+  BgpAddressFamily family = 2;
+  string source_prefix = 3;
+  string destination_prefix = 4;
+  uint32 protocol = 5;
+  uint32 source_port = 6;
+  uint32 destination_port = 7;
+  string action = 8;
+  uint32 rate = 9;
+}
+
+message BgpSrv6Params {
+  string locator = 1;
+  string sid = 2;
+  uint32 sid_step = 3;
+  uint32 sid_count = 4;
+  string segment_list = 5;
+}
+
+message BgpConfig {
+  ResourceRef ref = 1;
+  ResourceRef port = 2;
+  repeated BgpPeerConfig peers = 3;
+  repeated BgpRouteBlock route_blocks = 4;
+  repeated BgpEvpnRoute evpn_routes = 5;
+  repeated BgpFlowSpec flowspec_routes = 6;
+  BgpSrv6Params srv6 = 7;
+  PropertyBag properties = 8;
+}
+
+message BgpSession {
+  string peer = 1;
+  BgpState state = 2;
+  string local_as = 3;
+  string remote_as = 4;
+  string router_id = 5;
+  uint64 uptime_s = 6;
+  uint64 prefixes_received = 7;
+  uint64 prefixes_sent = 8;
+  uint64 updates_in = 9;
+  uint64 updates_out = 10;
+  uint64 notifications_in = 11;
+  uint64 notifications_out = 12;
+}
+
+message BgpRoute {
+  string prefix = 1;
+  uint32 prefix_len = 2;
+  BgpAddressFamily family = 3;
+  string next_hop = 4;
+  string as_path = 5;
+  string origin = 6;
+  string local_pref = 7;
+  string med = 8;
+  string communities = 9;
+  string rd = 10;
+  string rt = 11;
+  uint32 label = 12;
+  bool best = 13;
+}
+
+message BgpLsTopology {
+  repeated BgpLsNode nodes = 1;
+  repeated BgpLsLink links = 2;
+}
+
+message BgpLsNode {
+  string id = 1;
+  string as = 2;
+  string router_id = 3;
+}
+
+message BgpLsLink {
+  string local = 1;
+  string remote = 2;
+  uint32 metric = 3;
+}
+
+message BgpRequest {
+  ResourceRef ref = 1;
+}
+
+message BgpSessionListRequest {
+  ResourceRef config = 1;
+  PageRequest page = 2;
+}
+
+message BgpSessionList {
+  Result result = 1;
+  repeated BgpSession sessions = 2;
+  PageInfo page = 3;
+}
+
+message BgpRouteListRequest {
+  ResourceRef config = 1;
+  string peer = 2;
+  BgpAddressFamily family = 3;
+  PageRequest page = 4;
+}
+
+message BgpRouteList {
+  Result result = 1;
+  repeated BgpRoute routes = 2;
+  PageInfo page = 3;
+}
+
+message BgpActionRequest {
+  ResourceRef config = 1;
+  repeated string peers = 2;
+  repeated string route_blocks = 3;
+  string idempotency_key = 4;
+}
+
+message BgpLsRequest {
+  ResourceRef config = 1;
+}
+
+message BgpLsReply {
+  Result result = 1;
+  BgpLsTopology topology = 2;
+}
+
+service BgpService {
+  rpc Create(BgpConfig) returns (ResourceReply);                         // operator
+  rpc Get(BgpRequest) returns (ResourceReply);                           // viewer
+  rpc List(ListResourcesRequest) returns (ListResourcesReply);           // viewer
+  rpc Update(UpdateResourceRequest) returns (ResourceReply);             // operator
+  rpc Delete(BgpRequest) returns (JobReply);                             // operator
+  rpc Establish(BgpActionRequest) returns (JobReply);                    // operator
+  rpc Connect(BgpActionRequest) returns (JobReply);                      // operator
+  rpc Disconnect(BgpActionRequest) returns (JobReply);                   // operator
+  rpc AdvertiseRoutes(BgpActionRequest) returns (JobReply);              // operator
+  rpc WithdrawRoutes(BgpActionRequest) returns (JobReply);               // operator
+  rpc ReadvertiseRoutes(BgpActionRequest) returns (JobReply);            // operator
+  rpc Refresh(BgpActionRequest) returns (JobReply);                      // operator
+  rpc GracefulRestart(BgpActionRequest) returns (JobReply);              // operator
+  rpc ListSessions(BgpSessionListRequest) returns (BgpSessionList);      // viewer
+  rpc ViewRoutes(BgpRouteListRequest) returns (BgpRouteList);            // viewer
+  rpc ViewLsTopology(BgpLsRequest) returns (BgpLsReply);                 // viewer
+}

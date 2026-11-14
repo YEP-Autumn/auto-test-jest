@@ -1,0 +1,74 @@
+// stream-linux 公开 gRPC 契约（streamcontrol.v1）
+//
+// 本文件是公开契约的一部分；引擎内部 SLNX/2 不是公开接口。
+// 规则：
+//   * 字段号只增不改；删除字段必须 reserved；枚举 0 值必须是 UNSPECIFIED 类语义。
+//   * 单位写在字段名里：_ms/_us/_ns、_frames/_bytes/_bps/_pps、_x100。
+//   * 时间戳：墙钟用 *_wall_us 或 google.protobuf.Timestamp；单调时钟用 *_mono_us。
+//   * 业务失败用 Result（code != 0）；传输/鉴权失败用 gRPC status。
+//   * 角色：viewer < operator < admin；每个 RPC 注释里写所需角色。
+//   * 只定义已实现或明确排期的能力；不存在的 RPC 不放进公开契约。
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+
+enum JobState {
+  JOB_STATE_UNSPECIFIED = 0;
+  JOB_QUEUED = 1;
+  JOB_RUNNING = 2;
+  JOB_SUCCEEDED = 3;
+  JOB_FAILED = 4;
+  JOB_CANCELLED = 5;
+}
+
+message JobRef {
+  uint64 job_id = 1;
+}
+
+message JobStatus {
+  Result result = 1;
+  uint64 job_id = 2;
+  JobState state = 3;
+  uint32 progress_x100 = 4;
+  Result job_result = 5;
+  uint64 created_wall_us = 6;
+  uint64 started_wall_us = 7;
+  uint64 ended_wall_us = 8;
+  string message = 9;
+}
+
+message ListJobsRequest {}
+
+message JobList {
+  reserved 3;
+  reserved "next_page_token";
+
+  Result result = 1;
+  repeated JobStatus jobs = 2;
+}
+
+message CancelJobRequest {
+  reserved 2;
+  reserved "force";
+
+  uint64 job_id = 1;
+}
+
+message JobReply {
+  Result result = 1;
+  uint64 job_id = 2;
+}
+
+service JobService {
+  rpc GetJob(JobRef) returns (JobStatus);                     // viewer
+  rpc ListJobs(ListJobsRequest) returns (JobList);            // viewer
+  rpc CancelJob(CancelJobRequest) returns (JobStatus);        // operator
+}

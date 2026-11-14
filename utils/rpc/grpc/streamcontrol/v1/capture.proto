@@ -1,0 +1,194 @@
+// 报文捕获与分析（Renix CaptureConfig / Filter / Download）
+
+syntax = "proto3";
+
+package streamcontrol.v1;
+
+option csharp_namespace = "StreamControl.V1";
+option java_multiple_files = true;
+option java_package = "io.streamcontrol.v1";
+option go_package = "streamcontrol/v1;streamcontrolv1";
+
+import "streamcontrol/v1/common.proto";
+import "streamcontrol/v1/job.proto";
+import "streamcontrol/v1/resource.proto";
+
+enum CaptureMode {
+  CAPTURE_MODE_UNSPECIFIED = 0;
+  CAPTURE_MODE_ALL = 1;
+  CAPTURE_MODE_CTRL_PLANE = 2;
+  CAPTURE_MODE_REALTIME_ALL = 3;
+}
+
+enum CaptureFilterMode {
+  CAPTURE_FILTER_MODE_UNSPECIFIED = 0;
+  CAPTURE_FILTER_MODE_BYTE = 1;
+  CAPTURE_FILTER_MODE_PDU = 2;
+}
+
+enum CaptureBufferFullAction {
+  CAPTURE_BUFFER_FULL_ACTION_UNSPECIFIED = 0;
+  CAPTURE_BUFFER_FULL_ACTION_STOP = 1;
+  CAPTURE_BUFFER_FULL_ACTION_WRAP = 2;
+}
+
+enum CaptureState {
+  CAPTURE_STATE_UNSPECIFIED = 0;
+  CAPTURE_STATE_DISABLED = 1;
+  CAPTURE_STATE_IDLE = 2;
+  CAPTURE_STATE_RUNNING = 3;
+  CAPTURE_STATE_DOWNLOADING = 4;
+}
+
+enum CaptureFilterLogic {
+  CAPTURE_FILTER_LOGIC_UNSPECIFIED = 0;
+  CAPTURE_FILTER_LOGIC_AND = 1;
+  CAPTURE_FILTER_LOGIC_OR = 2;
+  CAPTURE_FILTER_LOGIC_NOT = 3;
+}
+
+message CaptureBytePattern {
+  bytes data = 1;
+  bytes mask = 2;
+  uint32 offset = 3;
+  uint32 min_frame_length = 4;
+  uint32 max_frame_length = 5;
+  bool use_frame_length = 6;
+}
+
+message CapturePduPattern {
+  string template = 1;
+  bytes value = 2;
+  bytes mask = 3;
+  string filter_event_type = 4;
+}
+
+message CaptureFilter {
+  CaptureFilterMode mode = 1;
+  CaptureFilterLogic logic = 2;
+  repeated CaptureBytePattern byte_patterns = 3;
+  repeated CapturePduPattern pdu_patterns = 4;
+  string expression = 5;
+  bool fcs_error = 6;
+  bool ipv4_checksum_error = 7;
+  bool payload_error = 8;
+}
+
+message CaptureConfig {
+  ResourceRef ref = 1;
+  ResourceRef port = 2;
+  CaptureMode mode = 3;
+  uint32 cache_capacity = 4;
+  CaptureFilterMode filter_mode = 5;
+  CaptureBufferFullAction buffer_full_action = 6;
+  uint32 starting_frame_index = 7;
+  uint32 attempt_download_packet_count = 8;
+  bool enable_realtime_capture = 9;
+  bool enable_realtime_capture_file = 10;
+  uint32 max_realtime_capture_frame_count = 11;
+  string slice_mode = 12;
+  uint32 slice_byte_size = 13;
+  bool preamble_enable = 14;
+  CaptureFilter filter = 15;
+}
+
+message CaptureStatus {
+  ResourceRef ref = 1;
+  CaptureState state = 2;
+  uint64 elapsed_ms = 3;
+  uint64 captured_packet_count = 4;
+  bool buffer_full = 5;
+  uint64 downloaded_packet_count = 6;
+  string current_data_file = 7;
+}
+
+message CaptureFrame {
+  uint64 index = 1;
+  int64 timestamp_ns = 2;
+  uint32 length = 3;
+  uint32 captured_length = 4;
+  bytes data = 5;
+}
+
+message CaptureChunk {
+  bytes data = 1;
+  uint64 offset = 2;
+  bool eof = 3;
+  uint32 crc32c = 4;
+}
+
+message CaptureRequest {
+  ResourceRef ref = 1;
+}
+
+message CaptureReply {
+  Result result = 1;
+  CaptureConfig config = 2;
+  CaptureStatus status = 3;
+}
+
+message ListCaptureRequest {
+  ResourceRef port = 1;
+  PageRequest page = 2;
+}
+
+message ListCaptureReply {
+  Result result = 1;
+  repeated CaptureConfig configs = 2;
+  PageInfo page = 3;
+}
+
+message DownloadCaptureRequest {
+  repeated ResourceRef refs = 1;
+  string file_dir = 2;
+  string file_name = 3;
+  bool category_by_port = 4;
+  uint32 max_download_data_count = 5;
+}
+
+message DownloadCaptureReply {
+  Result result = 1;
+  repeated string files = 2;
+  uint64 job_id = 3;
+}
+
+message ReadCaptureByIndexRequest {
+  ResourceRef ref = 1;
+  uint64 index = 2;
+}
+
+message ReadCaptureByIndexReply {
+  Result result = 1;
+  CaptureFrame frame = 2;
+}
+
+message StartCaptureRequest {
+  repeated ResourceRef refs = 1;
+}
+
+message StopCaptureRequest {
+  repeated ResourceRef refs = 1;
+}
+
+message SubscribeRealtimeCaptureRequest {
+  ResourceRef ref = 1;
+  string listen_ip = 2;
+  uint32 listen_port = 3;
+}
+
+service CaptureService {
+  rpc Create(CreateResourceRequest) returns (CaptureReply);                    // operator
+  rpc Get(CaptureRequest) returns (CaptureReply);                              // viewer
+  rpc List(ListCaptureRequest) returns (ListCaptureReply);                     // viewer
+  rpc Update(UpdateResourceRequest) returns (CaptureReply);                    // operator
+  rpc Delete(ResourceRef) returns (JobReply);                                  // operator
+  rpc Start(StartCaptureRequest) returns (JobReply);                           // operator
+  rpc Stop(StopCaptureRequest) returns (JobReply);                             // operator
+  rpc StartAll(StartCaptureRequest) returns (JobReply);                        // operator
+  rpc StopAll(StopCaptureRequest) returns (JobReply);                          // operator
+  rpc Download(DownloadCaptureRequest) returns (DownloadCaptureReply);         // operator
+  rpc AbortDownload(CaptureRequest) returns (JobReply);                        // operator
+  rpc ReadByIndex(ReadCaptureByIndexRequest) returns (ReadCaptureByIndexReply);// viewer
+  rpc SubscribeRealtime(SubscribeRealtimeCaptureRequest) returns (stream CaptureChunk); // viewer
+  rpc ResetParser(CaptureRequest) returns (JobReply);                          // operator
+}

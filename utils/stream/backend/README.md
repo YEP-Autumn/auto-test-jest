@@ -1,6 +1,6 @@
 # stream backend 抽象
 
-测试组件只依赖 `TrafficBackend`（`types.ts`，`StreamBackend` 是兼容别名），
+测试组件只依赖 `TrafficBackend`（`types.ts`），
 报文统一用 `packet/model.ts` 的 `PacketBuilder` 描述，编码/传输由具体后端负责。
 
 > Phase 1 起，测试侧建议通过 `utils/traffic` 的 `TrafficManager` 使用这些后端：
@@ -10,7 +10,7 @@
 ```
 PacketBuilder -> PacketSpec
                     │
-             StreamBackend
+             TrafficBackend
         ┌───────────┴────────────┐
  RenixHttpBackend        StreamControlBackend
  (codec/renix-thrift)     (codec/packet-headers + raw-frame)

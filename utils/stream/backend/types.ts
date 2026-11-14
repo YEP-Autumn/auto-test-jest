@@ -9,8 +9,7 @@
  * - sendPacket：按 PacketSpec 构造并发送报文
  * - stopTransmit：停止当前端口上的发送
  *
- * 端口统一使用 `TrafficPort`（逻辑端口 + provider + address + topology），
- * 旧 `StreamPort` 只作为 Config 兼容类型保留。
+ * 端口统一使用 `TrafficPort`（逻辑端口 + provider + address + topology）。
  */
 
 import type { TrafficPort } from "../../traffic/model";
@@ -68,6 +67,3 @@ export interface TrafficBackend {
     options?: SendOptions,
   ): Promise<void>;
 }
-
-/** @deprecated 使用 TrafficBackend */
-export type StreamBackend = TrafficBackend;

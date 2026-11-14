@@ -16,7 +16,7 @@
  */
 
 import { Config, StreamBackendConfig } from "../comm/config";
-import type { StreamPort } from "../comm/config";
+import type { ConfiguredTrafficPort } from "../comm/config";
 import type { PortMapping } from "../topo/types";
 import type { TrafficPort, TrafficPortId, TrafficProvider } from "./model";
 
@@ -30,8 +30,10 @@ export const TRAFFIC_PORT_IDS: readonly TrafficPortId[] = [
   "F",
 ];
 
-interface LegacyPortEntry {
-  port: StreamPort;
+interface ConfiguredPortEntry {
+  /** Config.Renix 中的物理端口（provider + address） */
+  port: ConfiguredTrafficPort;
+  /** 拓扑落点 */
   portMapping: PortMapping;
 }
 
@@ -69,14 +71,6 @@ function parseEnginePortMap(raw: string | undefined): Record<string, string> {
   return map;
 }
 
-function isTrafficPort(port: StreamPort | TrafficPort): port is TrafficPort {
-  const candidate = port as TrafficPort;
-  return (
-    typeof candidate.provider === "string" &&
-    typeof candidate.address === "string"
-  );
-}
-
 export class TrafficConfig {
   /** stream-linux 的逻辑端口 -> 引擎网卡名 */
   private static readonly enginePortMap = parseEnginePortMap(
@@ -86,11 +80,12 @@ export class TrafficConfig {
   /**
    * 解析逻辑端口 A-F。
    *
-   * 返回的 `TrafficPort` 同时填充 name/type，兼容现有 components 和 backend。
+   * 返回的 `TrafficPort` 只包含 id/provider/address/topology。
    */
   static resolvePort(id: TrafficPortId): TrafficPort {
     const index = TRAFFIC_PORT_IDS.indexOf(id);
-    const entry = Config.Renix.portList[index] as LegacyPortEntry | undefined;
+    const entry = Config.Renix.portList[index] as
+      ConfiguredPortEntry | undefined;
     if (!entry) {
       throw new Error(
         `逻辑端口 ${id} 未在 Config.Renix.portList 中配置（索引 ${index}）`,
@@ -117,7 +112,8 @@ export class TrafficConfig {
    */
   static resolveTopology(id: TrafficPortId): PortMapping {
     const index = TRAFFIC_PORT_IDS.indexOf(id);
-    const entry = Config.Renix.portList[index] as LegacyPortEntry | undefined;
+    const entry = Config.Renix.portList[index] as
+      ConfiguredPortEntry | undefined;
     if (!entry) {
       throw new Error(
         `逻辑端口 ${id} 未在 Config.Renix.portList 中配置（索引 ${index}）`,
@@ -126,42 +122,9 @@ export class TrafficConfig {
     return entry.portMapping;
   }
 
-  /**
-   * 把旧 StreamPort 或新 TrafficPort 归一化为 TrafficPort。
-   *
-   * - 已经是 TrafficPort：补齐可选 topology 后返回；
-   * - 旧的 { name, type }：如果能在 Config.Renix.portList 找到，就补上
-   *   逻辑端口号和 topology；找不到则作为自定义端口处理。
-   */
-  static normalizePort(port: StreamPort | TrafficPort): TrafficPort {
-    if (isTrafficPort(port)) {
-      return port;
-    }
-
-    const provider = parseTrafficProvider(port.type);
-    const index = Config.Renix.portList.findIndex(
-      (entry) => entry.port.name === port.name,
-    );
-
-    if (index >= 0) {
-      const entry = Config.Renix.portList[index] as LegacyPortEntry;
-      return {
-        id: TRAFFIC_PORT_IDS[index],
-        provider,
-        address: port.name,
-        topology: entry.portMapping,
-      };
-    }
-
-    return {
-      provider,
-      address: port.name,
-    };
-  }
-
   private static providerFor(
     id: TrafficPortId,
-    entry: LegacyPortEntry,
+    entry: ConfiguredPortEntry,
   ): TrafficProvider {
     const perPort = process.env[`TRAFFIC_PROVIDER_${id}`]?.trim();
     if (perPort) return parseTrafficProvider(perPort);
@@ -174,14 +137,14 @@ export class TrafficConfig {
       return "stream-linux";
     }
 
-    return parseTrafficProvider(entry.port.type);
+    return parseTrafficProvider(entry.port.provider);
   }
 
   private static addressFor(
     id: TrafficPortId,
     index: number,
     provider: TrafficProvider,
-    entry: LegacyPortEntry,
+    entry: ConfiguredPortEntry,
   ): string {
     const override = process.env[`TRAFFIC_ADDRESS_${id}`]?.trim();
     if (override) return override;
@@ -190,14 +153,14 @@ export class TrafficConfig {
       return this.enginePortMap[id] ?? `eth${index + 1}`;
     }
 
-    if (provider === parseTrafficProvider(entry.port.type)) {
-      return entry.port.name;
+    if (provider === parseTrafficProvider(entry.port.provider)) {
+      return entry.port.address;
     }
 
     throw new Error(
       `逻辑端口 ${id} 没有 ${provider} 后端地址。` +
-        `当前 Config.Renix.portList 中该端口是 ${entry.port.type}` +
-        `（${entry.port.name}）。请设置 TRAFFIC_ADDRESS_${id}，` +
+        `当前 Config.Renix.portList 中该端口是 ${entry.port.provider}` +
+        `（${entry.port.address}）。请设置 TRAFFIC_ADDRESS_${id}，` +
         `或在 Config 中补该 provider 的地址。`,
     );
   }

@@ -22,8 +22,8 @@ TrafficManager                 逻辑端口 -> provider 路由
 | address  | `string`          | provider 内部地址：机框端口 / NPF 设备 / `eth1` |
 | topology | `PortMapping`     | 原 `portMapping`，表示接在哪个 SDN 设备接口     |
 
-`TrafficPort` 现在只包含 `id` / `provider` / `address` / `topology`；旧的
-`StreamPort { name, type }` 只在 `Config` 数据结构和 `normalizePort()` 兼容层保留。
+`TrafficPort` 只包含 `id` / `provider` / `address` / `topology`。
+`Config.Renix.portList[].port` 也使用 `{ provider, address }`，不再有 `name/type`。
 
 ## 能力声明
 
@@ -56,7 +56,6 @@ RenixPort.A;
 // { id:"A", provider:"stream-linux", address:"eth1", ... }
 
 TrafficConfig.resolvePort("A");
-TrafficConfig.normalizePort({ name: "eth9", type: "stream-linux" });
 ```
 
 测试侧不需要改：
@@ -157,12 +156,12 @@ Phase 2 已完成：
 Phase 3 已完成：
 
 - 后端接口统一为 `TrafficBackend`，方法参数使用 `TrafficPort`；
-- `StreamBackend` 保留为 `TrafficBackend` 的 deprecated 类型别名；
+- `StreamBackend` / `StreamPort` 别名已移除；
 - `RenixHttpBackend` / `StreamControlBackend` 全部改用 `port.address` / `port.provider`；
 - `TrafficPort` 移除了 `name` / `type` 兼容字段；
 - `RenixPort.A` 现在只返回 `{ id, provider, address, topology }`；
-- `normalizePort()` / `HttpTrafficTransport` 仍接受旧 `{ name, type }`，
-  供 Config 和旧脚本过渡使用。
+- `Config.Renix.portList[].port` 迁移为 `{ provider, address }`；
+- `TrafficConfig.normalizePort()` 旧对象分支已移除。
 
 Phase 4 已完成：
 
@@ -175,4 +174,4 @@ Phase 4 已完成：
 后续阶段：
 
 1. 引擎 YAML 增加 burst 内 gap 字段后，再实现精确 BURST 时序并打开 `burstGap` 校验；
-2. 视需要移除 `StreamPort` / `StreamBackend` 别名和 `normalizePort()` 的旧对象分支。
+2. `HttpTrafficTransport` 仍接受旧 `{ name, type }` 对象，供直接调用旧 HTTP 接口的脚本过渡；如需彻底清理可再移除。

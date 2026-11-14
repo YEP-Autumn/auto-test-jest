@@ -29,7 +29,7 @@ export interface HttpPortArg {
 /**
  * 兼容新旧端口对象的输入：
  * - 新 TrafficPort：{ address, provider }
- * - 旧 StreamPort：{ name, type }
+ * - 旧 { name, type } 对象
  */
 export type HttpPortLike =
   | HttpPortArg
@@ -49,7 +49,7 @@ function isHttpProvider(value: string): value is HttpTrafficProvider {
 }
 
 /**
- * 把 TrafficPort / StreamPort 归一化为 HTTP 请求需要的 { address, provider }。
+ * 把 TrafficPort / 旧端口对象归一化为 HTTP 请求需要的 { address, provider }。
  *
  * 如果误把 stream-linux 端口交给 HTTP 后端，这里会直接抛错，而不是发一个
  * `backend=stream-linux` 的无效请求。
@@ -161,7 +161,7 @@ export class HttpTrafficTransport {
   /**
    * 发送单个报文（二进制上传）。
    *
-   * `fields` 里如果带 port（TrafficPort/StreamPort），会自动拆成
+   * `fields` 里如果带 port（TrafficPort / 旧端口对象），会自动拆成
    * port + backend 两个表单字段。
    */
   async sendPacket(
@@ -246,7 +246,7 @@ export class HttpTrafficTransport {
   }
 }
 
-/** 将 fields.port（旧 StreamPort / 新 TrafficPort）拆成 port + backend */
+/** 将 fields.port（旧 { name, type } / 新 TrafficPort）拆成 port + backend */
 function normalizeFormFields(
   fields?: Record<string, any>,
 ): Record<string, any> | undefined {

@@ -3,18 +3,14 @@ import { TrafficConfig } from "../traffic/config";
 import type { TrafficPort, TrafficProvider } from "../traffic/model";
 
 /**
- * 流量端口的最小兼容形状（旧 Config / 旧脚本使用）。
+ * Config.Renix.portList 中单个物理端口的描述。
  *
- * - `name`：provider 内部的物理地址（机框端口 / NPF 设备 / eth1）；
- * - `type`：流量后端类型。
- *
- * 新代码请使用 `TrafficPort` 的 `address` / `provider` 字段。
- *
- * @deprecated 使用 `TrafficPort`
+ * 老字段 name/type 已迁移为 address/provider；`portMapping` 保持不变，
+ * 继续表示该端口接在哪个 SDN 设备的哪个接口。
  */
-export interface StreamPort {
-  name: string;
-  type: TrafficProvider;
+export interface ConfiguredTrafficPort {
+  provider: TrafficProvider;
+  address: string;
 }
 
 /** 打流/抓包后端类型（旧接口，保留兼容） */
@@ -310,58 +306,58 @@ export class Config {
 
   public static Renix: {
     portList: {
-      port: StreamPort;
+      port: ConfiguredTrafficPort;
       portMapping: { device: string; if_index: number };
     }[];
   } = {
     portList: [
       {
-        port: { name: "//172.16.254.11/3/13", type: "renix" },
+        port: { provider: "renix", address: "//172.16.254.11/3/13" },
         portMapping: { device: "172.16.9.110", if_index: 305 },
       },
       {
-        port: { name: "//172.16.254.11/3/14", type: "renix" },
+        port: { provider: "renix", address: "//172.16.254.11/3/14" },
         portMapping: { device: "172.16.9.110", if_index: 561 },
       },
       {
-        port: { name: "//172.16.254.11/3/15", type: "renix" },
+        port: { provider: "renix", address: "//172.16.254.11/3/15" },
         portMapping: { device: "172.16.9.110", if_index: 817 },
       },
       {
-        port: { name: "//172.16.254.11/3/16", type: "renix" },
+        port: { provider: "renix", address: "//172.16.254.11/3/16" },
         portMapping: { device: "172.16.9.110", if_index: 1073 },
       },
       {
         port: {
-          name: "\\Device\\NPF_{D0DB71B0-1C1E-419C-8360-20C25AF8A6E1}",
-          type: "scapy",
+          provider: "scapy",
+          address: "\\Device\\NPF_{D0DB71B0-1C1E-419C-8360-20C25AF8A6E1}",
         },
         portMapping: { device: "172.16.9.110", if_index: 23 },
       },
       {
         port: {
-          name: "\\Device\\NPF_{02DCC5B0-C8A6-4440-9362-21B78C286280}",
-          type: "scapy",
+          provider: "scapy",
+          address: "\\Device\\NPF_{02DCC5B0-C8A6-4440-9362-21B78C286280}",
         },
         portMapping: { device: "172.16.9.110", if_index: 24 },
       },
       {
         port: {
-          name: "\\Device\\NPF_{CD6CB24F-5008-4F71-8D48-2E92DB1DAA88}",
-          type: "scapy",
+          provider: "scapy",
+          address: "\\Device\\NPF_{CD6CB24F-5008-4F71-8D48-2E92DB1DAA88}",
         },
         portMapping: { device: "172.16.9.106", if_index: 32 },
       },
       {
-        port: { name: "//172.16.254.11/5/1", type: "renix" },
+        port: { provider: "renix", address: "//172.16.254.11/5/1" },
         portMapping: { device: "172.16.9.106", if_index: 25 },
       },
       {
-        port: { name: "//172.16.254.11/5/2", type: "renix" },
+        port: { provider: "renix", address: "//172.16.254.11/5/2" },
         portMapping: { device: "172.16.9.106", if_index: 25 },
       },
       {
-        port: { name: "//172.16.254.11/3/15", type: "renix" },
+        port: { provider: "renix", address: "//172.16.254.11/3/15" },
         portMapping: { device: "172.16.9.106", if_index: 25 },
       },
     ],

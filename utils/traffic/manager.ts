@@ -10,7 +10,6 @@
  * renix / scapy 通过同一个 HttpTrafficTransport 共享登录与上传。
  */
 
-import type { StreamPort } from "../comm/config";
 import type { TrafficBackend } from "../stream/backend/types";
 import { HttpTrafficTransport } from "../stream/backend/http-transport";
 import { RenixHttpBackend } from "../stream/backend/renix-http";
@@ -22,7 +21,6 @@ import {
   getTrafficCapabilities,
   type TrafficCapabilities,
 } from "./capabilities";
-import { TrafficConfig } from "./config";
 import type { TrafficPort, TrafficProvider } from "./model";
 
 export class TrafficManager implements TrafficBackend {
@@ -44,8 +42,8 @@ export class TrafficManager implements TrafficBackend {
    * 注册一个端口。重复注册同一个逻辑端口时保持 provider 一致，
    * 防止同一端口在一次测试中被两个后端同时占用。
    */
-  register(port: StreamPort | TrafficPort): TrafficPort {
-    const resolved = TrafficConfig.normalizePort(port);
+  register(port: TrafficPort): TrafficPort {
+    const resolved = port;
     const key = this.key(resolved);
     if (resolved.id) {
       for (const existing of this.ports.values()) {
@@ -68,7 +66,7 @@ export class TrafficManager implements TrafficBackend {
    *
    * `ports` 可选：传了就一并注册；不传则使用之前 `register()` 的端口。
    */
-  async init(ports?: Iterable<StreamPort | TrafficPort>): Promise<void> {
+  async init(ports?: Iterable<TrafficPort>): Promise<void> {
     if (ports) {
       for (const port of ports) this.register(port);
     }
@@ -101,7 +99,7 @@ export class TrafficManager implements TrafficBackend {
     }
   }
 
-  reservePort(port: StreamPort | TrafficPort): Promise<void> {
+  reservePort(port: TrafficPort): Promise<void> {
     const resolved = this.register(port);
     return this.serialize(this.key(resolved), async () => {
       const backend = await this.ensureBackend(resolved.provider);
@@ -109,7 +107,7 @@ export class TrafficManager implements TrafficBackend {
     });
   }
 
-  releasePort(port: StreamPort | TrafficPort): Promise<void> {
+  releasePort(port: TrafficPort): Promise<void> {
     const resolved = this.register(port);
     return this.serialize(this.key(resolved), async () => {
       // 初始化失败的端口没有可释放的后端，不要在这里重新触发 login/connect
@@ -119,7 +117,7 @@ export class TrafficManager implements TrafficBackend {
     });
   }
 
-  stopTransmit(port: StreamPort | TrafficPort): Promise<void> {
+  stopTransmit(port: TrafficPort): Promise<void> {
     const resolved = this.register(port);
     return this.serialize(this.key(resolved), async () => {
       const backend = await this.ensureBackend(resolved.provider);
@@ -127,7 +125,7 @@ export class TrafficManager implements TrafficBackend {
     });
   }
 
-  startCapture(port: StreamPort | TrafficPort): Promise<void> {
+  startCapture(port: TrafficPort): Promise<void> {
     const resolved = this.register(port);
     return this.serialize(this.key(resolved), async () => {
       const backend = await this.ensureBackend(resolved.provider);
@@ -135,7 +133,7 @@ export class TrafficManager implements TrafficBackend {
     });
   }
 
-  stopCapture(port: StreamPort | TrafficPort): Promise<void> {
+  stopCapture(port: TrafficPort): Promise<void> {
     const resolved = this.register(port);
     return this.serialize(this.key(resolved), async () => {
       const backend = await this.ensureBackend(resolved.provider);
@@ -143,7 +141,7 @@ export class TrafficManager implements TrafficBackend {
     });
   }
 
-  readCapture(port: StreamPort | TrafficPort): Promise<CapturedPacket[]> {
+  readCapture(port: TrafficPort): Promise<CapturedPacket[]> {
     const resolved = this.register(port);
     return this.serialize(this.key(resolved), async () => {
       const backend = await this.ensureBackend(resolved.provider);
@@ -152,7 +150,7 @@ export class TrafficManager implements TrafficBackend {
   }
 
   sendPacket(
-    port: StreamPort | TrafficPort,
+    port: TrafficPort,
     packet: PacketSpec,
     options: SendOptions = {},
   ): Promise<void> {
@@ -171,7 +169,7 @@ export class TrafficManager implements TrafficBackend {
   }
 
   /** 查询某个端口当前 provider 的能力声明 */
-  capabilitiesFor(port: StreamPort | TrafficPort): TrafficCapabilities {
+  capabilitiesFor(port: TrafficPort): TrafficCapabilities {
     return getTrafficCapabilities(this.register(port).provider);
   }
 

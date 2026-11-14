@@ -2,7 +2,7 @@
  * @deprecated 已迁移到 `./backend/renix-http` 的 RenixHttpBackend。
  *
  * 保留此文件仅用于兼容旧的 import；新代码请使用
- * `createStreamBackend()` 或 `StreamBackend` 接口。
+ * `createStreamBackend()` 或 `TrafficBackend` 接口。
  */
 export { RenixHttpBackend as StreamBackendApi } from "./backend/renix-http";
 export type { LoginResponse } from "./backend/renix-http";

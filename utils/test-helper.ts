@@ -17,10 +17,9 @@ import {
   StopStream,
   toRegExp,
 } from "./comm/components";
-import { Config, StreamPort } from "./comm/config";
+import { Config } from "./comm/config";
 import { Dut } from "./comm/dut";
 import { createTrafficManager } from "./traffic/factory";
-import { TrafficConfig } from "./traffic/config";
 import type { TrafficManager } from "./traffic/manager";
 import type { TrafficPort } from "./traffic/model";
 import { TopoApi } from "./topo/topo-backend-api";
@@ -215,10 +214,8 @@ export class TestHelper {
    * 同一逻辑端口只允许一个 provider；自定义端口没有逻辑端口号时，
    * 用 provider + address 作为稳定 key。
    */
-  private registerTrafficPort(
-    stream_port: StreamPort | TrafficPort,
-  ): TrafficPort {
-    const port = TrafficConfig.normalizePort(stream_port);
+  private registerTrafficPort(stream_port: TrafficPort): TrafficPort {
+    const port = stream_port;
     const key = port.id ?? `${port.provider}:${port.address}`;
     const existing = this.trafficPorts.get(key);
     if (existing && existing.provider !== port.provider) {
@@ -230,7 +227,7 @@ export class TestHelper {
     return port;
   }
 
-  startCapture(stream_port: StreamPort | TrafficPort) {
+  startCapture(stream_port: TrafficPort) {
     const port = this.registerTrafficPort(stream_port);
     this.actuator.push(new StartCapture(port));
     return this;
@@ -245,7 +242,7 @@ export class TestHelper {
     return this;
   }
 
-  stopStream(stream_port: StreamPort | TrafficPort) {
+  stopStream(stream_port: TrafficPort) {
     const port = this.registerTrafficPort(stream_port);
     this.actuator.push(new StopStream(port));
     return this;

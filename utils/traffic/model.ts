@@ -9,9 +9,6 @@
 import type { PortMapping } from "../topo/types";
 import type { ProviderId } from "../backends/contract";
 
-/** @deprecated 使用 `ProviderId`；保留别名便于渐进迁移 */
-export type TrafficProvider = ProviderId;
-
 /** 逻辑端口号，对应 `Config.streamPorts` 的数组下标 */
 export type TrafficPortId =
   | "A"

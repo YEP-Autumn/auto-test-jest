@@ -5,20 +5,20 @@
  * 或测试在发送前做快速校验；具体报文/字段级能力仍以后端实现为准。
  */
 
-import type { TrafficProvider } from "./model";
+import type { ProviderId } from "../backends/contract";
 
 export type TrafficCapabilityName =
   "modifiers" | "fixedLength" | "burstGap" | "batchCapture";
 
 export interface TrafficCapabilities {
-  provider: TrafficProvider;
+  provider: ProviderId;
   transport: "http" | "grpc";
   supports: Record<TrafficCapabilityName, boolean>;
   /** 同时可运行的 run 数；无硬限制时为空 */
   maxConcurrentRuns?: number;
 }
 
-const CAPABILITIES: Record<TrafficProvider, TrafficCapabilities> = {
+const CAPABILITIES: Record<ProviderId, TrafficCapabilities> = {
   renix: {
     provider: "renix",
     transport: "http",
@@ -45,8 +45,8 @@ const CAPABILITIES: Record<TrafficProvider, TrafficCapabilities> = {
     supports: {
       modifiers: true,
       fixedLength: true,
-      // BURST 总帧数和速率已映射，但 burst 内 gap 尚未映射
-      burstGap: false,
+      // 新网关/引擎支持 frames_per_burst + burst_gap（feature=traffic-burst-gap）
+      burstGap: true,
       // 抓包停止后优先走 Capture.Download + FileService.Download + pcap
       batchCapture: true,
     },
@@ -55,13 +55,13 @@ const CAPABILITIES: Record<TrafficProvider, TrafficCapabilities> = {
 };
 
 export function getTrafficCapabilities(
-  provider: TrafficProvider,
+  provider: ProviderId,
 ): TrafficCapabilities {
   return CAPABILITIES[provider];
 }
 
 export function supportsTrafficCapability(
-  provider: TrafficProvider,
+  provider: ProviderId,
   capability: TrafficCapabilityName,
 ): boolean {
   return getTrafficCapabilities(provider).supports[capability] === true;
@@ -69,7 +69,7 @@ export function supportsTrafficCapability(
 
 /** 不支持时抛出可读错误，供发送前的快速校验使用 */
 export function assertTrafficCapability(
-  provider: TrafficProvider,
+  provider: ProviderId,
   capability: TrafficCapabilityName,
 ): void {
   if (!supportsTrafficCapability(provider, capability)) {

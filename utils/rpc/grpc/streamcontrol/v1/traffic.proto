@@ -148,12 +148,6 @@ message ErrorInjectionSpec {
   bool fcs_override = 4;
 }
 
-message BurstSpec {
-  uint64 frames = 1;
-  uint64 gap_us = 2;
-  string gap_unit = 3;
-}
-
 message StreamTemplate {
   ResourceRef ref = 1;
   string name = 2;
@@ -184,6 +178,10 @@ message StreamChannel {
   repeated ResourceRef source_endpoints = 4;
   repeated ResourceRef destination_endpoints = 5;
   TunnelBinding tunnel = 6;
+
+  // 本 channel 的发送节奏。空/全默认时回退到 StreamPortConfig 的
+  // transmit_mode/burst_size，保证单 channel 的旧配置继续可用。
+  StreamTransmitConfig transmit = 7;
 }
 
 message TunnelBinding {
@@ -202,8 +200,10 @@ message StreamPortConfig {
   string timestamp_position_tx = 5;
   string timestamp_position_rx = 6;
   uint32 latency_compensation = 7;
-  uint32 inter_frame_gap = 8;
-  string inter_frame_gap_unit = 9;
+  // 8/9 原为 inter_frame_gap/inter_frame_gap_unit，引擎和网关都未实现，已删除。
+  reserved 8, 9;
+  // 总帧数。新客户端应使用 StreamChannel.transmit 的 frames_per_burst *
+  // burst_count；两者同时给出时必须一致。
   uint64 burst_size = 10;
   uint32 latency_seg_threshold = 11;
   uint32 port_start_delay_ms = 12;
@@ -211,9 +211,13 @@ message StreamPortConfig {
 
 message StreamTransmitConfig {
   TrafficSendMode mode = 1;
+  // 每组帧数 F。0 表示不分组。
   uint32 frames_per_burst = 2;
+  // 组数 B。0 表示不限组数（由 duration/Stop 决定）；B > 0 时总帧数 = F * B。
   uint32 burst_count = 3;
+  // 组间额外空闲 G（不是组起始周期）。最后一组之后不再等待。
   uint32 burst_gap = 4;
+  // G 的单位：us / ms / ns。空视为 us。亚微秒向下取整到 0。
   string burst_gap_unit = 5;
 }
 
@@ -269,6 +273,12 @@ message SetStreamPortConfigRequest {
   StreamPortConfig config = 2;
   bool apply = 3;
   string idempotency_key = 4;
+}
+
+message SetStreamTransmitRequest {
+  repeated ResourceRef channels = 1;
+  StreamTransmitConfig config = 2;
+  string idempotency_key = 3;
 }
 
 message StartStreamRequest {
@@ -349,6 +359,7 @@ service TrafficService {
   rpc UpdateEndpoint(UpdateEndpointRequest) returns (ResourceReply);             // operator
   rpc CreateLoadProfile(CreateLoadProfileRequest) returns (ResourceReply);       // operator
   rpc SetPortConfig(SetStreamPortConfigRequest) returns (JobReply);              // operator
+  rpc SetChannelTransmit(SetStreamTransmitRequest) returns (JobReply);           // operator
   rpc Start(StartStreamRequest) returns (TrafficStartReply);                     // operator
   rpc Stop(StopStreamRequest) returns (JobReply);                                // operator
   rpc Restart(StartStreamRequest) returns (TrafficStartReply);                   // operator

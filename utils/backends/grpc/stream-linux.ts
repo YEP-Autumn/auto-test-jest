@@ -332,11 +332,13 @@ export class StreamControlBackend implements TrafficBackend {
         throw new Error("[streamcontrol] CreateTemplate 未返回 resource.meta.ref");
       }
 
-      const channel = {
+      const transmit = this.transmitConfig(options);
+      const channel: any = {
         ref: { kind: "stream_channel", path: `stream_channel[${channelName}]` },
         template: templateRef,
         source_endpoints: [{ kind: "port", path: `port[${port.address}]` }],
       };
+      if (transmit) channel.transmit = transmit;
       const ch = await this.client.unary<any>(
         this.client.traffic,
         "CreateChannel",
@@ -437,8 +439,54 @@ export class StreamControlBackend implements TrafficBackend {
     return { value: 100, unit: 1, per_port: true };
   }
 
+  /**
+   * BURST 分组/组间 gap。新网关用 StreamChannel.transmit 表达：
+   *   frames_per_burst * burst_count = 总帧数
+   *   burst_gap 是组间空闲（不是起始周期）
+   */
+  private transmitConfig(options: SendOptions): any | undefined {
+    const transmit: any = options.transmit;
+    if (transmit?.mode !== TransmitMode.BURST) return undefined;
+    const param: any = transmit.param ?? {};
+    const hasBurst =
+      param.burst_size != null || param.burst_count != null || param.gap != null;
+    if (!hasBurst) return undefined;
+
+    if (param.gap != null && !this.features.includes("traffic-burst-gap")) {
+      throw new Error(
+        "[streamcontrol] 网关/引擎不支持 burst gap（缺 feature=traffic-burst-gap）",
+      );
+    }
+
+    const unitMap: Record<string, string> = {
+      NS: "ns",
+      US: "us",
+      MS: "ms",
+      SEC: "s",
+    };
+    const unit = String(param.gap_unit ?? "US").toUpperCase();
+    if (param.gap != null && !unitMap[unit]) {
+      throw new Error(
+        `[streamcontrol] burst gap 单位 ${unit} 不支持（可用 NS/US/MS/SEC）`,
+      );
+    }
+
+    const config: any = { mode: 2 };
+    const framesPerBurst = Math.max(1, Number(param.burst_size ?? 1));
+    config.frames_per_burst = framesPerBurst;
+    if (param.burst_count != null) {
+      config.burst_count = Math.max(1, Number(param.burst_count));
+    }
+    if (param.gap != null) {
+      config.burst_gap = Math.max(0, Number(param.gap));
+      config.burst_gap_unit = unitMap[unit];
+    }
+    return config;
+  }
+
   private trafficPortConfig(frames: number, options: SendOptions): any {
     const transmit: any = options.transmit;
+    const param: any = transmit?.param ?? {};
     const mode = transmit?.mode;
     if (mode === TransmitMode.TIME) {
       return { transmit_mode: 3, burst_size: 0 };

@@ -70,7 +70,7 @@ Renix 和 Scapy 共享 `HttpTrafficTransport`：登录、token、multipart 上�
 PacketSpec
   -> codec/grpc/headers：HeaderInstance + PacketFieldModifier
   -> CreateTemplate（headers / frame_length / payload）
-  -> CreateChannel（template + tx port）
+  -> CreateChannel（template + tx port + 可选 transmit: frames_per_burst/burst_count/burst_gap）
   -> CreateLoadProfile（rate）
   -> SetPortConfig（STEP/BURST/TIME/CONTINUOUS）
   -> TrafficService.Start（inline blocks，不写全局 YAML、不关端口）
@@ -188,10 +188,10 @@ testHelper.addPktSender({
 2. **`proto_name` / 自定义动态层未接**：IPv4/TCP options 已接；但
    `HeaderInstance.proto_name` 只对动态 `CUSTOM` 层有意义，当前
    `PacketBuilder` 没有自定义层 API。
-3. **BURST 总帧数已生效，但 burst 内 gap 仍未映射**：2026-11-14 复测
-   `burst_size=5, burst_count=3` 抓到 15 帧；新引擎增加了 `combine`，
-   但 YAML 仍没有 `gap/gap_unit` 字段，所以 `burst_count` 只是被压平成
-   “总帧数 + 速率”，不是带间隔的多次 burst。
+3. **BURST gap 已接入**：新网关用 `StreamChannel.transmit` 表达
+   `frames_per_burst` / `burst_count` / `burst_gap` / `burst_gap_unit`，
+   引擎按组间空闲时间发送；需要 `feature=traffic-burst-gap`，缺失时
+   backend 会明确报错。
 4. **每次发送会创建/删除资源**：新路径每次发送会创建并清理
    template/channel/load_profile，资源开销比直接 RunService.StartTest 略高；
    端口配置会快照/恢复，避免污染用户配置。

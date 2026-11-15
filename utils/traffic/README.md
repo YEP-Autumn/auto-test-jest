@@ -178,12 +178,13 @@ npx jest ...
 | -------------- | --------- | --------- | --------- | --------- | ------------ |
 | `renix`        | http      | ✅        | ✅        | ✅        | ✅           |
 | `scapy`        | http      | ✅        | ✅        | ✅        | ✅           |
-| `stream-linux` | grpc      | ✅        | ✅        | ⚠️ 未保留 | ✅           |
+| `stream-linux` | grpc      | ✅        | ✅        | ✅        | ✅           |
 
-`burstGap` 暂不强制校验：引擎 YAML 目前只有 `mode/frames/duration_ms/rate`，
-没有 burst 内 gap 字段。stream-linux 停止抓包后会在帧数超过阈值时优先走
-`Capture.Download + FileService.Download + 本地 pcap 解析`，失败自动退回
-`ReadByIndex`。
+`burstGap` 通过 `StreamChannel.transmit` 下发：`frames_per_burst` /
+`burst_count` / `burst_gap` / `burst_gap_unit`，需要网关能力
+`feature=traffic-burst-gap`；缺失时 backend 会明确报错。stream-linux 停止抓包后
+会在帧数超过阈值时优先走 `Capture.Download + FileService.Download + 本地 pcap 解析`，
+失败自动退回 `ReadByIndex`。
 
 
 ## 当前阶段
@@ -239,5 +240,4 @@ Phase 5 已完成（对外屏蔽端口细节）：
 
 后续阶段：
 
-1. 引擎 YAML 增加 burst 内 gap 字段后，再实现精确 BURST 时序并打开 `burstGap` 校验；
 2. `HttpTrafficTransport` 仍接受旧 `{ name, type }` 对象，供直接调用旧 HTTP 接口的脚本过渡；如需彻底清理可再移除。

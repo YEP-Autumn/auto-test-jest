@@ -1,6 +1,6 @@
 import { createTrafficSession } from "@/utils/composition";
 import { FieldType, PacketBuilder } from "@/utils/packet/model";
-import { TransmitMode } from "@/utils/packet/types";
+import { BurstGapUnit, TransmitMode } from "@/utils/packet/types";
 import { StreamPort } from "@/utils/testing";
 import type { TrafficSession } from "@/utils/traffic/session";
 
@@ -137,6 +137,38 @@ describeE2E("streamcontrol TrafficService inline start", () => {
     120_000,
   );
 
+
+  test(
+    "BURST gap inserts an idle gap between bursts",
+    async () => {
+      await session.startCapture(StreamPort.B);
+      await session.sendPacket(StreamPort.A, packet().toSpec(), {
+        wait: true,
+        transmit: {
+          mode: TransmitMode.BURST,
+          param: {
+            burst_size: 5,
+            burst_count: 3,
+            gap: 50,
+            gap_unit: BurstGapUnit.MS,
+          },
+        },
+      });
+      await session.stopCapture(StreamPort.B);
+      const frames = (await session.readCapture(StreamPort.B))
+        .filter(myMac)
+        .map((frame) => Number(frame.timestampNs ?? 0n))
+        .sort((a, b) => a - b);
+      expect(frames).toHaveLength(15);
+      const gaps = frames
+        .slice(1)
+        .map((ts, i) => (ts - frames[i]) / 1e6)
+        .filter((ms) => ms >= 30);
+      // 3 组 burst -> 2 个组间 gap；最后一组之后不再等待
+      expect(gaps).toHaveLength(2);
+    },
+    120_000,
+  );
   test(
     "different tx ports can run concurrently and stop independently",
     async () => {

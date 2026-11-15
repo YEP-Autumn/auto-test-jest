@@ -157,6 +157,7 @@ export interface RAWOptions {
 export interface Dot3Options {
   dst?: string;
   src?: string;
+  /** 802.3 length 字段；指定后原样下发（可构造错误长度），未指定由引擎按实际数据长度回填 */
   len?: number;
 }
 

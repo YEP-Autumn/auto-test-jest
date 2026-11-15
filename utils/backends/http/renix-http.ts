@@ -154,6 +154,10 @@ export class RenixHttpBackend implements TrafficBackend {
 
   /**
    * 发送单个报文（二进制上传）
+   *
+   * @deprecated 原始帧发送不再作为框架公开能力；
+   * 请使用 `sendPacket(port, PacketSpec, options)`。
+   *
    * @param binary 报文二进制数据
    * @param fields 附加字段：port（BackendEndpoint）、count（发送次数，默认 1）等
    * @param filename 上传文件名

@@ -649,7 +649,8 @@ function dot3Fields(
       FieldType.Dot3,
     );
   }
-  // length 由引擎 seal 按实际帧长回填，不手工设置
+  // length 由引擎 seal 按实际 MAC client data 长度回填。
+  // 当前引擎不允许显式编辑 length 字段（TrafficService.Start 会返回 code=102）。
   return fields;
 }
 

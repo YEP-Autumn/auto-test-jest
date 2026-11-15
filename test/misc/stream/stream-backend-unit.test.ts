@@ -100,6 +100,20 @@ describe("stream packet model", () => {
     );
     expect(snap?.fields.find((f) => f.name === "pid")?.fixed?.u64).toBe(2048);
   });
+
+  test("Dot3 length is filled by the engine and never sent as a field", () => {
+    const headers = packetToHeaders(
+      new PacketBuilder()
+        .setDot3({
+          dst: "01:80:c2:00:00:00",
+          src: "66:77:88:99:aa:bb",
+          len: 30,
+        })
+        .toSpec(),
+    );
+    const dot3 = headers.find((h) => h.type === HeaderType.DOT3);
+    expect(dot3?.fields.some((f) => f.name === "length")).toBe(false);
+  });
 });
 
 describe("SNMP BER encoder", () => {

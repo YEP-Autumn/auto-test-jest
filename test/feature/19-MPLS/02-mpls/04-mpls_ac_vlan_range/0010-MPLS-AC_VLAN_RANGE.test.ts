@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -142,9 +142,9 @@ test("mpls ac支持配置vlan range", async () => {
   );
 
   /** RenixA发送vlan 30~40,50~60的报文, RenixB可以收到携带vlan的报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -161,7 +161,7 @@ test("mpls ac支持配置vlan range", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -176,9 +176,9 @@ test("mpls ac支持配置vlan range", async () => {
     expected_count: 10,
   });
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -195,7 +195,7 @@ test("mpls ac支持配置vlan range", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -211,9 +211,9 @@ test("mpls ac支持配置vlan range", async () => {
   });
 
   /** RenixA发送vlan 30~40,50~60以外的报文, RenixB不能收到 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -231,7 +231,7 @@ test("mpls ac支持配置vlan range", async () => {
   });
 
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",

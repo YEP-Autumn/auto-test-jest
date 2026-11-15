@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -93,7 +93,7 @@ test("支持raw模式vpls配置bpdu ac", async () => {
     new RegExp("11.11.1.1.*?OPERATIONAL"),
   );
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   testHelper.addPktSender({
     packet: new PacketBuilder()
@@ -103,7 +103,7 @@ test("支持raw模式vpls配置bpdu ac", async () => {
         len: 39,
       })
       .setLLC({ ctrl: 10, dsap: 10, ssap: 10 }),
-    port: RenixPort.A,
+    port: StreamPort.A,
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -121,7 +121,7 @@ test("支持raw模式vpls配置bpdu ac", async () => {
         len: 39,
       })
       .setLLC({ ctrl: 10, dsap: 10, ssap: 10 }),
-    port: RenixPort.B,
+    port: StreamPort.B,
   });
 
   testHelper.CleanConfigDutA([

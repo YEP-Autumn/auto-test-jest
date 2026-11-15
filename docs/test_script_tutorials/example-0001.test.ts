@@ -1,7 +1,7 @@
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 
 jest.setTimeout(1000 * 60 * 10);
 
@@ -57,7 +57,7 @@ test("", async () => {
     .setUDP({ sport: 1234, dport: 80 });
 
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: packet3,
     transmit_param: {
       mode: TransmitMode.STEP,

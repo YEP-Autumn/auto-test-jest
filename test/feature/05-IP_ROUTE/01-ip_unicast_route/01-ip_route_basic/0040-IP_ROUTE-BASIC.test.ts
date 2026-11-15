@@ -1,12 +1,12 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
 import {
   DeviceARouteMac,
   DeviceBRouteMac,
   TestHelper,
-} from "@/utils/test-helper";
+} from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 jest.setTimeout(1000 * 60 * 10);
@@ -96,9 +96,9 @@ test("多条静态路由共用同一网关时，远端网络与主机路由均�
   testHelper.ExecRetMatchDutA("ping 192.168.0.2", " 0% packet loss");
 
   /** 打流验证: 远端网络路由命中的报文应从 DUTB PortD 转发到 RenixB */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -117,7 +117,7 @@ test("多条静态路由共用同一网关时，远端网络与主机路由均�
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:03:00:03:00:03",

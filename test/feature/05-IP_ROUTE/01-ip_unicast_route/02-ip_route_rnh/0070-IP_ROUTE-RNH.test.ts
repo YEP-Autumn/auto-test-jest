@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { DeviceARouteMac, TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { DeviceARouteMac, TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -50,9 +50,9 @@ test("测试recursive-lookup host-route不影响匹配直连网段路由", async
   testHelper.ExecRetMatchDutA("show ip route", "10.10.10.0/24");
 
   /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -71,7 +71,7 @@ test("测试recursive-lookup host-route不影响匹配直连网段路由", async
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",

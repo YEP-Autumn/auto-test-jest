@@ -11,9 +11,9 @@
  *   3. `Topologies`：由 getter 自动派生的注册表，供遍历/校验使用。
  *
  * 端点（dut/traffic）与共享类型分别位于 `./endpoints` 与 `./types`。
- * 旧的 `renix("A")` 仍可用，等价于 `traffic("A")`。
+ * 端点统一使用 `traffic("A")`。
  */
-import { dut, Endpoint, renix, resolveEndpoint } from "./endpoints";
+import { dut, Endpoint, traffic, resolveEndpoint } from "./endpoints";
 import { Link, REVERSE_STREAM_ID_BASE, TopoLinks } from "./types";
 
 export { REVERSE_STREAM_ID_BASE } from "./types";
@@ -89,7 +89,7 @@ export class LinkConstraint {
    */
   static get one_device_topo_links_type_1(): TopoLinks {
     return cached("one_device_topo_links_type_1", () =>
-      topo(link(renix("A"), dut("A", "A")), link(dut("A", "B"), renix("B"))),
+      topo(link(traffic("A"), dut("A", "A")), link(dut("A", "B"), traffic("B"))),
     );
   }
 
@@ -105,10 +105,10 @@ export class LinkConstraint {
   static get two_devices_topo_links_type_1(): TopoLinks {
     return cached("two_devices_topo_links_type_1", () =>
       topo(
-        link(renix("A"), dut("A", "D")),
+        link(traffic("A"), dut("A", "D")),
         link(dut("A", "A"), dut("B", "A")),
         link(dut("A", "C"), dut("B", "C")),
-        link(dut("B", "D"), renix("B")),
+        link(dut("B", "D"), traffic("B")),
       ),
     );
   }
@@ -142,9 +142,9 @@ export class LinkConstraint {
     return cached("two_devices_topo_links_type_3", () =>
       topo(
         link(dut("A", "A"), dut("B", "A")),
-        link(dut("A", "B"), renix("C")),
-        link(dut("A", "D"), renix("A")),
-        link(dut("B", "D"), renix("B")),
+        link(dut("A", "B"), traffic("C")),
+        link(dut("A", "D"), traffic("A")),
+        link(dut("B", "D"), traffic("B")),
       ),
     );
   }
@@ -163,11 +163,11 @@ export class LinkConstraint {
   static get three_devices_topo_links_type_1(): TopoLinks {
     return cached("three_devices_topo_links_type_1", () =>
       topo(
-        link(renix("A"), dut("A", "D")),
+        link(traffic("A"), dut("A", "D")),
         link(dut("A", "A"), dut("B", "A")),
         link(dut("A", "C"), dut("B", "C")),
         link(dut("B", "B"), dut("C", "B")),
-        link(dut("C", "D"), renix("B")),
+        link(dut("C", "D"), traffic("B")),
       ),
     );
   }
@@ -186,11 +186,11 @@ export class LinkConstraint {
   static get three_devices_topo_links_type_2(): TopoLinks {
     return cached("three_devices_topo_links_type_2", () =>
       topo(
-        link(renix("A"), dut("A", "D")),
+        link(traffic("A"), dut("A", "D")),
         link(dut("A", "A"), dut("B", "A")),
         link(dut("B", "B"), dut("C", "B")),
-        link(dut("C", "D"), renix("B")),
-        link(renix("C"), dut("A", "B")),
+        link(dut("C", "D"), traffic("B")),
+        link(traffic("C"), dut("A", "B")),
       ),
     );
   }
@@ -215,12 +215,12 @@ export class LinkConstraint {
   static get three_devices_topo_links_type_3(): TopoLinks {
     return cached("three_devices_topo_links_type_3", () =>
       topo(
-        link(renix("A"), dut("A", "D")),
+        link(traffic("A"), dut("A", "D")),
         link(dut("A", "A"), dut("B", "A")),
         link(dut("A", "B"), dut("C", "B")),
         link(dut("A", "C"), dut("C", "C")),
         link(dut("B", "B"), dut("C", "A")),
-        link(dut("C", "D"), renix("B")),
+        link(dut("C", "D"), traffic("B")),
       ),
     );
   }
@@ -253,10 +253,10 @@ export class LinkConstraint {
   static get three_devices_topo_links_type_5(): TopoLinks {
     return cached("three_devices_topo_links_type_5", () =>
       topo(
-        link(renix("A"), dut("A", "D")),
+        link(traffic("A"), dut("A", "D")),
         link(dut("A", "A"), dut("B", "A")),
         link(dut("B", "B"), dut("C", "B")),
-        link(dut("C", "D"), renix("B")),
+        link(dut("C", "D"), traffic("B")),
       ),
     );
   }
@@ -309,9 +309,9 @@ export class LinkConstraint {
         link(dut("A", "A"), dut("B", "A")),
         link(dut("A", "B"), dut("B", "B")),
         link(dut("A", "C"), dut("D", "C")),
-        link(dut("A", "D"), renix("A")),
-        link(dut("B", "D"), renix("B")),
-        link(dut("C", "D"), renix("C")),
+        link(dut("A", "D"), traffic("A")),
+        link(dut("B", "D"), traffic("B")),
+        link(dut("C", "D"), traffic("C")),
         link(dut("B", "C"), dut("D", "B")),
         link(dut("C", "A"), dut("D", "A")),
       ),

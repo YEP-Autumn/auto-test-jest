@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { DeviceARouteMac, TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { DeviceARouteMac, TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -52,9 +52,9 @@ test("测试当主机路由消失后，recursive-lookup host-route路由失效",
   testHelper.ExecRetMatchDutA("show ip route", "12.12.12.0/24");
 
   /** 打流验证: 主机路由99.99.99.100/32存在, 12.12.12.0/24路由生效, RenixB应收到对应报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -73,7 +73,7 @@ test("测试当主机路由消失后，recursive-lookup host-route路由失效",
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",
@@ -97,9 +97,9 @@ test("测试当主机路由消失后，recursive-lookup host-route路由失效",
   testHelper.ExecRetMatchDutA("show ip route", "12.12.12.0/24", true);
 
   /** 打流验证: 主机路由99.99.99.100/32消失后, 12.12.12.0/24路由inactive, RenixB不应收到报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -118,7 +118,7 @@ test("测试当主机路由消失后，recursive-lookup host-route路由失效",
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",

@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { DeviceARouteMac, TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { DeviceARouteMac, TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -55,9 +55,9 @@ test("[SDK5.7.7-E530] 已有静态路由新增参数recursive-lookup host-route,
   );
 
   /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -76,7 +76,7 @@ test("[SDK5.7.7-E530] 已有静态路由新增参数recursive-lookup host-route,
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",
@@ -107,9 +107,9 @@ test("[SDK5.7.7-E530] 已有静态路由新增参数recursive-lookup host-route,
   );
 
   /** 打流验证: 10.10.10.0/24路由inactive(recursive-lookup host-route未生效), RenixB不应收到报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -128,7 +128,7 @@ test("[SDK5.7.7-E530] 已有静态路由新增参数recursive-lookup host-route,
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",
@@ -155,9 +155,9 @@ test("[SDK5.7.7-E530] 已有静态路由新增参数recursive-lookup host-route,
   testHelper.ExecRetMatchDutA("show ip route", "10.10.10.0/24");
 
   /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -176,7 +176,7 @@ test("[SDK5.7.7-E530] 已有静态路由新增参数recursive-lookup host-route,
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",
@@ -239,9 +239,9 @@ test("静态路由更新recursive-lookup host-route参数 (存在主机路由的
   testHelper.ExecRetMatchDutA("show ip route", "10.10.10.0/24");
 
   /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -260,7 +260,7 @@ test("静态路由更新recursive-lookup host-route参数 (存在主机路由的
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",
@@ -287,9 +287,9 @@ test("静态路由更新recursive-lookup host-route参数 (存在主机路由的
   testHelper.ExecRetMatchDutA("show ip route", "10.10.10.0/24");
 
   /** 打流验证: 10.10.10.0/24路由下一跳的主机路由存在, RenixB可以收到报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -308,7 +308,7 @@ test("静态路由更新recursive-lookup host-route参数 (存在主机路由的
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",
@@ -335,9 +335,9 @@ test("静态路由更新recursive-lookup host-route参数 (存在主机路由的
   testHelper.ExecRetMatchDutA("show ip route", "10.10.10.0/24");
 
   /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -356,7 +356,7 @@ test("静态路由更新recursive-lookup host-route参数 (存在主机路由的
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",

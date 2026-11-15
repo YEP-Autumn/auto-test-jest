@@ -8,7 +8,7 @@
 import type { TrafficProvider } from "./model";
 
 export type TrafficCapabilityName =
-  "modifiers" | "fixedLength" | "rawFrame" | "burstGap" | "batchCapture";
+  "modifiers" | "fixedLength" | "burstGap" | "batchCapture";
 
 export interface TrafficCapabilities {
   provider: TrafficProvider;
@@ -25,7 +25,6 @@ const CAPABILITIES: Record<TrafficProvider, TrafficCapabilities> = {
     supports: {
       modifiers: true,
       fixedLength: true,
-      rawFrame: true,
       burstGap: true,
       batchCapture: true,
     },
@@ -36,7 +35,6 @@ const CAPABILITIES: Record<TrafficProvider, TrafficCapabilities> = {
     supports: {
       modifiers: true,
       fixedLength: true,
-      rawFrame: true,
       burstGap: true,
       batchCapture: true,
     },
@@ -47,9 +45,7 @@ const CAPABILITIES: Record<TrafficProvider, TrafficCapabilities> = {
     supports: {
       modifiers: true,
       fixedLength: true,
-      // Dot3/LLC 走 templateString 原始帧
-      rawFrame: true,
-      // 当前实现把 BURST 压平成“总帧数 + 100%”，尚未保留 burst_size/gap
+      // BURST 总帧数和速率已映射，但 burst 内 gap 尚未映射
       burstGap: false,
       // 抓包停止后优先走 Capture.Download + FileService.Download + pcap
       batchCapture: true,

@@ -45,6 +45,12 @@ enum HeaderType {
   HEADER_TYPE_PPPOE = 23;         // PPPoE Session（8B：头 + PPP protocol）
   HEADER_TYPE_GTPU = 24;          // GTP-U（UDP 2152，后接内层 IP）
   HEADER_TYPE_IGMP = 25;          // IGMP（IPv4 proto 2，v1/v2/v3 query）
+  HEADER_TYPE_DHCP = 26;          // DHCPv4（UDP 67/68：BOOTP 240B + options）
+  HEADER_TYPE_PPPOE_DISCOVERY = 27; // PPPoE Discovery（0x8863，6B + tags）
+  HEADER_TYPE_LLDP = 28;          // LLDP（EtherType 0x88CC，纯 TLV）
+  HEADER_TYPE_LACP = 29;          // LACP（Slow Protocols 0x8809 subtype 1，110B）
+  HEADER_TYPE_STP = 30;           // STP/RSTP BPDU（LLC 0x42，35/36B）
+  HEADER_TYPE_DHCPV6 = 31;        // DHCPv6（UDP 546/547：4B 头 + 16 位 TLV）
 }
 
 enum PacketFieldType {
@@ -133,9 +139,99 @@ message PacketField {
 // 4=SACK permitted、5=SACK、8=Timestamps。
 // data 不含 type/length；EOL/NOP 的 data 必须为空。
 // 整组选项由引擎按 4 字节对齐，并把 IHL / TCP data offset 一起修正。
+message LldpTlv {
+  uint32 subtype = 1;             // Chassis/Port/Management address subtype
+  bytes id = 2;                   // Chassis/Port ID bytes
+  uint32 ttl = 3;
+  string text = 4;                // Port/System Description, System Name
+  uint32 capabilities = 5;        // System Capabilities
+  uint32 enabled_capabilities = 6;
+  uint32 address_subtype = 7;     // Management Address subtype
+  bytes address = 8;
+  uint32 interface_subtype = 9;
+  uint32 interface_number = 10;
+  bytes oid = 11;
+  uint32 oui = 12;                // Organizationally Specific
+  uint32 org_subtype = 13;
+  bytes info = 14;
+}
+
+message Dhcpv4SubOption {
+  uint32 code = 1;
+  bytes data = 2;
+}
+
+message Dhcpv4Route {
+  uint32 prefix_len = 1;
+  bytes destination = 2;
+  bytes next_hop = 3;
+}
+
+message Dhcpv4Option {
+  repeated Dhcpv4SubOption sub_options = 1; // option 82
+  repeated Dhcpv4Route routes = 2;          // option 121/249
+}
+
+message Dhcpv6SubOption {
+  uint32 type = 1;
+  bytes data = 2;
+}
+
+message Dhcpv6Option {
+  uint32 iaid = 1;
+  uint32 t1 = 2;
+  uint32 t2 = 3;
+  bytes address = 4;
+  uint32 preferred = 5;
+  uint32 valid = 6;
+  uint32 prefix_len = 7;
+  uint32 status_code = 8;
+  string status_message = 9;
+  bytes relay_message = 10;
+  repeated Dhcpv6SubOption sub_options = 11;
+}
+
+message IgmpGroupRecord {
+  uint32 record_type = 1;
+  bytes multicast_address = 2;
+  repeated bytes sources = 3;
+  bytes aux_data = 4;
+}
+
+message IgmpOption {
+  repeated bytes sources = 1;
+  repeated IgmpGroupRecord group_records = 2;
+}
+
+message MstiRecord {
+  uint32 flags = 1;
+  uint32 regional_root_priority = 2;
+  bytes regional_root_mac = 3;
+  uint32 internal_root_path_cost = 4;
+  uint32 bridge_priority = 5;
+  uint32 port_priority = 6;
+  uint32 remaining_hops = 7;
+}
+
+message MstiOption {
+  repeated MstiRecord records = 1;
+}
+
 message HeaderOption {
   uint32 type = 1;
   bytes data = 2;
+  // LLDP 常用 TLV 的结构化值；设置后 gateway 会生成结构化 layer_options。
+  // 支持的 TLV：Chassis/Port/TTL/Name/Capabilities/Management/Org-Specific。
+  LldpTlv lldp = 3;
+  // DHCPv4 option 82（Relay Agent） / 121/249（Classless Route）的结构化值。
+  Dhcpv4Option dhcpv4 = 4;
+  // DHCPv6 Relay Message / IA_NA / IA_TA / IAADDR / IA_PD / IA Prefix / Status 结构化值。
+  Dhcpv6Option dhcpv6 = 5;
+  // IGMPv3 Query source 列表 / Membership Report group record 结构化值。
+  // group_records 支持 record_type/multicast_address/sources/aux_data。
+  IgmpOption igmp = 6;
+  // MSTP MSTI Configuration Message；records 顺序即 MSTID。
+  MstiOption msti = 7;
 }
 
 // 一个具体的报文头实例。
@@ -146,7 +242,7 @@ message HeaderInstance {
   uint32 index = 3;            // 0-based；列表顺序优先
   uint32 header_length = 4;    // 0 = 默认；>默认值用于 options 预留
   repeated PacketField fields = 5;
-  repeated HeaderOption options = 6;  // IPv4/TCP、IPv6 hop/dst、ICMPv6 NDP；需要完整层栈模式
+  repeated HeaderOption options = 6;  // IPv4/TCP、IPv6 hop/dst、ICMPv6 NDP、DHCP/DHCPv6、PPPoE tags、LLDP TLVs；需要完整层栈模式
   // 引擎层名。动态类（HeaderType.CUSTOM）必填，其他头留空。
   string proto_name = 7;
 }

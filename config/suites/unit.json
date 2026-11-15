@@ -1,0 +1,9 @@
+{
+  "suite": "unit",
+  "description": "无设备单元测试：codec / packet model / traffic config",
+  "include": [
+    "test/misc/stream/**/*.test.ts",
+    "test/misc/traffic/**/*.test.ts"
+  ],
+  "exclude": []
+}

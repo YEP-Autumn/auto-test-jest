@@ -1,12 +1,12 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
 import {
   DeviceARouteMac,
   DeviceBRouteMac,
   TestHelper,
-} from "@/utils/test-helper";
+} from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -83,10 +83,10 @@ test("支持通过VLAN子接口建立ISIS邻居连接", async () => {
 
   testHelper.ReadyCheckDutA("show ip route", `10.10.10.0\/24`, 1000 * 30);
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -104,7 +104,7 @@ test("支持通过VLAN子接口建立ISIS邻居连接", async () => {
   });
 
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "3.3.3",

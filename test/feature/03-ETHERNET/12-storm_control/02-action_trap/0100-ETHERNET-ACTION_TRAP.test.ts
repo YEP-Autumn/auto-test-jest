@@ -4,9 +4,9 @@ import {
   BurstRateUnit,
   TransmitMode,
 } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -63,7 +63,7 @@ test("接口配置 Sotrm Control trap action后，multicast pps限速恢复后�
   );
 
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({ src: "0.0.1", dst: "01:00:5e:00:00:01" })
       .setIPv4({ src: "1.1.1.1", dst: "224.0.0.1" }),
@@ -81,13 +81,13 @@ test("接口配置 Sotrm Control trap action后，multicast pps限速恢复后�
     },
   });
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   testHelper.sleep(1000 * 5);
 
   // v2c 社区 Trap（version=1）
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder().setSNMP({
       version: 1,
       varbinds: [
@@ -101,7 +101,7 @@ test("接口配置 Sotrm Control trap action后，multicast pps限速恢复后�
     expected_count: 1,
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder().setSNMP({
       version: 3,
       varbinds: [

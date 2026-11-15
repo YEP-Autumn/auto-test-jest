@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -184,9 +184,9 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
   );
 
   // RenixA 发送 vlan 30-40 或 50-60 之间的报文时, RenixB能够收到报文
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -203,7 +203,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -219,9 +219,9 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
   });
 
   // RenixA 发送 vlan 200的报文时, RenixC能够收到vlan 400的报文
-  testHelper.startCapture(RenixPort.C);
+  testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -238,7 +238,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -254,9 +254,9 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
   });
 
   // RenixA 发送 vlan 201 202的报文时, RenixC能够收到vlan 201 401的报文
-  testHelper.startCapture(RenixPort.C);
+  testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -274,7 +274,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -291,9 +291,9 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
   });
 
   // RenixA 发送 vlan 203的报文时, RenixC能够收到vlan 203 402的报文
-  testHelper.startCapture(RenixPort.C);
+  testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -310,7 +310,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -327,9 +327,9 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
   });
 
   // RenixA 发送 vlan 不带vlan的报文时, RenixC能够收到vlan 403的报文
-  testHelper.startCapture(RenixPort.C);
+  testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -345,7 +345,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -361,9 +361,9 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
   });
 
   // RenixA 发送 vlan 其他vlan的报文时, RenixC能够收到 报文原vlan + 外层 vlan 500的报文 (需要portB和portD都配置允许该vlan通行)
-  testHelper.startCapture(RenixPort.C);
+  testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -380,7 +380,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -397,9 +397,9 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
   });
 
   // (携带vlan 100 200的报文从PortD接口出时, 会剥离两层tag)
-  testHelper.startCapture(RenixPort.A);
+  testHelper.startCapture(StreamPort.A);
   testHelper.addPktSender({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ec",
@@ -417,7 +417,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ec",
@@ -432,9 +432,9 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
   });
 
   // (携带vlan 200 300的报文从PortD接口出时, 会替换为vlan 123)
-  testHelper.startCapture(RenixPort.A);
+  testHelper.startCapture(StreamPort.A);
   testHelper.addPktSender({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ec",
@@ -452,7 +452,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ec",

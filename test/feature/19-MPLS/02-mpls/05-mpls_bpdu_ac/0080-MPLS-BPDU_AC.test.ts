@@ -4,9 +4,9 @@ import {
   ModifierMode,
   TransmitMode,
 } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -133,7 +133,7 @@ test("支持在agg接口配置bpud ac", async () => {
     new RegExp("11.11.1.1.*?OPERATIONAL"),
   );
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     packet: new PacketBuilder()
       .setDot3({
@@ -145,7 +145,7 @@ test("支持在agg接口配置bpud ac", async () => {
       .setRaw({
         payload: Buffer.from("0000000000000000000000000000000000000000000000"),
       }),
-    port: RenixPort.A,
+    port: StreamPort.A,
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -167,7 +167,7 @@ test("支持在agg接口配置bpud ac", async () => {
     packet: new PacketBuilder().setDot3({
       dst: "01:80:c2:00:00:00",
     }),
-    port: RenixPort.B,
+    port: StreamPort.B,
   });
 
   testHelper.CleanConfigDutA([

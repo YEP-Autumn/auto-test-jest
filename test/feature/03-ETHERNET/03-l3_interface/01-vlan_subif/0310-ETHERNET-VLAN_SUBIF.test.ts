@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -147,10 +147,10 @@ test("设备支持通过VLAN子接口配置MPLS VPLS", async () => {
 
   testHelper.sleep(1000 * 5);
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({ src: "1.1.1", dst: "2.2.2", type: 0x8100 })
       .setVLAN({ vlan: 2, type: 0x0800 })
@@ -164,7 +164,7 @@ test("设备支持通过VLAN子接口配置MPLS VPLS", async () => {
   });
 
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({ src: "1.1.1", dst: "2.2.2", type: 0x8100 })
       .setVLAN({ vlan: 2, type: 0x0800 })

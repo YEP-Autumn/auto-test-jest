@@ -100,14 +100,32 @@ message CaptureStatus {
   bool buffer_full = 5;
   uint64 downloaded_packet_count = 6;
   string current_data_file = 7;
+  uint64 first_seq = 8;   // 当前最老存活帧的绝对序号
+  uint64 next_seq = 9;    // 下一帧将分配的绝对序号
 }
 
 message CaptureFrame {
-  uint64 index = 1;
+  uint64 index = 1;       // 相对当前最老帧的 ring 下标（兼容旧客户端）
   int64 timestamp_ns = 2;
   uint32 length = 3;
   uint32 captured_length = 4;
   bytes data = 5;
+  uint64 seq = 6;         // 本会话内单调递增的绝对序号
+}
+
+message ReadCaptureRangeRequest {
+  ResourceRef ref = 1;
+  uint64 from_seq = 2;
+  uint32 max_frames = 3;  // 0 = 默认；服务端上限 32
+}
+
+message ReadCaptureRangeReply {
+  Result result = 1;
+  repeated CaptureFrame frames = 2;
+  uint64 next_seq = 3;
+  uint64 first_seq = 4;
+  bool eof = 5;
+  uint64 dropped = 6;
 }
 
 message CaptureChunk {
@@ -189,6 +207,8 @@ service CaptureService {
   rpc Download(DownloadCaptureRequest) returns (DownloadCaptureReply);         // operator
   rpc AbortDownload(CaptureRequest) returns (JobReply);                        // operator
   rpc ReadByIndex(ReadCaptureByIndexRequest) returns (ReadCaptureByIndexReply);// viewer
+  rpc ReadRange(ReadCaptureRangeRequest) returns (ReadCaptureRangeReply);      // viewer
   rpc SubscribeRealtime(SubscribeRealtimeCaptureRequest) returns (stream CaptureChunk); // viewer
   rpc ResetParser(CaptureRequest) returns (JobReply);                          // operator
+  rpc Flush(CaptureRequest) returns (CaptureReply);                            // operator
 }

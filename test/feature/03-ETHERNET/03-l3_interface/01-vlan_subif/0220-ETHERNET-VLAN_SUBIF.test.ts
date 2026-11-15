@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { DeviceARouteMac, TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { DeviceARouteMac, TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -71,7 +71,7 @@ test("支持配置IPv6静态路由指定下一跳为VLAN子接口邻居", async 
 
   testHelper.sleep(3000);
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   testHelper.addPktSender({
     packet: new PacketBuilder()
@@ -85,7 +85,7 @@ test("支持配置IPv6静态路由指定下一跳为VLAN子接口邻居", async 
         src: "2001::100",
         dst: "4000::1234",
       }),
-    port: RenixPort.A,
+    port: StreamPort.A,
     transmit_param: {
       mode: TransmitMode.STEP,
       param: { step_count: 10 },
@@ -93,7 +93,7 @@ test("支持配置IPv6静态路由指定下一跳为VLAN子接口邻居", async 
   });
 
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "a.b.c",

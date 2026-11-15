@@ -1,6 +1,6 @@
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 
 jest.setTimeout(1000 * 60 * 10);
 
@@ -16,7 +16,7 @@ afterAll(async () => {
 
 test("", async () => {
   testHelper.addPktChecker({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:00:11:22:44",

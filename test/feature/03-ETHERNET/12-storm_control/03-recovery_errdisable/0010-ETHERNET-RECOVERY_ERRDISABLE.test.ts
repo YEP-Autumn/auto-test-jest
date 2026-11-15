@@ -4,9 +4,9 @@ import {
   BurstRateUnit,
   TransmitMode,
 } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -41,7 +41,7 @@ test("errdisable支持配置storm-control reason", async () => {
 
   // 再发送限速类型报文(unicast), 校验接口errdisable
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({ src: "0.0.1", dst: "0.0.2" })
       .setIPv4({ src: "1.1.1.1", dst: "2.2.2.2" }),
@@ -59,7 +59,7 @@ test("errdisable支持配置storm-control reason", async () => {
     },
   });
 
-  testHelper.stopStream(RenixPort.A);
+  testHelper.stopStream(StreamPort.A);
 
   testHelper.ExecRetMatchDutA(`show interface ${Port.A}`, "Error Disabled");
   testHelper.ExecRetMatchDutA(

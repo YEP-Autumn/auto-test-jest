@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -205,7 +205,7 @@ test("测试BGP多实例配置 VXLAN L2 EVPN", async () => {
   testHelper.ReadyCheckDutA("show overlay", new RegExp("10.*?10.2.2.2"));
   testHelper.ReadyCheckDutA("show overlay", new RegExp("10.*?10.3.3.3"));
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   testHelper.addPktSender({
     packet: new PacketBuilder()
@@ -219,7 +219,7 @@ test("测试BGP多实例配置 VXLAN L2 EVPN", async () => {
         src: "100.100.100.1",
         dst: "10.10.10.100",
       }),
-    port: RenixPort.A,
+    port: StreamPort.A,
     transmit_param: {
       mode: TransmitMode.STEP,
       param: { step_count: 10 },
@@ -227,7 +227,7 @@ test("测试BGP多实例配置 VXLAN L2 EVPN", async () => {
   });
 
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:00:44:55:77",

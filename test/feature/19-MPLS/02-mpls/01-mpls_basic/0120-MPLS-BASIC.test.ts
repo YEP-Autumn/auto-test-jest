@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { GreaterThan } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -128,7 +128,7 @@ test("测试MPLS L3VPN 收到未知邻居报文能触发arp (bugid: 2751)", asyn
   testHelper.sleep(10_000);
   testHelper.ReadyCheckDutA("show ldp session", "OPERATIONAL", 90_000);
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   /** 验证ping连通性 */
   testHelper.ExecConfigDutA(["ping vrf vpn1 -a 2.2.2.2 3.3.3.100"]);
@@ -136,7 +136,7 @@ test("测试MPLS L3VPN 收到未知邻居报文能触发arp (bugid: 2751)", asyn
   testHelper.addPktChecker({
     expected_count: GreaterThan(1),
     packet: new PacketBuilder().setARP({ pdst: "3.3.3.100" }),
-    port: RenixPort.B,
+    port: StreamPort.B,
   });
 
   testHelper.CleanConfigDutA([

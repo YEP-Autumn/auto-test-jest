@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -95,7 +95,7 @@ test("支持vpls bpdu ac和ethernet ac同时使用", async () => {
     new RegExp("11.11.1.1.*?OPERATIONAL"),
   );
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     packet: new PacketBuilder()
       .setDot3({
@@ -104,7 +104,7 @@ test("支持vpls bpdu ac和ethernet ac同时使用", async () => {
         len: 39,
       })
       .setLLC({ ctrl: 10, dsap: 10, ssap: 10 }),
-    port: RenixPort.A,
+    port: StreamPort.A,
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -122,12 +122,12 @@ test("支持vpls bpdu ac和ethernet ac同时使用", async () => {
         len: 39,
       })
       .setLLC({ ctrl: 10, dsap: 10, ssap: 10 }),
-    port: RenixPort.B,
+    port: StreamPort.B,
   });
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -144,7 +144,7 @@ test("支持vpls bpdu ac和ethernet ac同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",

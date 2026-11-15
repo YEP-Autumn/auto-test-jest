@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -169,9 +169,9 @@ test("vlan range ac可以和vlan mapping同时使用", async () => {
   );
 
   /** RenixA发送vlan 30~40,50~60的报文, RenixB可以收到vlan 2的报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -188,7 +188,7 @@ test("vlan range ac可以和vlan mapping同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -204,9 +204,9 @@ test("vlan range ac可以和vlan mapping同时使用", async () => {
   });
 
   /** RenixA发送vlan 123的报文, RenixC可以收到vlan 333的报文 */
-  testHelper.startCapture(RenixPort.C);
+  testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -223,7 +223,7 @@ test("vlan range ac可以和vlan mapping同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -239,9 +239,9 @@ test("vlan range ac可以和vlan mapping同时使用", async () => {
   });
 
   /** RenixA发送vlan 100/200的报文, RenixC可以收到vlan 100/444的报文 */
-  testHelper.startCapture(RenixPort.C);
+  testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -259,7 +259,7 @@ test("vlan range ac可以和vlan mapping同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -275,9 +275,9 @@ test("vlan range ac可以和vlan mapping同时使用", async () => {
     expected_count: 10,
   });
   /** RenixC发送vlan 333的报文, RenixA可以收到vlan 123的报文 */
-  testHelper.startCapture(RenixPort.A);
+  testHelper.startCapture(StreamPort.A);
   testHelper.addPktSender({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -294,7 +294,7 @@ test("vlan range ac可以和vlan mapping同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -309,9 +309,9 @@ test("vlan range ac可以和vlan mapping同时使用", async () => {
     expected_count: 10,
   });
   /** RenixC发送vlan 444的报文, RenixA可以收到vlan 100/200的报文 */
-  testHelper.startCapture(RenixPort.A);
+  testHelper.startCapture(StreamPort.A);
   testHelper.addPktSender({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -329,7 +329,7 @@ test("vlan range ac可以和vlan mapping同时使用", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",

@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -71,13 +71,13 @@ test("配置静态VPWS", async () => {
   testHelper.ExecRetMatchDutB("show mpls l2-circuit", new RegExp("t2.*?201"));
   testHelper.ExecRetMatchDutB("show mpls vc-table", new RegExp("201.*?33\/44"));
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   testHelper.addPktSender({
     packet: new PacketBuilder()
       .setEthernet({ dst: "1.1.1", src: "2.2.2" })
       .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
-    port: RenixPort.A,
+    port: StreamPort.A,
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -91,7 +91,7 @@ test("配置静态VPWS", async () => {
     packet: new PacketBuilder()
       .setEthernet({ dst: "1.1.1", src: "2.2.2" })
       .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
-    port: RenixPort.B,
+    port: StreamPort.B,
   });
 
   testHelper.CleanConfigDutA([

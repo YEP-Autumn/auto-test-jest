@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -49,9 +49,9 @@ test("支持Egress为指定双层VLAN ID的报文剥离双层VLAN Tag", async ()
    * RenixB发送vlan [100/200]报文，RenixA能够收到不带vlan的报文
    */
 
-  testHelper.startCapture(RenixPort.A);
+  testHelper.startCapture(StreamPort.A);
   testHelper.addPktSender({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:cc",
@@ -69,7 +69,7 @@ test("支持Egress为指定双层VLAN ID的报文剥离双层VLAN Tag", async ()
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:cc",

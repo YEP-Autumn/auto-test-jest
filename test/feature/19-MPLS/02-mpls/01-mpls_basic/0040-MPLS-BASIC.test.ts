@@ -1,12 +1,12 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
 import {
   DeviceARouteMac,
   DeviceCRouteMac,
   TestHelper,
-} from "@/utils/test-helper";
+} from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -90,13 +90,13 @@ test("配置静态MPLS LSP", async () => {
    * then packet while output from DutC Port4
    */
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   testHelper.addPktSender({
     packet: new PacketBuilder()
       .setEthernet({ dst: DeviceARouteMac, src: "2.2.2" })
       .setIPv4({ dst: "172.22.4.200", src: "2.2.2.2" }),
-    port: RenixPort.A,
+    port: StreamPort.A,
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -110,7 +110,7 @@ test("配置静态MPLS LSP", async () => {
     packet: new PacketBuilder()
       .setEthernet({ dst: "2.2.2", src: DeviceCRouteMac })
       .setIPv4({ dst: "172.22.4.200", src: "2.2.2.2" }),
-    port: RenixPort.B,
+    port: StreamPort.B,
   });
 
   testHelper.ExecRetMatchDutA(

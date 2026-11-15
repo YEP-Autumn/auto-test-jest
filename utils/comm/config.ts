@@ -1,162 +1,13 @@
-import * as path from "path";
-import { TrafficConfig } from "../traffic/config";
-import type { TrafficPort, TrafficProvider } from "../traffic/model";
+import { StreamPort } from "../traffic/model";
+import { streamPorts } from "../config/traffic";
+import {
+  StreamBackendConfig,
+  StreamControlConfig,
+} from "../config/backends";
+import { TopoBackendConfig } from "../config/topo";
 
-/**
- * Config.Renix.portList 中单个物理端口的描述。
- *
- * 老字段 name/type 已迁移为 address/provider；`portMapping` 保持不变，
- * 继续表示该端口接在哪个 SDN 设备的哪个接口。
- */
-export interface ConfiguredTrafficPort {
-  provider: TrafficProvider;
-  address: string;
-}
-
-/** 打流/抓包后端类型（旧接口，保留兼容） */
-export type StreamBackendKind = "renix-http" | "streamcontrol-grpc";
-
-/**
- * 逻辑流量端口 A-D 的兼容入口。
- *
- * 返回值由 `TrafficConfig.resolvePort()` 根据当前流量后端解析：
- * - 默认（renix-http）：返回 Config.Renix.portList 中的 Renix/Scapy 地址；
- * - TRAFFIC_PROVIDER=stream-linux 或 STREAM_BACKEND_KIND=streamcontrol-grpc：
- *   返回 eth1/eth2/... 等引擎端口。
- *
- * 新代码建议直接使用 `TrafficConfig.resolvePort("A")`。
- */
-export class RenixPort {
-  static get A(): TrafficPort {
-    return TrafficConfig.resolvePort("A");
-  }
-  static get B(): TrafficPort {
-    return TrafficConfig.resolvePort("B");
-  }
-  static get C(): TrafficPort {
-    return TrafficConfig.resolvePort("C");
-  }
-  static get D(): TrafficPort {
-    return TrafficConfig.resolvePort("D");
-  }
-}
-
-/**
- * 打流/抓包后端服务（stream backend）地址配置。
- *
- * IP、端口集中在此维护，stream-backend-api.ts 只负责拼接接口路径，
- * 避免地址硬编码在各个请求里、切换环境时到处改。
- * 可通过环境变量覆盖：STREAM_BACKEND_HOST / STREAM_BACKEND_PORT /
- * STREAM_BACKEND_USERNAME / STREAM_BACKEND_PASSWORD。
- */
-export class StreamBackendConfig {
-  /**
-   * 选择后端实现：
-   * - renix-http：原信而泰/HTTP 后端（默认，行为不变）
-   * - streamcontrol-grpc：stream-linux 公开 gRPC 契约
-   */
-  static readonly kind: StreamBackendKind =
-    (process.env.STREAM_BACKEND_KIND as StreamBackendKind) || "renix-http";
-
-  static readonly host = process.env.STREAM_BACKEND_HOST || "172.16.9.1";
-  static readonly port = process.env.STREAM_BACKEND_PORT || "8001";
-  /** 默认登录账号 */
-  static readonly username = process.env.STREAM_BACKEND_USERNAME || "test";
-  static readonly password = process.env.STREAM_BACKEND_PASSWORD || "autotest";
-
-  /** 服务根地址，如 http://172.16.9.1:8001 */
-  static get origin(): string {
-    return `http://${this.host}:${this.port}`;
-  }
-
-  /** 业务接口 baseURL，如 http://172.16.9.1:8001/api/backend_proxy */
-  static get baseURL(): string {
-    return `${this.origin}/api/backend_proxy`;
-  }
-
-  /** 登录接口完整地址，如 http://172.16.9.1:8001/api/auth/login/ */
-  static get loginURL(): string {
-    return `${this.origin}/api/auth/login/`;
-  }
-}
-
-/**
- * streamcontrol gRPC 网关配置（对应 utils/rpc/grpc/streamcontrol.proto）。
- *
- * 契约里没有 login RPC：鉴权通过 TLS/mTLS 或 metadata 完成，
- * Hello 只做握手与能力发现。可通过环境变量覆盖：
- * STREAM_CONTROL_HOST / STREAM_CONTROL_PORT / STREAM_CONTROL_TLS /
- * STREAM_CONTROL_CA / STREAM_CONTROL_CERT / STREAM_CONTROL_KEY /
- * STREAM_CONTROL_TOKEN。
- */
-export class StreamControlConfig {
-  static readonly host = process.env.STREAM_CONTROL_HOST || "127.0.0.1";
-  static readonly port = process.env.STREAM_CONTROL_PORT || "5443";
-
-  /** 是否启用 TLS；默认关闭，生产网关（README 示例 5443）通常开启 */
-  static readonly tls = (process.env.STREAM_CONTROL_TLS || "false") === "true";
-  /** 自签证书联调时可跳过证书校验（仅限测试环境） */
-  static readonly tlsInsecure =
-    (process.env.STREAM_CONTROL_TLS_INSECURE || "false") === "true";
-  static readonly ca = process.env.STREAM_CONTROL_CA;
-  static readonly cert = process.env.STREAM_CONTROL_CERT;
-  static readonly key = process.env.STREAM_CONTROL_KEY;
-
-  /** 可选的鉴权 token；网关要求 Bearer 前缀时自动补齐 */
-  static readonly token = process.env.STREAM_CONTROL_TOKEN;
-
-  /** 实际发送的 authorization metadata 值 */
-  static get authorization(): string | undefined {
-    const token = this.token?.trim();
-    if (!token) return undefined;
-    return /^(Bearer|Token)\s+/i.test(token) ? token : `Bearer ${token}`;
-  }
-
-  /** gRPC 地址，如 127.0.0.1:5443 */
-  static get address(): string {
-    return `${this.host}:${this.port}`;
-  }
-
-  /** proto 根目录（manifest: streamcontrol.proto） */
-  static get protoRoot(): string {
-    return path.resolve(__dirname, "../rpc/grpc");
-  }
-
-  static get protoFile(): string {
-    return path.resolve(this.protoRoot, "streamcontrol.proto");
-  }
-}
-
-/**
- * 拓扑后端服务（topo backend）地址配置。
- *
- * IP、端口、默认登录账号集中在此维护，topo-backend-api.ts 只负责拼接接口路径，
- * 避免地址硬编码在各个请求里、切换环境时到处改。
- * 可通过环境变量覆盖：TOPO_BACKEND_HOST / TOPO_BACKEND_PORT /
- * TOPO_BACKEND_USERNAME / TOPO_BACKEND_PASSWORD。
- */
-export class TopoBackendConfig {
-  static readonly host = process.env.TOPO_BACKEND_HOST || "172.16.9.1";
-  static readonly port = process.env.TOPO_BACKEND_PORT || "8000";
-  /** 默认登录账号 */
-  static readonly username = process.env.TOPO_BACKEND_USERNAME || "test";
-  static readonly password = process.env.TOPO_BACKEND_PASSWORD || "autotest";
-
-  /** 服务根地址，如 http://172.16.9.1:8000 */
-  static get origin(): string {
-    return `http://${this.host}:${this.port}`;
-  }
-
-  /** 业务接口 baseURL，如 http://172.16.9.1:8000 */
-  static get baseURL(): string {
-    return this.origin;
-  }
-
-  /** 登录接口完整地址，如 http://172.16.9.1:8000/api/auth/login/ */
-  static get loginURL(): string {
-    return `${this.origin}/api/auth/login/`;
-  }
-}
+export { StreamPort };
+export { StreamBackendConfig, StreamControlConfig, TopoBackendConfig };
 
 export class Config {
   /**
@@ -304,64 +155,32 @@ export class Config {
     ],
   };
 
-  public static Renix: {
-    portList: {
-      port: ConfiguredTrafficPort;
-      portMapping: { device: string; if_index: number };
-    }[];
-  } = {
-    portList: [
-      {
-        port: { provider: "renix", address: "//172.16.254.11/3/13" },
-        portMapping: { device: "172.16.9.110", if_index: 305 },
-      },
-      {
-        port: { provider: "renix", address: "//172.16.254.11/3/14" },
-        portMapping: { device: "172.16.9.110", if_index: 561 },
-      },
-      {
-        port: { provider: "renix", address: "//172.16.254.11/3/15" },
-        portMapping: { device: "172.16.9.110", if_index: 817 },
-      },
-      {
-        port: { provider: "renix", address: "//172.16.254.11/3/16" },
-        portMapping: { device: "172.16.9.110", if_index: 1073 },
-      },
-      {
-        port: {
-          provider: "scapy",
-          address: "\\Device\\NPF_{D0DB71B0-1C1E-419C-8360-20C25AF8A6E1}",
-        },
-        portMapping: { device: "172.16.9.110", if_index: 23 },
-      },
-      {
-        port: {
-          provider: "scapy",
-          address: "\\Device\\NPF_{02DCC5B0-C8A6-4440-9362-21B78C286280}",
-        },
-        portMapping: { device: "172.16.9.110", if_index: 24 },
-      },
-      {
-        port: {
-          provider: "scapy",
-          address: "\\Device\\NPF_{CD6CB24F-5008-4F71-8D48-2E92DB1DAA88}",
-        },
-        portMapping: { device: "172.16.9.106", if_index: 32 },
-      },
-      {
-        port: { provider: "renix", address: "//172.16.254.11/5/1" },
-        portMapping: { device: "172.16.9.106", if_index: 25 },
-      },
-      {
-        port: { provider: "renix", address: "//172.16.254.11/5/2" },
-        portMapping: { device: "172.16.9.106", if_index: 25 },
-      },
-      {
-        port: { provider: "renix", address: "//172.16.254.11/3/15" },
-        portMapping: { device: "172.16.9.106", if_index: 25 },
-      },
-    ],
-  };
+  /**
+   * 流量端口配置（兼容入口）。
+   *
+   * 实际配置在 `utils/config/traffic.ts` 的 `streamPorts`。
+   *
+   * @deprecated 直接修改 `streamPorts`。
+   */
+  public static readonly streamPorts = streamPorts;
+
+  /**
+   * 流量后端服务连接配置（服务级，不属于端口实例）。
+   *
+   * - renix / scapy：共用同一个 HTTP 服务，由 StreamBackendConfig 提供
+   *   host / port / 账号；
+   * - stream-linux：streamcontrol gRPC 网关，由 StreamControlConfig 提供
+   *   host / port / TLS / token。
+   *
+   * `streamPorts` 只回答“从哪个物理端口收发”，这里回答“连哪个服务”。
+   */
+  public static get trafficBackends() {
+    return {
+      renix: StreamBackendConfig,
+      scapy: StreamBackendConfig,
+      "stream-linux": StreamControlConfig,
+    };
+  }
 
   public static dut_list = [
     this.dut_e530_107,

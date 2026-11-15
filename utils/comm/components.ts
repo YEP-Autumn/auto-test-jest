@@ -1,5 +1,5 @@
 import { Port, sleep, STR_DEBUG_INFO, STR_FAILED, STR_SUCCESS } from "..";
-import { formatPktList } from "../stream/packet/format";
+import { formatPktList } from "../packet/format";
 import {
   matchARP,
   matchDot3,
@@ -14,18 +14,19 @@ import {
   matchTCP,
   matchUDP,
   matchVLAN,
-} from "../stream/packet/match";
-import { TrafficBackend } from "../stream/backend/types";
-import type {
-  PacketModifierParam,
-  PacketTransmitModeParam,
-} from "../stream/packet/types";
-import { PacketBuilder } from "../stream";
-import type { TrafficPort } from "../traffic/model";
+} from "../packet/match";
+import type { TrafficSession } from "../traffic/session";
+import {
+  TransmitMode as TransmitModeValue,
+  type PacketModifierParam,
+  type PacketTransmitModeParam,
+} from "../packet/types";
+import { PacketBuilder } from "../packet";
+import type { StreamPort } from "../traffic/model";
 import { Dut } from "./dut";
 
 /**
- * 发送相关类型已下沉到 stream/packet/types，这里原样 re-export，
+ * 发送相关类型已下沉到 packet/types，这里原样 re-export，
  * 保持测试里 `from "@/utils/comm/components"` 的 import 不变。
  */
 export {
@@ -34,7 +35,7 @@ export {
   BurstGapUnit,
   BurstRateUnit,
   ModifierMode,
-} from "../stream/packet/types";
+} from "../packet/types";
 export type {
   PacketModifierParam,
   TransmitBurstParam,
@@ -42,7 +43,7 @@ export type {
   TransmitContinuousParam,
   TransmitTimeParam,
   PacketTransmitModeParam,
-} from "../stream/packet/types";
+} from "../packet/types";
 
 export interface Actuator {
   start(any?: any): any;
@@ -190,13 +191,13 @@ export class ReadyCheck implements Actuator {
 }
 
 export class StartCapture implements Actuator {
-  private stream_port: TrafficPort;
-  constructor(stream_port: TrafficPort) {
+  private stream_port: StreamPort;
+  constructor(stream_port: StreamPort) {
     this.stream_port = stream_port;
   }
-  async start(streamBackend: TrafficBackend): Promise<boolean> {
+  async start(session: TrafficSession): Promise<boolean> {
     try {
-      await streamBackend?.startCapture(this.stream_port);
+      await session.startCapture(this.stream_port);
     } catch (error) {
       console.error("Error: ", error);
       return false;
@@ -212,13 +213,18 @@ export class PacketSender implements Actuator {
     this.param = param;
   }
 
-  async start(streamBackend: TrafficBackend): Promise<boolean> {
+  async start(session: TrafficSession): Promise<boolean> {
     try {
       if (this.param.wait_time == null) {
         this.param.wait_time = 1000 * 2;
       }
       await sleep(this.param.wait_time);
-      await streamBackend?.sendPacket(
+      const mode = this.param.transmit_param.mode;
+      const waitForCompletion =
+        this.param.wait_for_completion ??
+        mode !== TransmitModeValue.CONTINUOUS;
+
+      const handle = await session.startTransmit(
         this.param.port,
         this.param.packet.toSpec(),
         {
@@ -226,6 +232,9 @@ export class PacketSender implements Actuator {
           transmit: this.param.transmit_param,
         },
       );
+      if (waitForCompletion) {
+        await handle?.wait(this.param.wait_timeout_ms);
+      }
     } catch (error) {
       console.error("PacketSender Error:", error);
       return false;
@@ -238,13 +247,13 @@ export class PacketSender implements Actuator {
 }
 
 export class StopStream implements Actuator {
-  private stream_port: TrafficPort;
-  constructor(stream_port: TrafficPort) {
+  private stream_port: StreamPort;
+  constructor(stream_port: StreamPort) {
     this.stream_port = stream_port;
   }
-  async start(streamBackend: TrafficBackend): Promise<boolean> {
+  async start(session: TrafficSession): Promise<boolean> {
     try {
-      await streamBackend?.stopTransmit(this.stream_port);
+      await session.stopTransmit(this.stream_port);
     } catch (error) {
       console.error("Error: ", error);
       return false;
@@ -390,12 +399,12 @@ export class PacketChecker implements Actuator {
     return false;
   }
 
-  async start(streamBackend: TrafficBackend): Promise<boolean> {
+  async start(session: TrafficSession): Promise<boolean> {
     let result;
 
     try {
-      await streamBackend?.stopCapture(this.param.port);
-      result = await streamBackend?.readCapture(this.param.port);
+      await session.stopCapture(this.param.port);
+      result = await session.readCapture(this.param.port);
     } catch (error) {
       console.error("PacketChecker Error:", error);
       return false;
@@ -563,11 +572,18 @@ export class ExecCustom implements Actuator {
 }
 
 export interface PacketSendParam {
-  port: TrafficPort;
+  port: StreamPort;
   packet: PacketBuilder;
   modifier_param?: PacketModifierParam[];
   transmit_param: PacketTransmitModeParam;
   wait_time?: number;
+  /**
+   * 是否等待发送结束。默认 STEP/BURST 等待，TIME/CONTINUOUS 不等待。
+   * 低速率长 burst 可显式设为 false。
+   */
+  wait_for_completion?: boolean;
+  /** 等待发送结束的超时（毫秒） */
+  wait_timeout_ms?: number;
 }
 
 enum CompareType {
@@ -594,7 +610,7 @@ export function EqualTo(cnt: number): NumberCompare {
 }
 
 export interface PacketCheckParam {
-  port: TrafficPort;
+  port: StreamPort;
   expected_count: NumberCompare | number;
   packet: PacketBuilder;
 }

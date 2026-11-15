@@ -1,56 +1,80 @@
 /**
- * 流量收发（traffic）领域的共享模型。
+ * 流量端口模型。
  *
- * 这里刻意把四个概念分开：
- *   1. 逻辑端口：A/B/C/D，测试脚本只引用它；
- *   2. provider：renix / scapy / stream-linux，决定用哪套收发实现；
- *   3. address：provider 内部的物理地址（机框端口 / NPF 设备 / eth1）；
- *   4. topology：该端口接在哪个 SDN 设备的哪个接口（原 portMapping）。
+ * 对外只暴露 `StreamPort`（逻辑端口令牌），测试用例不感知 provider /
+ * address / topology。配置在 `Config.streamPorts` 中，按数组顺序映射到
+ * `StreamPort.A/B/C...`。
  */
 
 import type { PortMapping } from "../topo/types";
+import type { ProviderId } from "../backends/contract";
 
-/** 流量后端类型 */
-export type TrafficProvider = "renix" | "scapy" | "stream-linux";
+/** @deprecated 使用 `ProviderId`；保留别名便于渐进迁移 */
+export type TrafficProvider = ProviderId;
 
-/** 逻辑端口号，对应 Config.Renix.portList 的下标 A=0 .. F=5 */
-export type TrafficPortId = "A" | "B" | "C" | "D" | "E" | "F";
+/** 逻辑端口号，对应 `Config.streamPorts` 的数组下标 */
+export type TrafficPortId =
+  | "A"
+  | "B"
+  | "C"
+  | "D"
+  | "E"
+  | "F"
+  | "G"
+  | "H"
+  | "I"
+  | "J";
+
+/** 逻辑端口顺序；数组下标 -> 端口 id */
+export const TRAFFIC_PORT_IDS: readonly TrafficPortId[] = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+];
 
 /**
- * 测试和组件使用的逻辑端口。
+ * 测试用例使用的逻辑端口令牌。
  *
- * - `id`：逻辑端口号；自定义端口可能没有对应配置，因此允许为空。
- * - `provider`：实际使用的流量后端。
- * - `address`：provider 内部地址。
- * - `topology`：拓扑落点，对应旧的 `portMapping`。
+ * 它只有一个 id，不包含 provider / address / topology；具体使用哪个
+ * 后端和物理端口完全由 `Config.streamPorts` 的数组顺序决定。
  */
-export interface TrafficPort {
-  id?: TrafficPortId;
-  provider: TrafficProvider;
-  address: string;
-  topology?: PortMapping;
-}
+export class StreamPort {
+  private constructor(readonly id: TrafficPortId) {}
 
-/** 端口在每个 provider 上的物理落点 */
-export interface TrafficEndpointConfig {
-  /** provider 内部的物理地址 */
-  address: string;
-  /** 可选：覆盖端口默认 topology */
-  topology?: PortMapping;
+  static readonly A = new StreamPort("A");
+  static readonly B = new StreamPort("B");
+  static readonly C = new StreamPort("C");
+  static readonly D = new StreamPort("D");
+  static readonly E = new StreamPort("E");
+  static readonly F = new StreamPort("F");
+  static readonly G = new StreamPort("G");
+  static readonly H = new StreamPort("H");
+  static readonly I = new StreamPort("I");
+  static readonly J = new StreamPort("J");
+
+  toString(): string {
+    return `StreamPort.${this.id}`;
+  }
 }
 
 /**
- * 逻辑端口配置。
+ * `Config.streamPorts` 的单项配置。
  *
- * Phase 1 仍以 `Config.Renix.portList` 为数据源，由 `TrafficConfig` 派生；
- * 后续可以把这里作为唯一的端口配置入口。
+ * 数组顺序即逻辑端口：第 0 项 = StreamPort.A，第 1 项 = StreamPort.B ...
+ * 调整测试实际使用的物理端口时，只需要调整数组顺序。
  */
-export interface TrafficPortConfig {
-  id: TrafficPortId;
-  /** 该逻辑端口的默认拓扑落点 */
+export interface StreamPortConfig {
+  /** 实际使用的后端 */
+  provider: ProviderId;
+  /** 该后端的物理地址（机框端口 / NPF 设备 / eth1） */
+  address: string;
+  /** 拓扑落点：接在哪个 SDN 设备的哪个接口 */
   topology: PortMapping;
-  /** 同一逻辑端口在不同流量后端上的落点 */
-  endpoints: Partial<Record<TrafficProvider, TrafficEndpointConfig>>;
-  /** 可选默认 provider；环境变量优先级更高 */
-  provider?: TrafficProvider;
 }

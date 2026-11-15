@@ -1,12 +1,12 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
 import {
   DeviceARouteMac,
   DeviceBRouteMac,
   TestHelper,
-} from "@/utils/test-helper";
+} from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 jest.setTimeout(1000 * 60 * 10);
@@ -100,9 +100,9 @@ test("配置默认静态路由后，未匹配明细路由的流量经默认网�
   testHelper.ExecRetMatchDutA("ping 2.2.2.1", " 0% packet loss");
 
   /** 打流验证: 未匹配明细路由的报文经默认路由从 DUTB PortD 转发到 RenixB */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -121,7 +121,7 @@ test("配置默认静态路由后，未匹配明细路由的流量经默认网�
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:03:00:03:00:03",

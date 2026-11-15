@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -93,14 +93,14 @@ test("配置MPLS VPLS (两设备)", async () => {
     60 * 1000,
   );
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   testHelper.addPktSender({
     packet: new PacketBuilder()
       .setEthernet({ dst: "1.1.1", src: "2.2.2" })
       .setVLAN({ vlan: 2 })
       .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
-    port: RenixPort.A,
+    port: StreamPort.A,
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -115,7 +115,7 @@ test("配置MPLS VPLS (两设备)", async () => {
       .setEthernet({ dst: "1.1.1", src: "2.2.2" })
       .setVLAN({ vlan: 2 })
       .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
-    port: RenixPort.B,
+    port: StreamPort.B,
   });
 
   testHelper.CleanConfigDutA([

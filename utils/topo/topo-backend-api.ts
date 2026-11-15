@@ -1,5 +1,5 @@
 import axios from "axios";
-import { TopoBackendConfig } from "../comm/config";
+import { TopoBackendConfig } from "../config/topo";
 
 export interface TopoLink {
   id: number;

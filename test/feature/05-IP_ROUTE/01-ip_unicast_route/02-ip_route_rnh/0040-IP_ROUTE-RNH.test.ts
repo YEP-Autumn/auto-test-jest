@@ -1,8 +1,8 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { DeviceARouteMac, TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { DeviceARouteMac, TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -66,9 +66,9 @@ test("测试 VRF 前缀和 VRF 下一跳静态路由配置recursive-lookup host-
   );
 
   /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -87,7 +87,7 @@ test("测试 VRF 前缀和 VRF 下一跳静态路由配置recursive-lookup host-
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",
@@ -101,9 +101,9 @@ test("测试 VRF 前缀和 VRF 下一跳静态路由配置recursive-lookup host-
   });
 
   /** 打流验证: 11.11.11.0/24路由inactive(recursive-lookup host-route未生效), RenixB不应收到报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -122,7 +122,7 @@ test("测试 VRF 前缀和 VRF 下一跳静态路由配置recursive-lookup host-
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",
@@ -136,9 +136,9 @@ test("测试 VRF 前缀和 VRF 下一跳静态路由配置recursive-lookup host-
   });
 
   /** 打流验证: 12.12.12.0/24路由生效(recursive-lookup host-route生效), RenixB应收到对应报文 */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -157,7 +157,7 @@ test("测试 VRF 前缀和 VRF 下一跳静态路由配置recursive-lookup host-
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:02:00:02:01:00",

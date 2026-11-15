@@ -1,12 +1,12 @@
 import { Port } from "@/utils";
 import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
 import {
   DeviceARouteMac,
   DeviceBRouteMac,
   TestHelper,
-} from "@/utils/test-helper";
+} from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -82,9 +82,9 @@ test("测试静态路由", async () => {
   testHelper.ExecRetMatchDutA("ping 2.2.2.1", " 0% packet loss");
 
   /** 打流验证: 命中静态路由的报文应从 DUTB PortD 转发到 RenixB */
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: DeviceARouteMac,
@@ -103,7 +103,7 @@ test("测试静态路由", async () => {
     },
   });
   testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:03:00:03:00:03",

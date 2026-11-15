@@ -4,9 +4,9 @@ import {
   ModifierMode,
   TransmitMode,
 } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { TestHelper } from "@/utils/test-helper";
+import { StreamPort } from "@/utils/testing";
+import { PacketBuilder } from "@/utils/testing";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 let testHelper: TestHelper;
@@ -215,14 +215,14 @@ test("删除bgp evpn地址族重新配置后，本地evpn type 2/3路由丢失�
     new RegExp("10.*?10.1.1.1 *?10.3.3.3"),
   );
 
-  testHelper.startCapture(RenixPort.B);
+  testHelper.startCapture(StreamPort.B);
 
   testHelper.addPktSender({
     packet: new PacketBuilder()
       .setEthernet({ dst: "1.1.1", src: "2.2.2" })
       .setVLAN({ vlan: 10 })
       .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
-    port: RenixPort.A,
+    port: StreamPort.A,
     transmit_param: {
       mode: TransmitMode.STEP,
       param: {
@@ -244,7 +244,7 @@ test("删除bgp evpn地址族重新配置后，本地evpn type 2/3路由丢失�
     packet: new PacketBuilder()
       .setEthernet({ dst: "1.1.1" })
       .setIPv4({ dst: "1.1.1.1", src: "2.2.2.2" }),
-    port: RenixPort.B,
+    port: StreamPort.B,
   });
 
   testHelper.ReadyCheckDutB("show mac address-table", "0003.0003.0003");

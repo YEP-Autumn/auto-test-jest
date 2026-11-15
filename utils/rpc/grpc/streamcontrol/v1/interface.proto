@@ -307,6 +307,7 @@ message RouteEntry {
   uint32 metric = 6;
   uint32 preference = 7;
   uint32 age_s = 8;
+  AddressFamily family = 9;  // 未指定时由 prefix 文本推断
 }
 
 message RouteListRequest {

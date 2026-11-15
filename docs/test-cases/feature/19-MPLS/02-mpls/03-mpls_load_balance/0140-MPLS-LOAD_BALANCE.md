@@ -37,7 +37,7 @@
 | 设备 profile | `mpls` | 确认特性可用范围 |
 | License / 单板 | 支持MPLS 负载分担相关命令 | 确认功能授权与端口能力 |
 | 端口形态 | 至少 4 个可配置接口 | 确认接口类型与数量 |
-| 测试仪端口 | RenixPort.A / RenixPort.B | 确认流量收发端口可用 |
+| 测试仪端口 | StreamPort.A / StreamPort.B | 确认流量收发端口可用 |
 | 规格 | 表项、实例或邻居数满足用例要求 | 确认数量上限 |
 
 能力不匹配时，用例结果标记为 `Blocked`，记录缺失项；环境具备后补测。规格低于用例要求时，仅执行基线用例，并记录规格差异。
@@ -65,7 +65,7 @@
 | 设备 / 对象 | 端口占位符 | 说明 |
 | --- | --- | --- |
 | DUTA ~ DUTD | `<PortA>`、`<PortB>`、`<PortC>`、`<PortD>` | 被测设备端口，执行前替换为实际接口名 |
-| 测试仪 | `<RenixPortA>`、`<RenixPortB>` | 流量收发端口，按测试仪实际连接配置 |
+| 测试仪 | `<StreamPortA>`、`<StreamPortB>` | 流量收发端口，按测试仪实际连接配置 |
 
 ## 3. 预置条件
 
@@ -81,7 +81,7 @@
 ### 3.2 初始状态
 
 - 设备接口处于默认二层或三层状态；本文档涉及的 VLAN、VRF、协议进程、静态路由、隧道、ACL、QoS 对象均为空。
-- 测试仪端口已连接并可用，收发端口与脚本中的 `RenixPort` 对应。
+- 测试仪端口已连接并可用，收发端口与脚本中的 `StreamPort` 对应。
 - 设备已具备 console、telnet 或 ssh 登录方式，可进入全局配置模式。
 - 脚本中标记为 `test.skip` 的用例不执行；其设计内容保留在第 4 节。
 - 现场保留：默认清理；保留位置：...
@@ -121,8 +121,8 @@
 | 8 | 等待就绪 | DUTB |
 | 9 | 等待就绪 | DUTA |
 | 10 | 等待就绪 | DUTC |
-| 11 | 流量发送 | RenixPort.B |
-| 12 | 流量发送 | RenixPort.B |
+| 11 | 流量发送 | StreamPort.B |
+| 12 | 流量发送 | StreamPort.B |
 | 13 | 自定义校验 | DUTA |
 | 14 | 清理 | DUTA |
 | 15 | 清理 | DUTA |
@@ -251,14 +251,14 @@ end
 - DUTB：轮询 `show ldp session`，回显应匹配正则 `/11.11.4.4.*?OPERATIONAL/`；超时 30 秒。
 - DUTA：轮询 `show ldp vpls`，回显应包含 `Up     ethernet`；超时 60 秒。
 - DUTC：轮询 `show ldp vpls`，回显应包含 `Up     ethernet`；超时 60 秒。
-- 从 `RenixPort.B` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 2，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 600。
+- 从 `StreamPort.B` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 2，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 600。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktSender({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -278,14 +278,14 @@ testHelper.addPktSender({
 
 </details>
 
-- 从 `RenixPort.B` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 2，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 600。
+- 从 `StreamPort.B` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 2，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 600。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktSender({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",

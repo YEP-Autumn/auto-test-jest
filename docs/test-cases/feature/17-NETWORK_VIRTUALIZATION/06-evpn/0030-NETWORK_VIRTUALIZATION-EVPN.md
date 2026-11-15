@@ -36,7 +36,7 @@
 | 设备 profile | `default` | 确认特性可用范围 |
 | License / 单板 | 支持EVPN配置相关命令 | 确认功能授权与端口能力 |
 | 端口形态 | 至少 3 个可配置接口 | 确认接口类型与数量 |
-| 测试仪端口 | RenixPort.A / RenixPort.B | 确认流量收发端口可用 |
+| 测试仪端口 | StreamPort.A / StreamPort.B | 确认流量收发端口可用 |
 | 规格 | 表项、实例或邻居数满足用例要求 | 确认数量上限 |
 
 能力不匹配时，用例结果标记为 `Blocked`，记录缺失项；环境具备后补测。规格低于用例要求时，仅执行基线用例，并记录规格差异。
@@ -78,7 +78,7 @@
 ### 3.2 初始状态
 
 - 设备接口处于默认二层或三层状态；本文档涉及的 VLAN、VRF、协议进程、静态路由、隧道、ACL、QoS 对象均为空。
-- 测试仪端口已连接并可用，收发端口与脚本中的 `RenixPort` 对应。
+- 测试仪端口已连接并可用，收发端口与脚本中的 `StreamPort` 对应。
 - 设备已具备 console、telnet 或 ssh 登录方式，可进入全局配置模式。
 - 现场保留：默认清理；保留位置：...
 
@@ -114,9 +114,9 @@
 | 5 | 固定等待 | — |
 | 6 | 等待就绪 | DUTA |
 | 7 | 等待就绪 | DUTA |
-| 8 | 抓包 / 停流 | RenixPort.B |
-| 9 | 流量发送 | RenixPort.A |
-| 10 | 流量校验 | RenixPort.B |
+| 8 | 抓包 / 停流 | StreamPort.B |
+| 9 | 流量发送 | StreamPort.A |
+| 10 | 流量校验 | StreamPort.B |
 | 11 | 清理 | DUTA |
 | 12 | 清理 | DUTB |
 | 13 | 清理 | DUTC |
@@ -311,8 +311,8 @@ clear bgp *
 - 固定等待 10 秒；等待依据见脚本注释。
 - DUTA：轮询 `show overlay`，回显应匹配正则 `/10.*?10.2.2.2/`；超时 30 秒。
 - DUTA：轮询 `show overlay`，回显应匹配正则 `/10.*?10.3.3.3/`；超时 30 秒。
-- 在 `RenixPort.B` 启动抓包。
-- 从 `RenixPort.A` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:00:44:55:77`，VLAN 10，目的 IP `10.10.10.100`，发送模式为 `STEP`，步数为 10。
+- 在 `StreamPort.B` 启动抓包。
+- 从 `StreamPort.A` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:00:44:55:77`，VLAN 10，目的 IP `10.10.10.100`，发送模式为 `STEP`，步数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
@@ -330,7 +330,7 @@ testHelper.addPktSender({
         src: "100.100.100.1",
         dst: "10.10.10.100",
       }),
-    port: RenixPort.A,
+    port: StreamPort.A,
     transmit_param: {
       mode: TransmitMode.STEP,
       param: { step_count: 10 },
@@ -340,14 +340,14 @@ testHelper.addPktSender({
 
 </details>
 
-- 在 `RenixPort.B` 校验报文，报文层包括 Ethernet、IPv4，目的 MAC `00:00:00:44:55:77`，目的 IP `10.10.10.100`，期望计数为 10。
+- 在 `StreamPort.B` 校验报文，报文层包括 Ethernet、IPv4，目的 MAC `00:00:00:44:55:77`，目的 IP `10.10.10.100`，期望计数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:00:44:55:77",

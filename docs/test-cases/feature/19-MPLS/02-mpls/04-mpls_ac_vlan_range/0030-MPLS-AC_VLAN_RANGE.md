@@ -36,7 +36,7 @@
 | 设备 profile | `mpls` | 确认特性可用范围 |
 | License / 单板 | 支持AC VLAN 范围相关命令 | 确认功能授权与端口能力 |
 | 端口形态 | 至少 3 个可配置接口 | 确认接口类型与数量 |
-| 测试仪端口 | RenixPort.A / RenixPort.B / RenixPort.C | 确认流量收发端口可用 |
+| 测试仪端口 | StreamPort.A / StreamPort.B / StreamPort.C | 确认流量收发端口可用 |
 | 规格 | 表项、实例或邻居数满足用例要求 | 确认数量上限 |
 
 能力不匹配时，用例结果标记为 `Blocked`，记录缺失项；环境具备后补测。规格低于用例要求时，仅执行基线用例，并记录规格差异。
@@ -66,7 +66,7 @@
 | 设备 / 对象 | 端口占位符 | 说明 |
 | --- | --- | --- |
 | DUTA ~ DUTD | `<PortA>`、`<PortB>`、`<PortD>` | 被测设备端口，执行前替换为实际接口名 |
-| 测试仪 | `<RenixPortA>`、`<RenixPortB>`、`<RenixPortC>` | 流量收发端口，按测试仪实际连接配置 |
+| 测试仪 | `<StreamPortA>`、`<StreamPortB>`、`<StreamPortC>` | 流量收发端口，按测试仪实际连接配置 |
 
 ## 3. 预置条件
 
@@ -83,7 +83,7 @@
 ### 3.2 初始状态
 
 - 设备接口处于默认二层或三层状态；本文档涉及的 VLAN、VRF、协议进程、静态路由、隧道、ACL、QoS 对象均为空。
-- 测试仪端口已连接并可用，收发端口与脚本中的 `RenixPort` 对应。
+- 测试仪端口已连接并可用，收发端口与脚本中的 `StreamPort` 对应。
 - 设备已具备 console、telnet 或 ssh 登录方式，可进入全局配置模式。
 - 现场保留：默认清理；保留位置：...
 
@@ -124,21 +124,21 @@
 | 10 | 等待就绪 | DUTA |
 | 11 | 等待就绪 | DUTC |
 | 12 | 等待就绪 | DUTC |
-| 13 | 抓包 / 停流 | RenixPort.B |
-| 14 | 流量发送 | RenixPort.A |
-| 15 | 流量校验 | RenixPort.B |
-| 16 | 抓包 / 停流 | RenixPort.C |
-| 17 | 流量发送 | RenixPort.A |
-| 18 | 流量校验 | RenixPort.C |
-| 19 | 抓包 / 停流 | RenixPort.C |
-| 20 | 流量发送 | RenixPort.A |
-| 21 | 流量校验 | RenixPort.C |
-| 22 | 抓包 / 停流 | RenixPort.A |
-| 23 | 流量发送 | RenixPort.C |
-| 24 | 流量校验 | RenixPort.A |
-| 25 | 抓包 / 停流 | RenixPort.A |
-| 26 | 流量发送 | RenixPort.C |
-| 27 | 流量校验 | RenixPort.A |
+| 13 | 抓包 / 停流 | StreamPort.B |
+| 14 | 流量发送 | StreamPort.A |
+| 15 | 流量校验 | StreamPort.B |
+| 16 | 抓包 / 停流 | StreamPort.C |
+| 17 | 流量发送 | StreamPort.A |
+| 18 | 流量校验 | StreamPort.C |
+| 19 | 抓包 / 停流 | StreamPort.C |
+| 20 | 流量发送 | StreamPort.A |
+| 21 | 流量校验 | StreamPort.C |
+| 22 | 抓包 / 停流 | StreamPort.A |
+| 23 | 流量发送 | StreamPort.C |
+| 24 | 流量校验 | StreamPort.A |
+| 25 | 抓包 / 停流 | StreamPort.A |
+| 26 | 流量发送 | StreamPort.C |
+| 27 | 流量校验 | StreamPort.A |
 | 28 | 清理 | DUTA |
 | 29 | 清理 | DUTB |
 | 30 | 清理 | DUTC |
@@ -270,15 +270,15 @@ end
 - DUTA：轮询 `show ldp session`，回显应匹配正则 `/11.11.4.4.*?OPERATIONAL/`；超时 45 秒。
 - DUTC：轮询 `show ldp session`，回显应匹配正则 `/11.11.1.1.*?OPERATIONAL/`；超时 45 秒。
 - DUTC：轮询 `show ldp session`，回显应匹配正则 `/11.11.2.2.*?OPERATIONAL/`；超时 45 秒。
-- 在 `RenixPort.B` 启动抓包。
-- 从 `RenixPort.A` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 33，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 10。
+- 在 `StreamPort.B` 启动抓包。
+- 从 `StreamPort.A` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 33，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -298,14 +298,14 @@ testHelper.addPktSender({
 
 </details>
 
-- 在 `RenixPort.B` 校验报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 2，目的 IP `2.2.2.2`，期望计数为 10。
+- 在 `StreamPort.B` 校验报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 2，目的 IP `2.2.2.2`，期望计数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -323,15 +323,15 @@ testHelper.addPktChecker({
 
 </details>
 
-- 在 `RenixPort.C` 启动抓包。
-- 从 `RenixPort.A` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 123，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 10。
+- 在 `StreamPort.C` 启动抓包。
+- 从 `StreamPort.A` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 123，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -351,14 +351,14 @@ testHelper.addPktSender({
 
 </details>
 
-- 在 `RenixPort.C` 校验报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 333，目的 IP `2.2.2.2`，期望计数为 10。
+- 在 `StreamPort.C` 校验报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 333，目的 IP `2.2.2.2`，期望计数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktChecker({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -376,15 +376,15 @@ testHelper.addPktChecker({
 
 </details>
 
-- 在 `RenixPort.C` 启动抓包。
-- 从 `RenixPort.A` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 200，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 10。
+- 在 `StreamPort.C` 启动抓包。
+- 从 `StreamPort.A` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 200，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -405,14 +405,14 @@ testHelper.addPktSender({
 
 </details>
 
-- 在 `RenixPort.C` 校验报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 444，目的 IP `2.2.2.2`，期望计数为 10。
+- 在 `StreamPort.C` 校验报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 444，目的 IP `2.2.2.2`，期望计数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktChecker({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -431,15 +431,15 @@ testHelper.addPktChecker({
 
 </details>
 
-- 在 `RenixPort.A` 启动抓包。
-- 从 `RenixPort.C` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 333，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 10。
+- 在 `StreamPort.A` 启动抓包。
+- 从 `StreamPort.C` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 333，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktSender({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -459,14 +459,14 @@ testHelper.addPktSender({
 
 </details>
 
-- 在 `RenixPort.A` 校验报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 123，目的 IP `2.2.2.2`，期望计数为 10。
+- 在 `StreamPort.A` 校验报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 123，目的 IP `2.2.2.2`，期望计数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktChecker({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -484,15 +484,15 @@ testHelper.addPktChecker({
 
 </details>
 
-- 在 `RenixPort.A` 启动抓包。
-- 从 `RenixPort.C` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 444，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 10。
+- 在 `StreamPort.A` 启动抓包。
+- 从 `StreamPort.C` 发送报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 444，目的 IP `2.2.2.2`，发送模式为 `STEP`，步数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktSender({
-    port: RenixPort.C,
+    port: StreamPort.C,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",
@@ -513,14 +513,14 @@ testHelper.addPktSender({
 
 </details>
 
-- 在 `RenixPort.A` 校验报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 200，目的 IP `2.2.2.2`，期望计数为 10。
+- 在 `StreamPort.A` 校验报文，报文层包括 Ethernet、VLAN、IPv4，目的 MAC `00:00:01:00:00:ee`，VLAN 200，目的 IP `2.2.2.2`，期望计数为 10。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktChecker({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({
         dst: "00:00:01:00:00:ee",

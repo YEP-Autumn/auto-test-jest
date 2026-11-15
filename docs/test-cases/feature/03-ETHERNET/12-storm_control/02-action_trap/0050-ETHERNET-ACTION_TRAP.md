@@ -34,7 +34,7 @@
 | 设备 profile | `default` | 确认特性可用范围 |
 | License / 单板 | 支持trap 动作相关命令 | 确认功能授权与端口能力 |
 | 端口形态 | 至少 2 个可配置接口 | 确认接口类型与数量 |
-| 测试仪端口 | RenixPort.A / RenixPort.B | 确认流量收发端口可用 |
+| 测试仪端口 | StreamPort.A / StreamPort.B | 确认流量收发端口可用 |
 | 规格 | 表项、实例或邻居数满足用例要求 | 确认数量上限 |
 
 能力不匹配时，用例结果标记为 `Blocked`，记录缺失项；环境具备后补测。规格低于用例要求时，仅执行基线用例，并记录规格差异。
@@ -58,7 +58,7 @@
 | 设备 / 对象 | 端口占位符 | 说明 |
 | --- | --- | --- |
 | DUTA ~ DUTD | `<PortA>`、`<PortB>` | 被测设备端口，执行前替换为实际接口名 |
-| 测试仪 | `<RenixPortA>`、`<RenixPortB>` | 流量收发端口，按测试仪实际连接配置 |
+| 测试仪 | `<StreamPortA>`、`<StreamPortB>` | 流量收发端口，按测试仪实际连接配置 |
 
 ## 3. 预置条件
 
@@ -75,7 +75,7 @@
 ### 3.2 初始状态
 
 - 设备接口处于默认二层或三层状态；本文档涉及的 VLAN、VRF、协议进程、静态路由、隧道、ACL、QoS 对象均为空。
-- 测试仪端口已连接并可用，收发端口与脚本中的 `RenixPort` 对应。
+- 测试仪端口已连接并可用，收发端口与脚本中的 `StreamPort` 对应。
 - 设备已具备 console、telnet 或 ssh 登录方式，可进入全局配置模式。
 - 现场保留：默认清理；保留位置：...
 
@@ -107,11 +107,11 @@
 | 1 | 配置 | DUTA |
 | 2 | 等待就绪 | DUTA |
 | 3 | 等待就绪 | DUTA |
-| 4 | 抓包 / 停流 | RenixPort.B |
-| 5 | 流量发送 | RenixPort.A |
-| 6 | 流量校验 | RenixPort.B |
-| 7 | 流量校验 | RenixPort.B |
-| 8 | 流量校验 | RenixPort.B |
+| 4 | 抓包 / 停流 | StreamPort.B |
+| 5 | 流量发送 | StreamPort.A |
+| 6 | 流量校验 | StreamPort.B |
+| 7 | 流量校验 | StreamPort.B |
+| 8 | 流量校验 | StreamPort.B |
 | 9 | 清理 | DUTA |
 
 **配置**
@@ -143,15 +143,15 @@ end
 
 - DUTA：轮询 `show interface <PortA>`，回显应包含 `Interface current state: UP`；超时 30 秒。
 - DUTA：轮询 `show interface <PortB>`，回显应包含 `Interface current state: UP`；超时 30 秒。
-- 在 `RenixPort.B` 启动抓包。
-- 从 `RenixPort.A` 发送报文，报文层包括 Ethernet、IPv4，目的 MAC `ff:ff:ff:ff:ff:ff`，目的 IP `255.255.255.255`，发送模式为 `BURST`，步数为 1，突发计数为 1000000。
+- 在 `StreamPort.B` 启动抓包。
+- 从 `StreamPort.A` 发送报文，报文层包括 Ethernet、IPv4，目的 MAC `ff:ff:ff:ff:ff:ff`，目的 IP `255.255.255.255`，发送模式为 `BURST`，步数为 1，突发计数为 1000000。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({ src: "0.0.1", dst: "ff:ff:ff:ff:ff:ff" })
       .setIPv4({ src: "1.1.1.1", dst: "255.255.255.255" }),
@@ -174,14 +174,14 @@ testHelper.addPktSender({
 
 - 当前版本社区 Trap 目标默认使用 v2c，不配置 `version v1` 时不会发送 v1 Trap；本文档仅校验 v2c 和 v3。
 
-- 在 `RenixPort.B` 校验报文，报文层包括 SNMP，SNMP 版本为 1，OID 包括 `1.3.6.1.2.1.1.3.0`、`1.3.6.1.6.3.1.1.4.1.0`，其值的企业号部分使用正则 `^1\.3\.6\.1\.4\.1\.\d+\.5\.2\.1$` 匹配，期望计数为 1。
+- 在 `StreamPort.B` 校验报文，报文层包括 SNMP，SNMP 版本为 1，OID 包括 `1.3.6.1.2.1.1.3.0`、`1.3.6.1.6.3.1.1.4.1.0`，其值的企业号部分使用正则 `^1\.3\.6\.1\.4\.1\.\d+\.5\.2\.1$` 匹配，期望计数为 1。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder().setSNMP({
       version: 1,
       varbinds: [
@@ -198,14 +198,14 @@ testHelper.addPktChecker({
 
 </details>
 
-- 在 `RenixPort.B` 校验报文，报文层包括 SNMP，SNMP 版本为 3，OID 包括 `1.3.6.1.2.1.1.3.0`、`1.3.6.1.6.3.1.1.4.1.0`，其值的企业号部分使用正则 `^1\.3\.6\.1\.4\.1\.\d+\.5\.2\.1$` 匹配，期望计数为 1。
+- 在 `StreamPort.B` 校验报文，报文层包括 SNMP，SNMP 版本为 3，OID 包括 `1.3.6.1.2.1.1.3.0`、`1.3.6.1.6.3.1.1.4.1.0`，其值的企业号部分使用正则 `^1\.3\.6\.1\.4\.1\.\d+\.5\.2\.1$` 匹配，期望计数为 1。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder().setSNMP({
       version: 3,
       varbinds: [

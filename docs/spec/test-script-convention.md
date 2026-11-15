@@ -29,7 +29,7 @@ node script/check-test-names.js   # 或 npm run check:test-names
 
 ```ts
 import { Port } from "@/utils";
-import { TestHelper } from "@/utils/test-helper";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 // 1) 超时：设备交互耗时较长，应显式放宽（仅 CLI 场景常用 30 分钟）
@@ -124,7 +124,8 @@ test("配置 LDP 后邻居进入 OPERATIONAL", async () => {
 
 - `Port.A/B/C/D/E/F`（值形如 `<PortA>`）是**端口占位符**，DUT 最多支持 6 个端口；命令字符串里直接写
   `` `interface ${Port.A}` ``，执行前会按当前 DUT 的 `portList` 替换为真实端口名。
-- 流量收发端口使用 `RenixPort.A/B/C/D`（`StreamPort`），与 DUT 端口无关。
+- 流量收发端口使用 `StreamPort.A`-`J`，只填逻辑端口；实际后端/地址由
+  `Config.streamPorts` 的数组顺序决定。`StreamPort` 暂时作为兼容别名保留。
 
 ---
 
@@ -199,14 +200,12 @@ testHelper.ReadyCheckDutB(
 **`addPktChecker` 会自动执行 `startCapture`/`stopCapture`**，通常由该动作完成抓包起止。
 
 ```ts
-import { TransmitMode } from "@/utils/comm/components";
-import { RenixPort } from "@/utils/comm/config";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
+import { PacketBuilder, StreamPort, TransmitMode } from "@/utils/testing";
 
-testHelper.startCapture(RenixPort.B);
+testHelper.startCapture(StreamPort.B);
 
 testHelper.addPktSender({
-  port: RenixPort.A,
+  port: StreamPort.A,
   packet: new PacketBuilder()
     .setEthernet({ dst: "00:00:01:00:00:ee", src: "00:00:a0:0a:00:66", type: 0x8100 })
     .setVLAN({ vlan: 10, type: 0x0800 })
@@ -215,7 +214,7 @@ testHelper.addPktSender({
 });
 
 testHelper.addPktChecker({
-  port: RenixPort.B,
+  port: StreamPort.B,
   packet: new PacketBuilder()
     .setEthernet({ dst: "00:00:01:00:00:ee", src: "00:00:a0:0a:00:66", type: 0x8100 })
     .setVLAN({ vlan: 200, type: 0x0800 })
@@ -244,12 +243,12 @@ testHelper.addPktChecker({
 - 需要自定义时用声明式 DSL：
 
 ```ts
-import { dut, renix } from "@/utils/topo/endpoints";
+import { dut, traffic } from "@/utils/topo/endpoints";
 import { link, topo } from "@/utils/topo/link-constraint";
 
 new TestHelper(
   topo(
-    link(dut("A", "D"), renix("A")),
+    link(dut("A", "D"), traffic("A")),
     link(dut("A", "A"), dut("B", "A"), { vlan: 100 }),
   ),
 ).init();
@@ -317,7 +316,7 @@ describe("VLAN trunk translate 接口模式", () => {
 ### 9.1 最小示例
 
 ```ts
-import { TestHelper } from "@/utils/test-helper";
+import { TestHelper } from "@/utils/testing";
 import { LinkConstraint } from "@/utils/topo/link-constraint";
 
 jest.setTimeout(1000 * 60 * 10);

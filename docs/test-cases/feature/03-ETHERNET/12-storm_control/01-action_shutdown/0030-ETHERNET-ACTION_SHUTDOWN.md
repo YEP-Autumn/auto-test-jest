@@ -34,7 +34,7 @@
 | 设备 profile | `default` | 确认特性可用范围 |
 | License / 单板 | 支持shutdown 动作相关命令 | 确认功能授权与端口能力 |
 | 端口形态 | 至少 2 个可配置接口 | 确认接口类型与数量 |
-| 测试仪端口 | RenixPort.A | 确认流量收发端口可用 |
+| 测试仪端口 | StreamPort.A | 确认流量收发端口可用 |
 | 规格 | 表项、实例或邻居数满足用例要求 | 确认数量上限 |
 
 能力不匹配时，用例结果标记为 `Blocked`，记录缺失项；环境具备后补测。规格低于用例要求时，仅执行基线用例，并记录规格差异。
@@ -58,7 +58,7 @@
 | 设备 / 对象 | 端口占位符 | 说明 |
 | --- | --- | --- |
 | DUTA ~ DUTD | `<PortA>` | 被测设备端口，执行前替换为实际接口名 |
-| 测试仪 | `<RenixPortA>` | 流量收发端口，按测试仪实际连接配置 |
+| 测试仪 | `<StreamPortA>` | 流量收发端口，按测试仪实际连接配置 |
 
 ## 3. 预置条件
 
@@ -75,7 +75,7 @@
 ### 3.2 初始状态
 
 - 设备接口处于默认二层或三层状态；本文档涉及的 VLAN、VRF、协议进程、静态路由、隧道、ACL、QoS 对象均为空。
-- 测试仪端口已连接并可用，收发端口与脚本中的 `RenixPort` 对应。
+- 测试仪端口已连接并可用，收发端口与脚本中的 `StreamPort` 对应。
 - 设备已具备 console、telnet 或 ssh 登录方式，可进入全局配置模式。
 - 现场保留：默认清理；保留位置：...
 
@@ -106,9 +106,9 @@
 | --- | --- | --- |
 | 1 | 配置 | DUTA |
 | 2 | 等待就绪 | DUTA |
-| 3 | 流量发送 | RenixPort.A |
+| 3 | 流量发送 | StreamPort.A |
 | 4 | 观测 | DUTA |
-| 5 | 流量发送 | RenixPort.A |
+| 5 | 流量发送 | StreamPort.A |
 | 6 | 观测 | DUTA |
 | 7 | 清理 | DUTA |
 
@@ -127,14 +127,14 @@ end
 **触发与等待**
 
 - DUTA：轮询 `show interface <PortA>`，回显应包含 `Interface current state: UP`；超时 30 秒。
-- 从 `RenixPort.A` 发送报文，报文层包括 Ethernet、IPv4，目的 MAC `0.0.2`，目的 IP `2.2.2.2`，发送模式为 `BURST`，步数为 1，突发计数为 1000000。
+- 从 `StreamPort.A` 发送报文，报文层包括 Ethernet、IPv4，目的 MAC `0.0.2`，目的 IP `2.2.2.2`，发送模式为 `BURST`，步数为 1，突发计数为 1000000。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({ src: "0.0.1", dst: "0.0.2" })
       .setIPv4({ src: "1.1.1.1", dst: "2.2.2.2" }),
@@ -155,14 +155,14 @@ testHelper.addPktSender({
 
 </details>
 
-- 从 `RenixPort.A` 发送报文，报文层包括 Ethernet、IPv4，目的 MAC `ff:ff:ff:ff:ff:ff`，目的 IP `255.255.255.255`，发送模式为 `BURST`，步数为 1，突发计数为 1000000。
+- 从 `StreamPort.A` 发送报文，报文层包括 Ethernet、IPv4，目的 MAC `ff:ff:ff:ff:ff:ff`，目的 IP `255.255.255.255`，发送模式为 `BURST`，步数为 1，突发计数为 1000000。
 
 <details>
 <summary>脚本片段（仅追溯）</summary>
 
 ```ts
 testHelper.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({ src: "0.0.1", dst: "ff:ff:ff:ff:ff:ff" })
       .setIPv4({ src: "1.1.1.1", dst: "255.255.255.255" }),

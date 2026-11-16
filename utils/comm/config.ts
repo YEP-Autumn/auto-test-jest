@@ -1,9 +1,6 @@
 import { StreamPort } from "../traffic/model";
 import { streamPorts } from "../config/traffic";
-import {
-  StreamBackendConfig,
-  StreamControlConfig,
-} from "../config/backends";
+import { StreamBackendConfig, StreamControlConfig } from "../config/backends";
 import { TopoBackendConfig } from "../config/topo";
 
 export { StreamPort };
@@ -278,13 +275,13 @@ export class Config {
     this.dut_e530_107,
     this.dut_e530_108,
     this.dut_e530_109,
-    this.dut_e361_130,
-    this.dut_e361_131,
-    this.dut_e730_140,
-    this.dut_e680_120,
     this.dut_e670_112,
     this.dut_e670_113,
     this.dut_e670_114,
     this.dut_e670_115,
+    this.dut_e361_130,
+    this.dut_e361_131,
+    this.dut_e680_120,
+    this.dut_e730_140,
   ];
 }

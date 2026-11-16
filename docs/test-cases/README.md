@@ -16,9 +16,9 @@
 | 模块 | 目录索引 | 脚本数量 | 用例文档数量 |
 | --- | --- | --- | --- |
 | 02-BASIC 基础配置 | [`feature/02-BASIC/README.md`](feature/02-BASIC/README.md) | 0 | 0 |
-| 03-ETHERNET 以太网 | [`feature/03-ETHERNET/README.md`](feature/03-ETHERNET/README.md) | 64 | 64 |
+| 03-ETHERNET 以太网 | [`feature/03-ETHERNET/README.md`](feature/03-ETHERNET/README.md) | 66 | 66 |
 | 04-IP_SERVICE IP业务 | [`feature/04-IP_SERVICE/README.md`](feature/04-IP_SERVICE/README.md) | 0 | 0 |
-| 05-IP_ROUTE IP路由 | [`feature/05-IP_ROUTE/README.md`](feature/05-IP_ROUTE/README.md) | 55 | 55 |
+| 05-IP_ROUTE IP路由 | [`feature/05-IP_ROUTE/README.md`](feature/05-IP_ROUTE/README.md) | 62 | 62 |
 | 06-MULTICAST 组播 | [`feature/06-MULTICAST/README.md`](feature/06-MULTICAST/README.md) | 0 | 0 |
 | 07-SECURITY 安全性 | [`feature/07-SECURITY/README.md`](feature/07-SECURITY/README.md) | 12 | 12 |
 | 08-DEVICE_MANAGEMENT 设备管理 | [`feature/08-DEVICE_MANAGEMENT/README.md`](feature/08-DEVICE_MANAGEMENT/README.md) | 0 | 0 |

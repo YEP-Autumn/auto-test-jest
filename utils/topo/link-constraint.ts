@@ -89,7 +89,10 @@ export class LinkConstraint {
    */
   static get one_device_topo_links_type_1(): TopoLinks {
     return cached("one_device_topo_links_type_1", () =>
-      topo(link(traffic("A"), dut("A", "A")), link(dut("A", "B"), traffic("B"))),
+      topo(
+        link(traffic("A"), dut("A", "A")),
+        link(dut("A", "B"), traffic("B")),
+      ),
     );
   }
 
@@ -417,6 +420,366 @@ export class LinkConstraint {
         link(dut("B", "B"), dut("C", "B")),
         link(dut("A", "C"), dut("D", "A")),
         link(dut("B", "C"), dut("D", "B")),
+      ),
+    );
+  }
+
+  /**
+   * 五设备拓扑：
+   *
+   *   A-B: DUTA PortA <=> DUTB PortA
+   *   B-D: DUTB PortB <=> DUTD PortA
+   *   A-C: DUTA PortB <=> DUTC PortA
+   *   C-D: DUTC PortB <=> DUTD PortB
+   *   C-E: DUTC PortC <=> DUTE PortA
+   *
+   *        DUTA --------- DUTB
+   *          |              |
+   *        DUTC --------- DUTD
+   *          |
+   *        DUTE
+   *
+   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
+   *
+   *          DUTB          DUTC          DUTD          DUTE
+   *   DUTA  PortA-PortA   PortB-PortA   —             —
+   *   DUTB                —             PortB-PortA   —
+   *   DUTC                              PortB-PortB   PortC-PortA
+   *   DUTD                                            —
+   */
+  static get five_devices_topo_links_type_1(): TopoLinks {
+    return cached("five_devices_topo_links_type_1", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("B", "B"), dut("D", "A")),
+        link(dut("A", "B"), dut("C", "A")),
+        link(dut("C", "B"), dut("D", "B")),
+        link(dut("C", "C"), dut("E", "A")),
+      ),
+    );
+  }
+
+  /**
+   * 六设备拓扑：
+   *
+   *   A-B: DUTA PortA <=> DUTB PortA
+   *   A-C: DUTA PortB <=> DUTC PortA
+   *   A-D: DUTA PortC <=> DUTD PortA
+   *   B-C: DUTB PortB <=> DUTC PortB
+   *   B-D: DUTB PortC <=> DUTD PortB
+   *   C-D: DUTC PortC <=> DUTD PortC
+   *   C-E: DUTC PortD <=> DUTE PortA
+   *   C-F: DUTC PortE <=> DUTF PortA
+   *   D-E: DUTD PortD <=> DUTE PortB
+   *   D-F: DUTD PortE <=> DUTF PortB
+   *
+   *        DUTA --------- DUTB
+   *          | \        / |
+   *          |   \    /   |
+   *          |     \/     |
+   *          |     /\     |
+   *          |   /    \   |
+   *          | /        \ |
+   *        DUTC --------- DUTD
+   *          | \        / |
+   *          |   \    /   |
+   *          |     \/     |
+   *          |     /\     |
+   *          |   /    \   |
+   *          | /        \ |
+   *        DUTE --------- DUTF
+   */
+  static get six_devices_topo_links_type_4(): TopoLinks {
+    return cached("six_devices_topo_links_type_4", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("A", "B"), dut("C", "A")),
+        link(dut("A", "C"), dut("D", "A")),
+        link(dut("B", "B"), dut("C", "B")),
+        link(dut("B", "C"), dut("D", "B")),
+        link(dut("C", "C"), dut("D", "C")),
+        link(dut("C", "D"), dut("E", "A")),
+        link(dut("C", "E"), dut("F", "A")),
+        link(dut("D", "D"), dut("E", "B")),
+        link(dut("D", "E"), dut("F", "B")),
+      ),
+    );
+  }
+
+  /**
+   * 七设备拓扑：
+   *
+   *   A-B: DUTA PortA <=> DUTB PortA
+   *   A-D: DUTA PortB <=> DUTD PortA
+   *   A-E: DUTA PortC <=> DUTE PortA
+   *   B-C: DUTB PortB <=> DUTC PortA
+   *   C-G: DUTC PortB <=> DUTG PortA
+   *   D-E: DUTD PortB <=> DUTE PortB
+   *   E-F: DUTE PortC <=> DUTF PortA
+   *   F-G: DUTF PortB <=> DUTG PortB
+   *
+   *        DUTB --------- DUTC --------------- DUTG
+   *          |                                 /
+   *        DUTA -------------- DUTE --- DUTF -/
+   *          \                 |
+   *           \                |
+   *          DUTD --------------+
+   *
+   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
+   *
+   *          DUTB          DUTC          DUTD          DUTE          DUTF          DUTG
+   *   DUTA  PortA-PortA   —             PortB-PortA   PortC-PortA   —             —
+   *   DUTB                PortB-PortA   —             —             —             —
+   *   DUTC                              —             —             —             PortB-PortA
+   *   DUTD                                            PortB-PortB   —             —
+   *   DUTE                                                          PortC-PortA   —
+   *   DUTF                                                                        PortB-PortB
+   */
+  static get seven_devices_topo_links_type_1(): TopoLinks {
+    return cached("seven_devices_topo_links_type_1", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("A", "B"), dut("D", "A")),
+        link(dut("A", "C"), dut("E", "A")),
+        link(dut("B", "B"), dut("C", "A")),
+        link(dut("C", "B"), dut("G", "A")),
+        link(dut("D", "B"), dut("E", "B")),
+        link(dut("E", "C"), dut("F", "A")),
+        link(dut("F", "B"), dut("G", "B")),
+      ),
+    );
+  }
+
+  /**
+   * 九设备拓扑：
+   *
+   *   A-B: DUTA PortA <=> DUTB PortA
+   *   A-D: DUTA PortB <=> DUTD PortA
+   *   A-F: DUTA PortC <=> DUTF PortA
+   *   B-C: DUTB PortB <=> DUTC PortA
+   *   C-G: DUTC PortB <=> DUTG PortA
+   *   D-H: DUTD PortB <=> DUTH PortA
+   *   D-I: DUTD PortC <=> DUTI PortA
+   *   E-G: DUTE PortA <=> DUTG PortB
+   *   E-H: DUTE PortB <=> DUTH PortB
+   *   F-H: DUTF PortB <=> DUTH PortC
+   *
+   *                          DUTE
+   *                         /    \
+   *                      DUTG    DUTH ------ DUTF
+   *                       |       |          /
+   *                      DUTB     |         /
+   *                       |       |        /
+   *                   DUTA ------ DUTD ----
+   *                       \       |
+   *                        \    DUTI
+   */
+  static get nine_devices_topo_links_type_1(): TopoLinks {
+    return cached("nine_devices_topo_links_type_1", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("A", "B"), dut("D", "A")),
+        link(dut("A", "C"), dut("F", "A")),
+        link(dut("B", "B"), dut("C", "A")),
+        link(dut("C", "B"), dut("G", "A")),
+        link(dut("D", "B"), dut("H", "A")),
+        link(dut("D", "C"), dut("L", "A")),
+        link(dut("E", "A"), dut("G", "B")),
+        link(dut("E", "B"), dut("H", "B")),
+        link(dut("F", "B"), dut("H", "C")),
+      ),
+    );
+  }
+
+  /**
+   * 九设备拓扑：
+   *
+   *   A-B: DUTA PortA <=> DUTB PortA
+   *   A-C: DUTA PortB <=> DUTC PortA
+   *   A-D: DUTA PortC <=> DUTD PortA
+   *   B-C: DUTB PortB <=> DUTC PortB
+   *   B-D: DUTB PortC <=> DUTD PortB
+   *   B-E: DUTB PortD <=> DUTE PortA
+   *   B-F: DUTB PortE <=> DUTF PortA
+   *   C-D: DUTC PortC <=> DUTD PortC
+   *   C-G: DUTC PortD <=> DUTG PortA
+   *   C-H: DUTC PortE <=> DUTH PortA
+   *   D-G: DUTD PortD <=> DUTG PortB
+   *   D-H: DUTD PortE <=> DUTH PortB
+   *   E-F: DUTE PortB <=> DUTF PortB
+   *   E-I: DUTE PortC <=> DUTI PortA
+   *   F-I: DUTF PortC <=> DUTI PortB
+   *
+   *                     DUTA --------- DUTB
+   *                    / | \          / | \
+   *                   /  |  \        /  |  \
+   *               DUTC --+-- DUTD  DUTE--+--DUTF
+   *                 | \       / |      \    /
+   *                 |   \   /   |       \  /
+   *               DUTG ---+--- DUTH     DUTI
+   */
+  static get nine_devices_topo_links_type_2(): TopoLinks {
+    return cached("nine_devices_topo_links_type_2", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("A", "B"), dut("C", "A")),
+        link(dut("A", "C"), dut("D", "A")),
+        link(dut("B", "B"), dut("C", "B")),
+        link(dut("B", "C"), dut("D", "B")),
+        link(dut("B", "D"), dut("E", "A")),
+        link(dut("B", "E"), dut("F", "A")),
+        link(dut("C", "C"), dut("D", "C")),
+        link(dut("C", "D"), dut("G", "A")),
+        link(dut("C", "E"), dut("H", "A")),
+        link(dut("D", "D"), dut("G", "B")),
+        link(dut("D", "E"), dut("H", "B")),
+        link(dut("E", "B"), dut("F", "B")),
+        link(dut("E", "C"), dut("L", "A")),
+        link(dut("F", "C"), dut("L", "B")),
+      ),
+    );
+  }
+
+  /**
+   * 九设备拓扑（在 nine_devices_topo_links_type_2 基础上去掉 DUTA-DUTB 直连）：
+   *
+   *   A-C: DUTA PortB <=> DUTC PortA
+   *   A-D: DUTA PortC <=> DUTD PortA
+   *   B-C: DUTB PortB <=> DUTC PortB
+   *   B-D: DUTB PortC <=> DUTD PortB
+   *   B-E: DUTB PortD <=> DUTE PortA
+   *   B-F: DUTB PortE <=> DUTF PortA
+   *   C-D: DUTC PortC <=> DUTD PortC
+   *   C-G: DUTC PortD <=> DUTG PortA
+   *   C-H: DUTC PortE <=> DUTH PortA
+   *   D-G: DUTD PortD <=> DUTG PortB
+   *   D-H: DUTD PortE <=> DUTH PortB
+   *   E-F: DUTE PortB <=> DUTF PortB
+   *   E-I: DUTE PortC <=> DUTI PortA
+   *   F-I: DUTF PortC <=> DUTI PortB
+   *
+   *                     DUTA          DUTB
+   *                    / | \          / | \
+   *                   /  |  \        /  |  \
+   *               DUTC --+-- DUTD  DUTE--+--DUTF
+   *                 | \       / |      \    /
+   *                 |   \   /   |       \  /
+   *               DUTG ---+--- DUTH     DUTI
+   */
+  static get nine_devices_topo_links_type_3(): TopoLinks {
+    return cached("nine_devices_topo_links_type_3", () =>
+      topo(
+        link(dut("A", "B"), dut("C", "A")),
+        link(dut("A", "C"), dut("D", "A")),
+        link(dut("B", "B"), dut("C", "B")),
+        link(dut("B", "C"), dut("D", "B")),
+        link(dut("B", "D"), dut("E", "A")),
+        link(dut("B", "E"), dut("F", "A")),
+        link(dut("C", "C"), dut("D", "C")),
+        link(dut("C", "D"), dut("G", "A")),
+        link(dut("C", "E"), dut("H", "A")),
+        link(dut("D", "D"), dut("G", "B")),
+        link(dut("D", "E"), dut("H", "B")),
+        link(dut("E", "B"), dut("F", "B")),
+        link(dut("E", "C"), dut("L", "A")),
+        link(dut("F", "C"), dut("L", "B")),
+      ),
+    );
+  }
+
+  /**
+   * 九设备拓扑：
+   *
+   *   A-B: DUTA PortA <=> DUTB PortA
+   *   B-C: DUTB PortB <=> DUTC PortA
+   *   C-F: DUTC PortB <=> DUTF PortA
+   *   A-G: DUTA PortB <=> DUTG PortA
+   *   G-H: DUTG PortB <=> DUTH PortA
+   *   H-F: DUTH PortB <=> DUTF PortB
+   *   E-A: DUTE PortA <=> DUTA PortC
+   *   C-D: DUTC PortC <=> DUTD PortA
+   *   D-E: DUTD PortB <=> DUTE PortB
+   *   E-F: DUTE PortC <=> DUTF PortC
+   *   C-E: DUTC PortD <=> DUTE PortD
+   *
+   *   DUTB ---- DUTA ---- DUTG ---- DUTH
+   *               | \               |
+   *               |  \              |
+   *               |   DUTE -------- + ---- DUTF
+   *               |     |  \                 |
+   *             DUTC ---+   \                |
+   *              |  \        \               |
+   *            DUTD  +--------+--------------+
+   *
+   *   示意图仅表示相邻关系，端口对应关系以链路列表为准。
+   */
+  static get nine_devices_topo_links_type_4(): TopoLinks {
+    return cached("nine_devices_topo_links_type_4", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("B", "B"), dut("C", "A")),
+        link(dut("C", "B"), dut("K", "A")),
+        link(dut("A", "B"), dut("G", "A")),
+        link(dut("G", "B"), dut("H", "A")),
+        link(dut("H", "B"), dut("K", "B")),
+        link(dut("E", "A"), dut("A", "C")),
+        link(dut("C", "C"), dut("D", "A")),
+        link(dut("D", "B"), dut("E", "B")),
+        link(dut("E", "C"), dut("K", "C")),
+        link(dut("C", "D"), dut("E", "D")),
+      ),
+    );
+  }
+
+  /**
+   * 十二设备拓扑：
+   *
+   *   A-B: DUTA PortA <=> DUTB PortA
+   *   A-H: DUTA PortB <=> DUTH PortA
+   *   A-I: DUTA PortC <=> DUTI PortA
+   *   B-C: DUTB PortB <=> DUTC PortA
+   *   C-D: DUTC PortB <=> DUTD PortA
+   *   C-I: DUTC PortC <=> DUTI PortB
+   *   C-J: DUTC PortD <=> DUTJ PortA
+   *   D-E: DUTD PortB <=> DUTE PortA
+   *   E-F: DUTE PortB <=> DUTF PortA
+   *   F-H: DUTF PortB <=> DUTH PortB
+   *   F-G: DUTF PortC <=> DUTG PortA
+   *   J-K: DUTJ PortB <=> DUTK PortA
+   *   K-I: DUTK PortB <=> DUTI PortC
+   *   K-L: DUTK PortC <=> DUTL PortB
+   *   L-G: DUTL PortA <=> DUTG PortB
+   *
+   *   DUTD -- DUTE
+   *    |       |
+   *   DUTC -- DUTF -- DUTG
+   *    |  \    |  \    |
+   *   DUTB  DUTJ  DUTH DUTL
+   *    |      |         |
+   *   DUTA -- DUTK -----+
+   *    |       |
+   *   DUTI ----+     （DUTI 同时连接 DUTC）
+   *
+   *   以上示意图仅表示相邻关系，端口对应关系以链路列表和下面的矩阵为准。
+   */
+  static get twelve_devices_topo_links_type_2(): TopoLinks {
+    return cached("twelve_devices_topo_links_type_2", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("A", "B"), dut("H", "A")),
+        link(dut("A", "C"), dut("I", "A")),
+        link(dut("B", "B"), dut("C", "A")),
+        link(dut("C", "B"), dut("D", "A")),
+        link(dut("C", "C"), dut("I", "B")),
+        link(dut("C", "D"), dut("J", "A")),
+        link(dut("D", "B"), dut("E", "A")),
+        link(dut("E", "B"), dut("F", "A")),
+        link(dut("F", "B"), dut("H", "B")),
+        link(dut("F", "C"), dut("G", "A")),
+        link(dut("J", "B"), dut("K", "A")),
+        link(dut("K", "B"), dut("I", "C")),
+        link(dut("K", "C"), dut("L", "B")),
+        link(dut("L", "A"), dut("G", "B")),
       ),
     );
   }

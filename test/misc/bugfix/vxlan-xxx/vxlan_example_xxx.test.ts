@@ -1,6 +1,5 @@
-import { Port } from "@/utils";
-import { DutIdx, TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { DutIdx, LinkConstraint, Port, TestHelper } from "@/utils";
+
 import { exit } from "node:process";
 
 let testHelper: TestHelper;

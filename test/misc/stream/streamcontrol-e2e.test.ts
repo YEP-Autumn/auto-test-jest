@@ -4,16 +4,12 @@ import { BurstGapUnit, TransmitMode } from "@/utils/packet/types";
 import { StreamPort } from "@/utils/testing";
 import type { TrafficSession } from "@/utils/traffic/session";
 
-const enabled =
-  process.env.STREAM_CONTROL_E2E === "true" &&
-  Boolean(process.env.STREAM_CONTROL_HOST);
+// 显式开关仅用于决定是否运行 E2E；连接参数统一在 config/env/local.json。
+const enabled = process.env.STREAM_CONTROL_E2E === "true";
 const describeE2E = enabled ? describe : describe.skip;
 
-// E2E 只关心逻辑端口 A/B；具体后端由统一配置决定。
-if (enabled) {
-  process.env.TRAFFIC_PROVIDER ??= "stream-linux";
-  process.env.STREAM_CONTROL_PORT_MAP ??= "A=eth1,B=eth2";
-}
+// E2E 只关心逻辑端口 A/B；运行前需把 traffic.ports 配成 stream-linux，
+// 并在 traffic.streamControl 中配置可用网关。
 
 const myMac = (frame: any) =>
   frame.layers.some(

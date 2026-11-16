@@ -97,7 +97,6 @@ function timestamp() {
  *   「该场景下的子集」（如失败重跑），profile/suite 仍用于 globals 与报告命名
  * @param {string} [options.reportSuffix] 附加到报告名/标题的后缀（如 "failed"）
  * @param {string} [options.rootDir=".."] 相对 `config/` 的根目录
- * @param {string} [options.envFile] .env 路径，默认仓库根 `.env`
  * @param {object} [options.overrides] 需要覆盖的其它 Jest 配置项
  */
 function createJestConfig({
@@ -106,7 +105,6 @@ function createJestConfig({
   testRegex,
   reportSuffix = "",
   rootDir = "..",
-  envFile = path.join(REPO_ROOT, ".env"),
   overrides = {},
 } = {}) {
   const hasSpec = Boolean(profile || suite);
@@ -119,7 +117,7 @@ function createJestConfig({
 
   const spec = hasSpec ? resolveSpec({ profile, suite }) : null;
 
-  const globals = { ENV_FILE: envFile };
+  const globals = {};
   if (spec) {
     globals.PROFILE = spec.profile.name;
     globals.SUITE = spec.suite.name;

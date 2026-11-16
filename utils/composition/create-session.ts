@@ -6,21 +6,18 @@
 
 import { BackendRegistry } from "../backends/registry";
 import { streamPorts } from "../config/traffic";
-import { resolverFromEnv, StreamPortResolver } from "../traffic/resolver";
+import { StreamPortResolver } from "../traffic/resolver";
 import { TrafficSession } from "../traffic/session";
 
 export interface CreateTrafficSessionOptions {
   resolver?: StreamPortResolver;
   registry?: BackendRegistry;
-  env?: NodeJS.ProcessEnv;
 }
 
 export function createTrafficSession(
   options: CreateTrafficSessionOptions = {},
 ): TrafficSession {
-  const resolver =
-    options.resolver ??
-    resolverFromEnv(streamPorts, options.env ?? process.env);
+  const resolver = options.resolver ?? new StreamPortResolver(streamPorts);
   const registry = options.registry ?? new BackendRegistry();
   return new TrafficSession(resolver, registry);
 }

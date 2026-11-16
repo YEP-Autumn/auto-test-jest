@@ -11,6 +11,7 @@ import { toStruct } from "../shared/grpc-struct";
 import type { StreamControlClient } from "./client";
 import { waitJob } from "./jobs";
 import { parsePcapFrames } from "./pcap";
+import { StreamControlConfig } from "../../config/backends";
 import { assertResult, batchCaptureThreshold, sleepMs } from "./util";
 
 export class CaptureManager {
@@ -232,7 +233,7 @@ export class CaptureManager {
       try {
         const batches = await this.collectViaDownload(port, ref);
         if (batches.length > 0) {
-          if (process.env.STREAM_CONTROL_DEBUG_CAPTURE === "true") {
+          if (StreamControlConfig.debugCapture) {
             console.log(
               `[streamcontrol] batch capture ${batches.length} frame(s) on ${port.address}`,
             );
@@ -241,7 +242,7 @@ export class CaptureManager {
         }
       } catch (err) {
         // 网关未配置 state_dir / 文件导出失败时，退回逐帧读取
-        if (process.env.STREAM_CONTROL_DEBUG_CAPTURE === "true") {
+        if (StreamControlConfig.debugCapture) {
           console.warn(
             `[streamcontrol] batch capture failed on ${port.address}, fallback ReadByIndex:`,
             err,

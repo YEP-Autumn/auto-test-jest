@@ -2,6 +2,8 @@
  * streamcontrol 后端的通用小工具。
  */
 
+import { StreamControlConfig } from "../../config/backends";
+
 /** 业务错误检查：契约约定 Result.code != 0 表示失败 */
 export function assertResult(result: any, op: string): void {
   if (!result) return;
@@ -29,8 +31,5 @@ export function sleepMs(ms: number): Promise<void> {
  * 设为 0 表示只要停止抓包就批量下载；设为很大的值可退回 ReadByIndex。
  */
 export function batchCaptureThreshold(): number {
-  const raw = process.env.STREAM_CONTROL_BATCH_CAPTURE_MIN;
-  if (raw === undefined) return 64;
-  const value = Number(raw);
-  return Number.isFinite(value) && value >= 0 ? value : 64;
+  return StreamControlConfig.batchCaptureMin;
 }

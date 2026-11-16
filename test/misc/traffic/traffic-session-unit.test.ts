@@ -58,15 +58,13 @@ describe("TrafficSession", () => {
   function setup() {
     const calls: string[] = [];
     const backend = createFakeBackend(calls);
-    const resolver = new StreamPortResolver({
-      slots: [
-        {
-          provider: "renix",
-          address: "fake0",
-          topology: { device: "dut", if_index: 1 },
-        },
-      ],
-    });
+    const resolver = new StreamPortResolver([
+      {
+        provider: "renix",
+        address: "fake0",
+        topology: { device: "dut", if_index: 1 },
+      },
+    ]);
     const registry = new BackendRegistry({
       factories: { renix: () => backend },
     });

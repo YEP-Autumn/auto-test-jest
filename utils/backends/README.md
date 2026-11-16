@@ -35,15 +35,28 @@ grpc/
 日常由 `utils/config/traffic.ts` 的 `streamPorts` 指定每个端口的
 `provider`。
 
-gRPC 相关环境变量：
+gRPC 网关参数在 `config/env/default.json` 的 `traffic.streamControl` 中配置：
 
-- `STREAM_CONTROL_HOST`（默认 `127.0.0.1`）
-- `STREAM_CONTROL_PORT`（默认 `5443`）
-- `STREAM_CONTROL_TLS`（`true`/`false`）
-- `STREAM_CONTROL_CA` / `STREAM_CONTROL_CERT` / `STREAM_CONTROL_KEY`
-- `STREAM_CONTROL_TLS_INSECURE`（`true` 时跳过证书校验，仅测试环境）
-- `STREAM_CONTROL_TOKEN`（自动补 `Bearer ` 前缀）
-- `STREAM_CONTROL_BATCH_CAPTURE_MIN`（抓包批量下载阈值）
+```json
+{
+  "traffic": {
+    "streamControl": {
+      "host": "127.0.0.1",
+      "port": "5443",
+      "tls": false,
+      "tlsInsecure": false,
+      "ca": "",
+      "cert": "",
+      "key": "",
+      "token": "",
+      "debugCapture": false,
+      "batchCaptureMin": 64
+    }
+  }
+}
+```
+
+不再读取 `STREAM_CONTROL_*` 环境变量。
 
 ## 当前状态
 
@@ -197,7 +210,7 @@ testHelper.addPktSender({
    端口配置会快照/恢复，避免污染用户配置。
 5. **抓包性能**：停止抓包且帧数达到阈值后，`readCapture` 会走
    `Capture.Download -> FileService.Download -> pcap 解析`；否则仍用
-   `ReadByIndex`。可用 `STREAM_CONTROL_BATCH_CAPTURE_MIN` 调整阈值。
+   `ReadByIndex`。可用 `traffic.streamControl.batchCaptureMin` 调整阈值。
 6. **抓包参数**：`startCapture(port)` 没有 options；backend 固定
    `WRAP + 4MB + 65536 帧`。引擎支持 `maxBytes/maxFrames/snaplen`，但
    没有 BPF 过滤。

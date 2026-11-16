@@ -1,15 +1,18 @@
 /**
  * 拓扑后端服务（topo backend）地址配置。
  *
- * 可通过环境变量覆盖：TOPO_BACKEND_HOST / TOPO_BACKEND_PORT /
- * TOPO_BACKEND_USERNAME / TOPO_BACKEND_PASSWORD。
+ * 由 config/env/default.json + local.json 提供。
  */
+
+import { loadConfig } from "./loader";
+
+const { topo } = loadConfig();
+
 export class TopoBackendConfig {
-  static readonly host = process.env.TOPO_BACKEND_HOST || "172.16.9.1";
-  static readonly port = process.env.TOPO_BACKEND_PORT || "8000";
-  /** 默认登录账号 */
-  static readonly username = process.env.TOPO_BACKEND_USERNAME || "test";
-  static readonly password = process.env.TOPO_BACKEND_PASSWORD || "autotest";
+  static readonly host = topo.backend.host;
+  static readonly port = topo.backend.port;
+  static readonly username = topo.backend.username;
+  static readonly password = topo.backend.password;
 
   /** 服务根地址，如 http://172.16.9.1:8000 */
   static get origin(): string {

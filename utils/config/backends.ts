@@ -1,17 +1,22 @@
+/**
+ * 打流/抓包后端服务配置。
+ *
+ * 由 config/env/default.json + local.json 提供，不再读取环境变量。
+ */
+
 import * as path from "path";
+import { loadConfig } from "./loader";
+
+const { traffic } = loadConfig();
 
 /**
  * 打流/抓包后端服务（HTTP）地址配置。
- *
- * 可通过环境变量覆盖：STREAM_BACKEND_HOST / STREAM_BACKEND_PORT /
- * STREAM_BACKEND_USERNAME / STREAM_BACKEND_PASSWORD。
  */
 export class StreamBackendConfig {
-  static readonly host = process.env.STREAM_BACKEND_HOST || "172.16.9.1";
-  static readonly port = process.env.STREAM_BACKEND_PORT || "8001";
-  /** 默认登录账号 */
-  static readonly username = process.env.STREAM_BACKEND_USERNAME || "test";
-  static readonly password = process.env.STREAM_BACKEND_PASSWORD || "autotest";
+  static readonly host = traffic.http.host;
+  static readonly port = traffic.http.port;
+  static readonly username = traffic.http.username;
+  static readonly password = traffic.http.password;
 
   /** 服务根地址，如 http://172.16.9.1:8001 */
   static get origin(): string {
@@ -31,10 +36,6 @@ export class StreamBackendConfig {
 
 /**
  * streamcontrol gRPC 网关配置（对应 utils/rpc/grpc/streamcontrol.proto）。
- *
- * 可通过环境变量覆盖：STREAM_CONTROL_HOST / STREAM_CONTROL_PORT /
- * STREAM_CONTROL_TLS / STREAM_CONTROL_CA / STREAM_CONTROL_CERT /
- * STREAM_CONTROL_KEY / STREAM_CONTROL_TOKEN。
  */
 export interface StreamControlSettings {
   readonly host: string;
@@ -52,20 +53,25 @@ export interface StreamControlSettings {
 }
 
 export class StreamControlConfig {
-  static readonly host = process.env.STREAM_CONTROL_HOST || "127.0.0.1";
-  static readonly port = process.env.STREAM_CONTROL_PORT || "5443";
+  static readonly host = traffic.streamControl.host;
+  static readonly port = traffic.streamControl.port;
 
   /** 是否启用 TLS；默认关闭，生产网关（README 示例 5443）通常开启 */
-  static readonly tls = (process.env.STREAM_CONTROL_TLS || "false") === "true";
+  static readonly tls = traffic.streamControl.tls ?? false;
   /** 自签证书联调时可跳过证书校验（仅限测试环境） */
-  static readonly tlsInsecure =
-    (process.env.STREAM_CONTROL_TLS_INSECURE || "false") === "true";
-  static readonly ca = process.env.STREAM_CONTROL_CA;
-  static readonly cert = process.env.STREAM_CONTROL_CERT;
-  static readonly key = process.env.STREAM_CONTROL_KEY;
+  static readonly tlsInsecure = traffic.streamControl.tlsInsecure ?? false;
+  static readonly ca = traffic.streamControl.ca;
+  static readonly cert = traffic.streamControl.cert;
+  static readonly key = traffic.streamControl.key;
 
   /** 可选的鉴权 token；网关要求 Bearer 前缀时自动补齐 */
-  static readonly token = process.env.STREAM_CONTROL_TOKEN;
+  static readonly token = traffic.streamControl.token;
+
+  /** 批量抓包调试日志 */
+  static readonly debugCapture = traffic.streamControl.debugCapture ?? false;
+
+  /** 批量抓包下载阈值 */
+  static readonly batchCaptureMin = traffic.streamControl.batchCaptureMin ?? 64;
 
   /** 实际发送的 authorization metadata 值 */
   static get authorization(): string | undefined {

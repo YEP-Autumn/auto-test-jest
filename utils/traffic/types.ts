@@ -18,19 +18,5 @@ export function resolvedPortKey(port: ResolvedPort): string {
   return `${port.endpoint.provider}:${port.endpoint.address}`;
 }
 
-/** 逻辑端口在解析时可用的覆盖项（来自环境变量或测试注入） */
-export interface PortOverrides {
-  provider?: Partial<Record<TrafficPortId, ProviderId>>;
-  address?: Partial<Record<TrafficPortId, string>>;
-  /** stream-linux 的 A=eth1,B=eth2 映射 */
-  enginePortMap?: Partial<Record<TrafficPortId, string>>;
-}
-
-/** 解析器输入：顺序即 A/B/C... */
-export interface StreamPortSource {
-  slots: readonly StreamPortConfig[];
-  overrides?: PortOverrides;
-}
-
 export type { BackendEndpoint, ProviderId };
-export type { StreamPort };
+export type { StreamPort, StreamPortConfig };

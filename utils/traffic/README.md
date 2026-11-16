@@ -108,40 +108,57 @@ streamPorts.splice(0, streamPorts.length, 原B, 原A, ...);
 旧 `RenixPort` / `Config.Renix.portList` / `TrafficManager` 已删除；
 测试统一使用 `StreamPort.A/B/...`。
 
-## 环境变量
+## JSON 配置
 
-日常使用只需要改 `streamPorts`；环境变量仅用于临时覆盖：
+流量端口由 `config/env/default.json` 的 `traffic.ports` 配置，本机可在
+`config/env/local.json` 覆盖。顺序即逻辑端口：
 
-| 变量                               | 说明                                                          |
-| ---------------------------------- | ------------------------------------------------------------- |
-| `TRAFFIC_PROVIDER`                 | 全局 provider：`renix` / `scapy` / `stream-linux`             |
-| `TRAFFIC_PROVIDER_A` ... `_J`      | 单端口覆盖，优先级高于 `TRAFFIC_PROVIDER`                     |
-| `TRAFFIC_ADDRESS_A` ... `_J`       | 覆盖该逻辑端口解析出的 address                                |
-| `STREAM_CONTROL_PORT_MAP`          | stream-linux 的 `A=eth1,B=eth2` 映射                          |
-| `STREAM_CONTROL_BATCH_CAPTURE_MIN` | 批量下载阈值（默认 64 帧；0=总是批量，调大=退回 ReadByIndex） |
-
-provider 解析优先级：
-
-```
-TRAFFIC_PROVIDER_<id>
-  > TRAFFIC_PROVIDER
-  > streamPorts[index].provider
-```
-
-address 解析优先级：
-
-```
-TRAFFIC_ADDRESS_<id>
-  > stream-linux: STREAM_CONTROL_PORT_MAP
-  > streamPorts[index].address
+```json
+{
+  "traffic": {
+    "ports": [
+      {
+        "provider": "renix",
+        "address": "//172.16.254.11/3/13",
+        "topology": { "device": "172.16.9.110", "if_index": 305 }
+      },
+      {
+        "provider": "stream-linux",
+        "address": "eth1",
+        "topology": { "device": "172.16.9.110", "if_index": 305 }
+      }
+    ]
+  }
+}
 ```
 
-如果强制切换 provider 但没有对应地址，会直接抛错并提示设置
-`TRAFFIC_ADDRESS_<id>`，不会静默猜测端口名。
+不再支持 `TRAFFIC_PROVIDER`、`TRAFFIC_ADDRESS_*`、
+`STREAM_CONTROL_PORT_MAP` 等环境变量；切换 provider/address 直接改 JSON。
+
+`streamcontrol` 网关参数同样在 JSON 中：
+
+```json
+{
+  "traffic": {
+    "streamControl": {
+      "host": "10.10.10.163",
+      "port": "9443",
+      "tls": true,
+      "tlsInsecure": false,
+      "ca": "/path/to/ca.pem",
+      "token": "...",
+      "debugCapture": false,
+      "batchCaptureMin": 64
+    }
+  }
+}
+```
 
 ## 示例
 
 ### 默认 Renix/Scapy HTTP 后端
+
+直接运行：
 
 ```bash
 npx jest ...
@@ -149,25 +166,30 @@ npx jest ...
 
 ### stream-linux gRPC 后端
 
-```bash
-TRAFFIC_PROVIDER=stream-linux \
-STREAM_CONTROL_PORT_MAP="A=eth1,B=eth2" \
-STREAM_CONTROL_HOST=10.10.10.163 \
-STREAM_CONTROL_PORT=9443 \
-STREAM_CONTROL_TLS=true \
-STREAM_CONTROL_CA=/tmp/opencode/streamcontrol/ca.pem \
-STREAM_CONTROL_TOKEN=... \
-npx jest ...
+修改 `config/env/default.json` 或 `local.json`：
+
+```json
+{
+  "traffic": {
+    "ports": [
+      {
+        "provider": "stream-linux",
+        "address": "eth1",
+        "topology": { "device": "172.16.9.110", "if_index": 305 }
+      }
+    ],
+    "streamControl": {
+      "host": "10.10.10.163",
+      "port": "9443",
+      "tls": true,
+      "ca": "/path/to/ca.pem",
+      "token": "..."
+    }
+  }
+}
 ```
 
-### 单端口指定 provider
-
-```bash
-TRAFFIC_PROVIDER_A=renix \
-TRAFFIC_PROVIDER_B=stream-linux \
-STREAM_CONTROL_PORT_MAP="B=eth2" \
-npx jest ...
-```
+然后运行 `npx jest ...`。
 
 ## 能力声明
 

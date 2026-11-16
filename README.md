@@ -73,7 +73,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── install-git-hooks.js    # 安装 commit-msg / pre-commit hook
 │   ├── git-hooks/commit-msg
 │   ├── git-hooks/pre-commit
-│   └── setup/jest.setup.ts     # 加载 .env 到 process.env
+│   └── setup/jest.setup.ts     # Jest 统一 console 设置
 ├── test/
 │   ├── demo.test.ts            # 最小可运行示例
 │   ├── feature/                # 特性用例：<NN-模块>/<NN-UG小节>[/<NN-子功能>[_类型]]/NNNN-<模块>[-<子功能>].test.ts
@@ -127,12 +127,17 @@ npm run gen
 ## 快速开始
 
 ```bash
-# 1) 配置设备与后端连接（见下方「配置」）
-cat > .env <<'EOF'
-DUT_USERNAME=admin
-DUT_PASSWORD=your-password
-TOPO_BACKEND_HOST=172.16.9.1
-STREAM_BACKEND_HOST=172.16.9.1
+# 1) 配置本机设备账号（见下方「配置」）
+mkdir -p config/env
+cat > config/env/local.json <<'EOF'
+{
+  "dut": {
+    "connection": {
+      "username": "admin",
+      "password": "your-password"
+    }
+  }
+}
 EOF
 
 # 2) 按设备 profile 执行功能回归
@@ -221,23 +226,30 @@ npm run list:cases -- --profile mpls --suite regression --status skip,failing
 
 ## 配置
 
-### 环境变量（`.env`）
+### JSON 配置（`config/env`）
 
-`script/setup/jest.setup.ts` 在测试启动前读取仓库根目录的 `.env` 并写入 `process.env`
-（已存在的环境变量优先，`.env` 缺失不报错）。`.env` 已被 `.gitignore` 忽略。
+测试框架不再读取环境变量或 `.env`，配置统一放在：
 
-| 变量 | 默认值 | 说明 |
-|---|---|---|
-| `DUT_USERNAME` | — | 登录 DUT 的账号 |
-| `DUT_PASSWORD` | — | 登录 DUT 的密码 |
-| `TOPO_BACKEND_HOST` | `172.16.9.1` | 拓扑后端地址 |
-| `TOPO_BACKEND_PORT` | `8000` | 拓扑后端端口 |
-| `TOPO_BACKEND_USERNAME` | `test` | 拓扑后端账号 |
-| `TOPO_BACKEND_PASSWORD` | `autotest` | 拓扑后端密码 |
-| `STREAM_BACKEND_HOST` | `172.16.9.1` | 流量收发后端地址 |
-| `STREAM_BACKEND_PORT` | `8001` | 流量收发后端端口 |
-| `STREAM_BACKEND_USERNAME` | `test` | 流量收发后端账号 |
-| `STREAM_BACKEND_PASSWORD` | `autotest` | 流量收发后端密码 |
+- `config/env/default.json`：仓库默认配置，提交到版本库
+  - 拓扑后端地址/账号
+  - 流量后端地址、TLS/token
+  - DUT 清单与端口映射
+  - `streamPorts` 逻辑端口配置
+- `config/env/local.json`：本机覆盖配置，已被 `.gitignore` 忽略
+  - 通常只放 DUT 账号/密码
+  - 与 `default.json` 深合并，数组整体替换
+
+DUT 连接行为默认值（`shellPrompt`、分页正则、超时、缓冲区、终端尺寸等）
+仍保留在 `utils/comm/dut-defaults.ts`，不放进 JSON；JSON 只覆盖
+`dut.connection` 中的 `protocol`、`username`、`password`。
+
+### DUT 与端口映射（`utils/comm/config.ts`）
+
+- `Config.dut_list` 从 `config/env/default.json` 的 `dut.list` 读取，下标与 `DutIdx.A`(0) ~ `DutIdx.L`(11) 一一对应。
+- 每台 DUT 通过 `portList` 和 `portMapping` 描述物理连接。
+- `Config.streamPorts` 从 `traffic.ports` 读取；测试代码使用 `StreamPort.A/B/...` 逻辑端口令牌。
+- `Config.defaultTopoName` 从 `topo.name` 读取。
+- `Config.default_cfg` 由代码默认值 + `dut.connection` 合并而成。
 
 ### DUT 与端口映射（`utils/comm/config.ts`）
 

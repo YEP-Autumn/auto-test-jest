@@ -8,7 +8,7 @@
  */
 import { Config } from "../comm/config";
 import { streamPorts } from "../config/traffic";
-import { resolverFromEnv } from "../traffic/resolver";
+import { StreamPortResolver } from "../traffic/resolver";
 import { PortMapping } from "./types";
 
 /** 逻辑设备名，对应 Config.dut_list 的下标 A=0 .. L=11（最多 12 台） */
@@ -65,7 +65,9 @@ export function traffic(port: PortName): Endpoint {
  */
 export function resolveEndpoint(endpoint: Endpoint): PortMapping {
   if (endpoint.kind === "traffic") {
-    return resolverFromEnv(streamPorts).resolveTopology(endpoint.port);
+    return new StreamPortResolver(streamPorts).resolveTopology(
+      endpoint.port,
+    );
   }
 
   const device = Config.dut_list[DUT_INDEX[endpoint.dut]];

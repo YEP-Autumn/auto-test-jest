@@ -1,0 +1,484 @@
+{
+  "topo": {
+    "name": "auto-test-topo",
+    "backend": {
+      "host": "172.16.9.1",
+      "port": "8000",
+      "username": "test",
+      "password": "autotest"
+    }
+  },
+  "dut": {
+    "connection": {
+      "protocol": "telnet"
+    },
+    "list": [
+      {
+        "host": "172.16.9.104",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4",
+          "eth-0-5",
+          "eth-0-6"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.105",
+            "if_index": 1
+          },
+          {
+            "device": "172.16.9.105",
+            "if_index": 2
+          },
+          {
+            "device": "172.16.9.105",
+            "if_index": 3
+          },
+          {
+            "device": "172.16.9.105",
+            "if_index": 4
+          },
+          {
+            "device": "172.16.9.105",
+            "if_index": 9
+          },
+          {
+            "device": "172.16.9.105",
+            "if_index": 10
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.107",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4",
+          "eth-0-5",
+          "eth-0-6"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.106",
+            "if_index": 1
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 2
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 3
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 4
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 21
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 22
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.108",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4",
+          "eth-0-5",
+          "eth-0-6"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.106",
+            "if_index": 5
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 6
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 7
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 8
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 23
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 24
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.109",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4",
+          "eth-0-5",
+          "eth-0-6"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.105",
+            "if_index": 5
+          },
+          {
+            "device": "172.16.9.105",
+            "if_index": 6
+          },
+          {
+            "device": "172.16.9.105",
+            "if_index": 7
+          },
+          {
+            "device": "172.16.9.105",
+            "if_index": 8
+          },
+          {
+            "device": "172.16.9.105",
+            "if_index": 11
+          },
+          {
+            "device": "172.16.9.105",
+            "if_index": 12
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.112",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.110",
+            "if_index": 13
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 14
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 15
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 16
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.113",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.110",
+            "if_index": 29
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 30
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 31
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 32
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.114",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.110",
+            "if_index": 25
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 26
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 27
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 28
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.115",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.110",
+            "if_index": 33
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 34
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 35
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 36
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.131",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.106",
+            "if_index": 13
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 14
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 15
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 16
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.130",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.106",
+            "if_index": 17
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 18
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 19
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 20
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.120",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.106",
+            "if_index": 9
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 10
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 11
+          },
+          {
+            "device": "172.16.9.106",
+            "if_index": 12
+          }
+        ]
+      },
+      {
+        "host": "172.16.9.140",
+        "portList": [
+          "eth-0-1",
+          "eth-0-2",
+          "eth-0-3",
+          "eth-0-4"
+        ],
+        "portMapping": [
+          {
+            "device": "172.16.9.110",
+            "if_index": 53
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 54
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 55
+          },
+          {
+            "device": "172.16.9.110",
+            "if_index": 56
+          }
+        ]
+      }
+    ]
+  },
+  "traffic": {
+    "http": {
+      "host": "172.16.9.1",
+      "port": "8001",
+      "username": "test",
+      "password": "autotest"
+    },
+    "streamControl": {
+      "host": "127.0.0.1",
+      "port": "5443",
+      "tls": false,
+      "tlsInsecure": false,
+      "ca": "",
+      "cert": "",
+      "key": "",
+      "token": "",
+      "debugCapture": false,
+      "batchCaptureMin": 64
+    },
+    "ports": [
+      {
+        "provider": "renix",
+        "address": "//172.16.254.11/3/13",
+        "topology": {
+          "device": "172.16.9.110",
+          "if_index": 305
+        }
+      },
+      {
+        "provider": "renix",
+        "address": "//172.16.254.11/3/14",
+        "topology": {
+          "device": "172.16.9.110",
+          "if_index": 561
+        }
+      },
+      {
+        "provider": "renix",
+        "address": "//172.16.254.11/3/15",
+        "topology": {
+          "device": "172.16.9.110",
+          "if_index": 817
+        }
+      },
+      {
+        "provider": "renix",
+        "address": "//172.16.254.11/3/16",
+        "topology": {
+          "device": "172.16.9.110",
+          "if_index": 1073
+        }
+      },
+      {
+        "provider": "scapy",
+        "address": "\\Device\\NPF_{D0DB71B0-1C1E-419C-8360-20C25AF8A6E1}",
+        "topology": {
+          "device": "172.16.9.110",
+          "if_index": 23
+        }
+      },
+      {
+        "provider": "scapy",
+        "address": "\\Device\\NPF_{02DCC5B0-C8A6-4440-9362-21B78C286280}",
+        "topology": {
+          "device": "172.16.9.110",
+          "if_index": 24
+        }
+      },
+      {
+        "provider": "scapy",
+        "address": "\\Device\\NPF_{CD6CB24F-5008-4F71-8D48-2E92DB1DAA88}",
+        "topology": {
+          "device": "172.16.9.106",
+          "if_index": 32
+        }
+      },
+      {
+        "provider": "renix",
+        "address": "//172.16.254.11/5/1",
+        "topology": {
+          "device": "172.16.9.106",
+          "if_index": 25
+        }
+      },
+      {
+        "provider": "renix",
+        "address": "//172.16.254.11/5/2",
+        "topology": {
+          "device": "172.16.9.106",
+          "if_index": 25
+        }
+      },
+      {
+        "provider": "renix",
+        "address": "//172.16.254.11/3/15",
+        "topology": {
+          "device": "172.16.9.106",
+          "if_index": 25
+        }
+      }
+    ]
+  }
+}

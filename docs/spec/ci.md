@@ -105,8 +105,9 @@ npm run hooks:install           # 安装 commit-msg / pre-commit hook（npm inst
 
       - name: 准备设备连接配置
         run: |
-          cat > .env <<'EOF'
-          ${{ secrets.DUT_ENV }}
+          mkdir -p config/env
+          cat > config/env/local.json <<'EOF'
+          ${{ secrets.DUT_LOCAL_CONFIG }}
           EOF
 
       - name: 安装依赖
@@ -128,8 +129,8 @@ npm run hooks:install           # 安装 commit-msg / pre-commit hook（npm inst
 
 要点：
 
-- 设备地址与账号的取值保存在 `secrets`（`DUT_ENV`）中，仓库仅保留变量名；`jest.setup.ts` 读取的
-  `ENV_FILE` 指向仓库根 `.env`，而 `.env` 已被 `.gitignore` 忽略。
+- 设备地址与账号的取值保存在 `secrets`（`DUT_LOCAL_CONFIG`）中，仓库仅保留变量名；
+  CI 将其写入 `config/env/local.json`，该文件已被 `.gitignore` 忽略。框架不再读取 `.env` 或环境变量。
 - 设备用例耗时长且有状态，建议用 `workflow_dispatch` 或 nightly 定时触发，
   仅在需要设备环境时触发。
 - 失败时上传 `test-report/`（`jest-html-reporter` 产物）与 `jest-junit` 结果便于定位。

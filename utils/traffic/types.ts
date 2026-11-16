@@ -4,11 +4,7 @@
 
 import type { BackendEndpoint, ProviderId } from "../backends/contract";
 import type { PortMapping } from "../topo/types";
-import type {
-  StreamPort,
-  StreamPortConfig,
-  TrafficPortId,
-} from "./model";
+import type { StreamPort, StreamPortConfig, TrafficPortId } from "./model";
 
 /** 逻辑端口 + 实际后端地址 + 拓扑落点（仅内部使用） */
 export interface ResolvedPort {

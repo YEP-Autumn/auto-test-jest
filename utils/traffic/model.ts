@@ -11,16 +11,7 @@ import type { ProviderId } from "../backends/contract";
 
 /** 逻辑端口号，对应 `Config.streamPorts` 的数组下标 */
 export type TrafficPortId =
-  | "A"
-  | "B"
-  | "C"
-  | "D"
-  | "E"
-  | "F"
-  | "G"
-  | "H"
-  | "I"
-  | "J";
+  "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J";
 
 /** 逻辑端口顺序；数组下标 -> 端口 id */
 export const TRAFFIC_PORT_IDS: readonly TrafficPortId[] = [

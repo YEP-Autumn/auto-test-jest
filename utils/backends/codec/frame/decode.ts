@@ -9,7 +9,11 @@
  * 以及 IPv4/IPv6 之上常见端口的 SNMP v1/v2c/v3（用于 Storm Control Trap 用例）。
  */
 
-import { bufferToIpv4, bufferToIpv6, bufferToMac } from "../../../packet/address";
+import {
+  bufferToIpv4,
+  bufferToIpv6,
+  bufferToMac,
+} from "../../../packet/address";
 import { FieldType, PacketLayer } from "../../../packet/model";
 
 const ETHERTYPE_IPV4 = 0x0800;

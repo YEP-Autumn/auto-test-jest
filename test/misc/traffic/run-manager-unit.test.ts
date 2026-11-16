@@ -51,13 +51,7 @@ describe("RunManager", () => {
 
     await manager.wait(port);
 
-    expect(calls).toEqual([
-      "GetRun",
-      "Stop",
-      "Delete",
-      "Delete",
-      "Delete",
-    ]);
+    expect(calls).toEqual(["GetRun", "Stop", "Delete", "Delete", "Delete"]);
   });
 
   test("stopAll clears tracked runs", async () => {

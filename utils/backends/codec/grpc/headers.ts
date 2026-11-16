@@ -20,7 +20,11 @@ import {
   ModifierMode,
   PacketModifierParam,
 } from "../../../packet/types";
-import { ipv4ToBuffer, ipv6ToBuffer, macToBuffer } from "../../../packet/address";
+import {
+  ipv4ToBuffer,
+  ipv6ToBuffer,
+  macToBuffer,
+} from "../../../packet/address";
 
 export const HeaderType = {
   ETHERNET: 1,
@@ -89,9 +93,8 @@ export interface HeaderInstance {
 }
 
 function decodeOptionHex(hex: string, label: string): Buffer {
-  const normalized = hex.startsWith("0x") || hex.startsWith("0X")
-    ? hex.slice(2)
-    : hex;
+  const normalized =
+    hex.startsWith("0x") || hex.startsWith("0X") ? hex.slice(2) : hex;
   if (normalized.length % 2 !== 0) {
     throw new Error(`[streamcontrol] ${label} option data 必须是偶数长度 hex`);
   }

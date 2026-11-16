@@ -95,9 +95,9 @@ describe("stream packet model", () => {
         .toSpec(),
     );
     const snap = headers.find((h) => h.type === HeaderType.SNAP);
-    expect(snap?.fields.find((f) => f.name === "oui")?.fixed?.raw?.toString("hex")).toBe(
-      "000000",
-    );
+    expect(
+      snap?.fields.find((f) => f.name === "oui")?.fixed?.raw?.toString("hex"),
+    ).toBe("000000");
     expect(snap?.fields.find((f) => f.name === "pid")?.fixed?.u64).toBe(2048);
   });
 

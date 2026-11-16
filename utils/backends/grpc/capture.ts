@@ -127,7 +127,11 @@ export class CaptureManager {
   /** 删除上一次进程遗留的 auto-test capture（capture 线程会占用端口） */
   async cleanupStale(): Promise<void> {
     try {
-      const list = await this.client.unary<any>(this.client.capture, "List", {});
+      const list = await this.client.unary<any>(
+        this.client.capture,
+        "List",
+        {},
+      );
       for (const config of list.configs ?? []) {
         const path = String(config.ref?.path ?? "");
         if (!path.includes("auto-test-capture-")) continue;
@@ -140,7 +144,11 @@ export class CaptureManager {
           // 未运行
         }
         try {
-          await this.client.unary<any>(this.client.capture, "Delete", config.ref);
+          await this.client.unary<any>(
+            this.client.capture,
+            "Delete",
+            config.ref,
+          );
         } catch {
           // 已删除
         }

@@ -31,8 +31,7 @@ const HEADER_LENGTH: Record<number, number> = {
 
 export function headerLength(header: HeaderInstance): number {
   return (
-    (HEADER_LENGTH[header.type] ?? 0) +
-    headerOptionBytesLength(header.options)
+    (HEADER_LENGTH[header.type] ?? 0) + headerOptionBytesLength(header.options)
   );
 }
 

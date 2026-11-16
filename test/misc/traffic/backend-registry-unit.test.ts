@@ -53,8 +53,6 @@ describe("BackendRegistry", () => {
 
   test("unknown provider is rejected", async () => {
     const registry = new BackendRegistry();
-    await expect(registry.get("ixia" as any)).rejects.toThrow(
-      /未知的流量后端/,
-    );
+    await expect(registry.get("ixia" as any)).rejects.toThrow(/未知的流量后端/);
   });
 });

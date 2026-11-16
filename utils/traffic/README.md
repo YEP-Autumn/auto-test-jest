@@ -25,12 +25,12 @@ BackendRegistry                按 provider 选择适配器
 
 ## 概念
 
-| 概念                 | 说明                                                         |
-| -------------------- | ------------------------------------------------------------ |
-| `StreamPort`         | 对外唯一令牌，只含逻辑 id；测试用例只接触这个                 |
-| `streamPorts`        | 有序端口配置；数组顺序决定 A/B/C 实际使用哪个端口             |
-| `ResolvedPort`       | 内部解析结果（endpoint + topology），不对外暴露               |
-| provider             | `renix` / `scapy` / `stream-linux`，只在配置和内部出现        |
+| 概念           | 说明                                                   |
+| -------------- | ------------------------------------------------------ |
+| `StreamPort`   | 对外唯一令牌，只含逻辑 id；测试用例只接触这个          |
+| `streamPorts`  | 有序端口配置；数组顺序决定 A/B/C 实际使用哪个端口      |
+| `ResolvedPort` | 内部解析结果（endpoint + topology），不对外暴露        |
+| provider       | `renix` / `scapy` / `stream-linux`，只在配置和内部出现 |
 
 ## 使用
 
@@ -174,18 +174,17 @@ npx jest ...
 `TrafficCapabilities` 是控制层使用的保守能力表，发送前只会校验能明确判断的
 能力（`modifiers` / `fixed_len`）：
 
-| provider       | transport | modifiers | fixed_len | burstGap  | batchCapture |
-| -------------- | --------- | --------- | --------- | --------- | ------------ |
-| `renix`        | http      | ✅        | ✅        | ✅        | ✅           |
-| `scapy`        | http      | ✅        | ✅        | ✅        | ✅           |
-| `stream-linux` | grpc      | ✅        | ✅        | ✅        | ✅           |
+| provider       | transport | modifiers | fixed_len | burstGap | batchCapture |
+| -------------- | --------- | --------- | --------- | -------- | ------------ |
+| `renix`        | http      | ✅        | ✅        | ✅       | ✅           |
+| `scapy`        | http      | ✅        | ✅        | ✅       | ✅           |
+| `stream-linux` | grpc      | ✅        | ✅        | ✅       | ✅           |
 
 `burstGap` 通过 `StreamChannel.transmit` 下发：`frames_per_burst` /
 `burst_count` / `burst_gap` / `burst_gap_unit`，需要网关能力
 `feature=traffic-burst-gap`；缺失时 backend 会明确报错。stream-linux 停止抓包后
 会在帧数超过阈值时优先走 `Capture.Download + FileService.Download + 本地 pcap 解析`，
 失败自动退回 `ReadByIndex`。
-
 
 ## 当前阶段
 

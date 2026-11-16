@@ -35,7 +35,8 @@ export class BackendRegistry {
     this.httpFactory =
       options.httpFactory ??
       (() => new RenixHttpBackend(sharedTransport as HttpTrafficTransport));
-    this.grpcFactory = options.grpcFactory ?? (() => new StreamControlBackend());
+    this.grpcFactory =
+      options.grpcFactory ?? (() => new StreamControlBackend());
   }
 
   async get(provider: ProviderId): Promise<TrafficBackend> {

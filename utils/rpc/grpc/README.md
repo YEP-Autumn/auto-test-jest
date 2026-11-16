@@ -5,11 +5,11 @@
 
 ## 1. 边界
 
-| 层 | 是否公开 | 说明 |
-|---|---|---|
-| gRPC `streamcontrol.v1` | **是，唯一公开契约** | GUI、脚本、自动化、第三方客户端 |
-| SLNX/2 | 否 | 仅 `streamd-gateway` ↔ 引擎内部 ABI |
-| YAML | 是（配置文件） | 人类编辑/导入导出；不是对象 API |
+| 层                      | 是否公开             | 说明                                |
+| ----------------------- | -------------------- | ----------------------------------- |
+| gRPC `streamcontrol.v1` | **是，唯一公开契约** | GUI、脚本、自动化、第三方客户端     |
+| SLNX/2                  | 否                   | 仅 `streamd-gateway` ↔ 引擎内部 ABI |
+| YAML                    | 是（配置文件）       | 人类编辑/导入导出；不是对象 API     |
 
 > **完整契约不等于全部已实现。** 当前网关只映射了已实现的 17 个 service；
 > 其余 service 已定义、可生成 stub，但运行时会返回 `UNIMPLEMENTED`，直到引擎/网关补齐。
@@ -53,201 +53,202 @@ api/streamcontrol/v1/
 
 当前定义：
 
-| 指标 | 数量 |
-|---|---:|
-| service | 55 |
-| RPC | 561 |
-| message | 496 |
+| 指标    | 数量 |
+| ------- | ---: |
+| service |   55 |
+| RPC     |  561 |
+| message |  496 |
 
 按域：
 
-| 域 | service |
-|---|---|
-| 系统/硬件 | `SystemService` `HardwareService` `LicenseService` |
-| 端口 | `PortService` |
-| 接口/邻居/路由 | `InterfaceService` `NeighborService` `RouteService` `PingService` |
-| 流量 | `TrafficService` |
-| 通用对象 | `ResourceService` |
-| 协议 | `ProtocolService` `BgpService` `OspfService` `Ospfv2Service` `Ospfv3Service` `IsisService` `RipService` `MulticastService` `MplsService` `SrService` `BfdService` `SwitchingService` `TunnelService` `ControllerService` |
-| 接入 | `DhcpService` `PppoeService` `L2tpService` `IptvService` `Dot1xService` |
-| OAM | `CfmService` `Y1731Service` `EfmService` `GptpService` `TwampService` `SaaService` `Srv6OamService` |
-| 基准 | `BenchmarkService` `SmartScripterService` |
-| L4–L7 | `L47Service` `CertificateService` |
-| 配置/文件 | `ConfigService` `TestCaseService` `TestSuiteService` `WorkspaceService` `FileService` |
-| 统计/结果 | `StatsService` `ResultService` `ChartService` `ReportService` `EventService` |
-| 抓包 | `CaptureService` |
-| 场景向导 | `ScenarioService` |
-| 扩展 | `ExtensionService` |
-| 运行/作业 | `RunService` `JobService` |
+| 域             | service                                                                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 系统/硬件      | `SystemService` `HardwareService` `LicenseService`                                                                                                                                                                       |
+| 端口           | `PortService`                                                                                                                                                                                                            |
+| 接口/邻居/路由 | `InterfaceService` `NeighborService` `RouteService` `PingService`                                                                                                                                                        |
+| 流量           | `TrafficService`                                                                                                                                                                                                         |
+| 通用对象       | `ResourceService`                                                                                                                                                                                                        |
+| 协议           | `ProtocolService` `BgpService` `OspfService` `Ospfv2Service` `Ospfv3Service` `IsisService` `RipService` `MulticastService` `MplsService` `SrService` `BfdService` `SwitchingService` `TunnelService` `ControllerService` |
+| 接入           | `DhcpService` `PppoeService` `L2tpService` `IptvService` `Dot1xService`                                                                                                                                                  |
+| OAM            | `CfmService` `Y1731Service` `EfmService` `GptpService` `TwampService` `SaaService` `Srv6OamService`                                                                                                                      |
+| 基准           | `BenchmarkService` `SmartScripterService`                                                                                                                                                                                |
+| L4–L7          | `L47Service` `CertificateService`                                                                                                                                                                                        |
+| 配置/文件      | `ConfigService` `TestCaseService` `TestSuiteService` `WorkspaceService` `FileService`                                                                                                                                    |
+| 统计/结果      | `StatsService` `ResultService` `ChartService` `ReportService` `EventService`                                                                                                                                             |
+| 抓包           | `CaptureService`                                                                                                                                                                                                         |
+| 场景向导       | `ScenarioService`                                                                                                                                                                                                        |
+| 扩展           | `ExtensionService`                                                                                                                                                                                                       |
+| 运行/作业      | `RunService` `JobService`                                                                                                                                                                                                |
 
 ## 4. 接口功能与支持状态（详细）
+
 > 状态以“网关是否已映射到引擎”为准，不以 proto 是否存在为准。
 
-| 标记 | 含义 |
-|---|---|
-| ✅ | 已映射到引擎，RPC 可用 |
-| 🟡 | 已映射，但有前置条件或字段/能力不完整 |
-| ⛔ | proto 已定义，网关未映射；调用返回 `UNIMPLEMENTED` |
-| ⚙️ | 依赖专用硬件；通用 Linux 只能返回不支持或能力受限 |
+| 标记 | 含义                                               |
+| ---- | -------------------------------------------------- |
+| ✅   | 已映射到引擎，RPC 可用                             |
+| 🟡   | 已映射，但有前置条件或字段/能力不完整              |
+| ⛔   | proto 已定义，网关未映射；调用返回 `UNIMPLEMENTED` |
+| ⚙️   | 依赖专用硬件；通用 Linux 只能返回不支持或能力受限  |
 
 **汇总：171 / 561 RPC 已映射；17 个 service 类可用，37 个 service 仅有契约。**
 
 ### 4.1 按域汇总
 
-| 域 | service | 已支持 RPC | 总 RPC | 结论 |
-|---|---|---:|---:|---|
-| 系统/机框/硬件 | `SystemService`, `HardwareService`, `LicenseService` | 2 | 20 | 🟡 部分 |
-| 端口 | `PortService` | 22 | 27 | 🟡 能力/配置/统计/采样/SFP/QBU gate |
-| 接口/邻居/路由 | `InterfaceService`, `NeighborService`, `RouteService`, `PingService` | 19 | 19 | ✅ 可用 |
-| 流量 | `TrafficService` | 19 | 19 | ✅ 配置/启停/Encode/ImportPcap 可用 |
-| 通用对象 | `ResourceService` | 10 | 10 | ✅ |
-| 路由/交换协议 | `ProtocolService`, `BgpService`, `OspfService`, `Ospfv2Service`, `Ospfv3Service`, `IsisService`, `RipService`, `MulticastService`, `MplsService`, `SrService`, `BfdService`, `SwitchingService`, `TunnelService`, `ControllerService` | 19 | 194 | 🟡 部分 |
-| 接入/会话 | `DhcpService`, `PppoeService`, `L2tpService`, `IptvService`, `Dot1xService` | 0 | 58 | ⛔ 未支持 |
-| OAM/时间同步 | `CfmService`, `Y1731Service`, `EfmService`, `GptpService`, `TwampService`, `SaaService`, `Srv6OamService` | 0 | 74 | ⛔ 未支持 |
-| 性能/基准 | `BenchmarkService`, `SmartScripterService` | 0 | 23 | ⛔ 未支持 |
-| L4–L7 | `L47Service`, `CertificateService` | 0 | 15 | ⛔ 未支持 |
-| 配置/用例/文件 | `ConfigService`, `TestCaseService`, `TestSuiteService`, `WorkspaceService`, `FileService` | 19 | 33 | 🟡 部分 |
-| 统计/结果 | `StatsService`, `ResultService`, `ChartService`, `ReportService`, `EventService` | 29 | 29 | 🟡 基础视图/导出 |
-| 捕获 | `CaptureService` | 14 | 14 | ✅ 可用（引擎有界队列实时推送） |
-| 场景向导 | `ScenarioService` | 0 | 7 | ⛔ 未支持 |
-| 运行/作业 | `RunService`, `JobService` | 9 | 9 | ✅ 可用 |
-| 自定义扩展 | `ExtensionService` | 9 | 10 | 🟡 schema/读回/头增删/动态类+属性已接；动态网络层未支持 |
+| 域             | service                                                                                                                                                                                                                               | 已支持 RPC | 总 RPC | 结论                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------: | -----: | ------------------------------------------------------- |
+| 系统/机框/硬件 | `SystemService`, `HardwareService`, `LicenseService`                                                                                                                                                                                  |          2 |     20 | 🟡 部分                                                 |
+| 端口           | `PortService`                                                                                                                                                                                                                         |         22 |     27 | 🟡 能力/配置/统计/采样/SFP/QBU gate                     |
+| 接口/邻居/路由 | `InterfaceService`, `NeighborService`, `RouteService`, `PingService`                                                                                                                                                                  |         19 |     19 | ✅ 可用                                                 |
+| 流量           | `TrafficService`                                                                                                                                                                                                                      |         19 |     19 | ✅ 配置/启停/Encode/ImportPcap 可用                     |
+| 通用对象       | `ResourceService`                                                                                                                                                                                                                     |         10 |     10 | ✅                                                      |
+| 路由/交换协议  | `ProtocolService`, `BgpService`, `OspfService`, `Ospfv2Service`, `Ospfv3Service`, `IsisService`, `RipService`, `MulticastService`, `MplsService`, `SrService`, `BfdService`, `SwitchingService`, `TunnelService`, `ControllerService` |         19 |    194 | 🟡 部分                                                 |
+| 接入/会话      | `DhcpService`, `PppoeService`, `L2tpService`, `IptvService`, `Dot1xService`                                                                                                                                                           |          0 |     58 | ⛔ 未支持                                               |
+| OAM/时间同步   | `CfmService`, `Y1731Service`, `EfmService`, `GptpService`, `TwampService`, `SaaService`, `Srv6OamService`                                                                                                                             |          0 |     74 | ⛔ 未支持                                               |
+| 性能/基准      | `BenchmarkService`, `SmartScripterService`                                                                                                                                                                                            |          0 |     23 | ⛔ 未支持                                               |
+| L4–L7          | `L47Service`, `CertificateService`                                                                                                                                                                                                    |          0 |     15 | ⛔ 未支持                                               |
+| 配置/用例/文件 | `ConfigService`, `TestCaseService`, `TestSuiteService`, `WorkspaceService`, `FileService`                                                                                                                                             |         19 |     33 | 🟡 部分                                                 |
+| 统计/结果      | `StatsService`, `ResultService`, `ChartService`, `ReportService`, `EventService`                                                                                                                                                      |         29 |     29 | 🟡 基础视图/导出                                        |
+| 捕获           | `CaptureService`                                                                                                                                                                                                                      |         14 |     14 | ✅ 可用（引擎有界队列实时推送）                         |
+| 场景向导       | `ScenarioService`                                                                                                                                                                                                                     |          0 |      7 | ⛔ 未支持                                               |
+| 运行/作业      | `RunService`, `JobService`                                                                                                                                                                                                            |          9 |      9 | ✅ 可用                                                 |
+| 自定义扩展     | `ExtensionService`                                                                                                                                                                                                                    |          9 |     10 | 🟡 schema/读回/头增删/动态类+属性已接；动态网络层未支持 |
 
 ### 4.2 逐 service 明细
 
 #### 系统/机框/硬件
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `SystemService` | 🟡 2/4（仅 Hello/Shutdown） | `Hello`, `Shutdown` | `GetSystemInfo`, `SetLogLevel` |
-| `HardwareService` | ⛔ 0/11 | — | `ListChassis`, `ListCards`, `ListPorts`, `GetSfp`, `GetSfpRaw`, `ReadRegister`, `WriteRegister`, `Reboot`, `Upgrade`, `SwitchMode`, `QueryCapabilities` |
-| `LicenseService` | ⛔ 0/5 | — | `Get`, `Install`, `Remove`, `Download`, `ClearExpired` |
+| Service           | 状态                        | 已支持 RPC          | 未支持 RPC                                                                                                                                              |
+| ----------------- | --------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SystemService`   | 🟡 2/4（仅 Hello/Shutdown） | `Hello`, `Shutdown` | `GetSystemInfo`, `SetLogLevel`                                                                                                                          |
+| `HardwareService` | ⛔ 0/11                     | —                   | `ListChassis`, `ListCards`, `ListPorts`, `GetSfp`, `GetSfpRaw`, `ReadRegister`, `WriteRegister`, `Reboot`, `Upgrade`, `SwitchMode`, `QueryCapabilities` |
+| `LicenseService`  | ⛔ 0/5                      | —                   | `Get`, `Install`, `Remove`, `Download`, `ClearExpired`                                                                                                  |
 
 #### 端口
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
+| Service       | 状态     | 已支持 RPC                                                                                                                                                                                                                                                                                                                                  | 未支持 RPC                                                                   |
+| ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | `PortService` | 🟡 22/27 | `ListPorts`, `GetPort`, `OpenPort`, `ClosePort`, `OnlinePort`, `OfflinePort`, `SetPort`, `ConfigurePorts`, `SetLinks`, `SendLinkFault`, `RestartAutoneg`, `SwitchMedia`, `GetStats`, `VerifyProperties`, `CreateOfflinePorts`, `StartSampling`, `StopSampling`, `TriggerSampling`, `ShowSampling`, `GetAvgLatency`, `GetSfp`, `GetQbuStats` | `AggregatePorts`, `AddLagMember`, `DeleteLagMember`, `StartLacp`, `StopLacp` |
 
 #### 接口/邻居/路由
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `InterfaceService` | ✅ 12/12 | `Create`, `Get`, `List`, `Delete`, `BuildStack`, `SelectProtocol`, `UnselectProtocol`, `CreateLink`, `EditLink`, `DeleteLink`, `ReplaceStack`, `ExpandWizard` | — |
-| `NeighborService` | ✅ 2/2 | `List`, `Action` | — |
-| `RouteService` | ✅ 4/4 | `List`, `Add`, `Delete`, `Lookup` | — |
-| `PingService` | ✅ 1/1 | `Ping` | — |
+| Service            | 状态     | 已支持 RPC                                                                                                                                                    | 未支持 RPC |
+| ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `InterfaceService` | ✅ 12/12 | `Create`, `Get`, `List`, `Delete`, `BuildStack`, `SelectProtocol`, `UnselectProtocol`, `CreateLink`, `EditLink`, `DeleteLink`, `ReplaceStack`, `ExpandWizard` | —          |
+| `NeighborService`  | ✅ 2/2   | `List`, `Action`                                                                                                                                              | —          |
+| `RouteService`     | ✅ 4/4   | `List`, `Add`, `Delete`, `Lookup`                                                                                                                             | —          |
+| `PingService`      | ✅ 1/1   | `Ping`                                                                                                                                                        | —          |
 
 #### 流量
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `TrafficService` | ✅ 19/19 | `CreateTemplate`, `GetTemplate`, `ListTemplates`, `UpdateTemplate`, `DeleteTemplate`, `CreateChannel`, `UpdateEndpoint`, `CreateLoadProfile`, `SetPortConfig`, `Start`, `Stop`, `Restart`, `StartAll`, `StopAll`, `Wait`, `CalculateRate`, `Encode`, `ImportPcap`, `AddTunnel` | — |
+| Service          | 状态     | 已支持 RPC                                                                                                                                                                                                                                                                     | 未支持 RPC |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| `TrafficService` | ✅ 19/19 | `CreateTemplate`, `GetTemplate`, `ListTemplates`, `UpdateTemplate`, `DeleteTemplate`, `CreateChannel`, `UpdateEndpoint`, `CreateLoadProfile`, `SetPortConfig`, `Start`, `Stop`, `Restart`, `StartAll`, `StopAll`, `Wait`, `CalculateRate`, `Encode`, `ImportPcap`, `AddTunnel` | —          |
 
 #### 通用对象
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
+| Service           | 状态     | 已支持 RPC                                                                               | 未支持 RPC                                                                |
+| ----------------- | -------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | `ResourceService` | ✅ 10/10 | `Get`, `List`, `Create`, `Update`, `Delete`, `Query`, `Batch`, `Watch`, `Clone`, `Reset` | `Watch`, `Create`, `Update`, `Delete`, `Clone`, `Reset`, `Batch`, `Query` |
 
 #### 路由/交换协议
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `ProtocolService` | ⛔ 0/15 | — | `Create`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `StartAll`, `StopAll`, `WaitForUp`, `Advertise`, `Withdraw`, `Restart`, `GetStats`, `ListSessions` |
-| `BgpService` | ⛔ 0/16 | — | `Create`, `Get`, `List`, `Update`, `Delete`, `Establish`, `Connect`, `Disconnect`, `AdvertiseRoutes`, `WithdrawRoutes`, `ReadvertiseRoutes`, `Refresh`, `GracefulRestart`, `ListSessions`, `ViewRoutes`, `ViewLsTopology` |
-| `OspfService` | ✅ 10/10（需 CLI 实例） | `GetCaps`, `GetStats`, `GetScale`, `ListPeers`, `ListLsdb`, `GetRoutes`, `SetRoutes`, `Measure`, `SetFault`, `ListFaults` | — |
-| `Ospfv2Service` | 🟡 9/9（GR 显式 NOTSUP） | `Create`, `Get`, `List`, `Update`, `Delete`, `Establish`, `Advertise`, `Withdraw`, `GracefulRestart` | — |
-| `Ospfv3Service` | ⛔ 0/9 | — | `Create`, `Get`, `List`, `Update`, `Delete`, `Establish`, `Advertise`, `Withdraw`, `GracefulRestart` |
-| `IsisService` | ⛔ 0/13 | — | `Create`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `Establish`, `LspAdvertise`, `LspWithdraw`, `GracefulRestart`, `SendInSyncPdus`, `SendOutOfSyncPdus` |
-| `RipService` | ⛔ 0/11 | — | `Create`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `Advertise`, `Withdraw`, `Suspend`, `Resume` |
-| `MulticastService` | ⛔ 0/20 | — | `CreatePim`, `CreateIgmp`, `CreateIgmpQuerier`, `CreateMld`, `CreateMldQuerier`, `Get`, `List`, `Update`, `Delete`, `PimStart`, `PimJoin`, `PimLeave`, `PimBootstrap`, `PimRegister`, `IgmpApply`, `IgmpJoin`, `IgmpLeave`, `IgmpSendReport`, `MldApply`, `MldSendReport` |
-| `MplsService` | ⛔ 0/20 | — | `CreateLdp`, `CreateVpls`, `CreatePw`, `List`, `Get`, `Delete`, `LdpStart`, `LdpStop`, `LdpEstablish`, `LdpRequestLabel`, `LdpRestart`, `LdpWithdrawLsps`, `CreateStaticLabel`, `CreateVpnLabel`, `LspPingStart`, `LspPingStop`, `LspPingPause`, `LspPingResume`, `LspTracePause`, `LspTraceResume` |
-| `SrService` | ⛔ 0/12 | — | `CreateSr`, `CreateSrv6`, `Get`, `List`, `Delete`, `SegmentListImport`, `SegmentListExport`, `SegmentListPreview`, `SegmentListValidate`, `PreviewTunnelSid`, `Srv6OamStart`, `Srv6OamStop` |
-| `BfdService` | ⛔ 0/15 | — | `Create`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `AdminUp`, `AdminDown`, `EnableDemand`, `DisableDemand`, `InitiatePoll`, `ResumePdus`, `StopPdus`, `SetDiagnostic` |
-| `SwitchingService` | ⛔ 0/13 | — | `CreateStp`, `CreateLacp`, `CreateSrp`, `Get`, `List`, `Delete`, `StpStartCist`, `StpStartMsti`, `StpStartBridge`, `StpStop`, `StpSendTopoChange`, `StartAllLacp`, `SrpControl` |
-| `TunnelService` | ⛔ 0/14 | — | `CreateVxlan`, `CreateGre`, `CreateTrill`, `Get`, `List`, `Delete`, `VxlanSelectVtep`, `VxlanSelectVm`, `VxlanSelectMulticastGroup`, `VxlanStartPing`, `VxlanPing`, `TrillStart`, `TrillStop`, `TrillReadvertiseLsps` |
-| `ControllerService` | ⛔ 0/17 | — | `CreateOpenFlow`, `CreateNetconf`, `CreateOvsdb`, `CreatePcep`, `Get`, `List`, `Delete`, `OpenFlowStart`, `OpenFlowStop`, `OpenFlowExecute`, `NetconfStart`, `NetconfGetYang`, `OvsdbQuery`, `OvsdbStartRefresh`, `PcepEstablish`, `PcepInitiateLsp`, `PcepReportLsp` |
+| Service             | 状态                     | 已支持 RPC                                                                                                                | 未支持 RPC                                                                                                                                                                                                                                                                                          |
+| ------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ProtocolService`   | ⛔ 0/15                  | —                                                                                                                         | `Create`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `StartAll`, `StopAll`, `WaitForUp`, `Advertise`, `Withdraw`, `Restart`, `GetStats`, `ListSessions`                                                                                                                                    |
+| `BgpService`        | ⛔ 0/16                  | —                                                                                                                         | `Create`, `Get`, `List`, `Update`, `Delete`, `Establish`, `Connect`, `Disconnect`, `AdvertiseRoutes`, `WithdrawRoutes`, `ReadvertiseRoutes`, `Refresh`, `GracefulRestart`, `ListSessions`, `ViewRoutes`, `ViewLsTopology`                                                                           |
+| `OspfService`       | ✅ 10/10（需 CLI 实例）  | `GetCaps`, `GetStats`, `GetScale`, `ListPeers`, `ListLsdb`, `GetRoutes`, `SetRoutes`, `Measure`, `SetFault`, `ListFaults` | —                                                                                                                                                                                                                                                                                                   |
+| `Ospfv2Service`     | 🟡 9/9（GR 显式 NOTSUP） | `Create`, `Get`, `List`, `Update`, `Delete`, `Establish`, `Advertise`, `Withdraw`, `GracefulRestart`                      | —                                                                                                                                                                                                                                                                                                   |
+| `Ospfv3Service`     | ⛔ 0/9                   | —                                                                                                                         | `Create`, `Get`, `List`, `Update`, `Delete`, `Establish`, `Advertise`, `Withdraw`, `GracefulRestart`                                                                                                                                                                                                |
+| `IsisService`       | ⛔ 0/13                  | —                                                                                                                         | `Create`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `Establish`, `LspAdvertise`, `LspWithdraw`, `GracefulRestart`, `SendInSyncPdus`, `SendOutOfSyncPdus`                                                                                                                                  |
+| `RipService`        | ⛔ 0/11                  | —                                                                                                                         | `Create`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `Advertise`, `Withdraw`, `Suspend`, `Resume`                                                                                                                                                                                          |
+| `MulticastService`  | ⛔ 0/20                  | —                                                                                                                         | `CreatePim`, `CreateIgmp`, `CreateIgmpQuerier`, `CreateMld`, `CreateMldQuerier`, `Get`, `List`, `Update`, `Delete`, `PimStart`, `PimJoin`, `PimLeave`, `PimBootstrap`, `PimRegister`, `IgmpApply`, `IgmpJoin`, `IgmpLeave`, `IgmpSendReport`, `MldApply`, `MldSendReport`                           |
+| `MplsService`       | ⛔ 0/20                  | —                                                                                                                         | `CreateLdp`, `CreateVpls`, `CreatePw`, `List`, `Get`, `Delete`, `LdpStart`, `LdpStop`, `LdpEstablish`, `LdpRequestLabel`, `LdpRestart`, `LdpWithdrawLsps`, `CreateStaticLabel`, `CreateVpnLabel`, `LspPingStart`, `LspPingStop`, `LspPingPause`, `LspPingResume`, `LspTracePause`, `LspTraceResume` |
+| `SrService`         | ⛔ 0/12                  | —                                                                                                                         | `CreateSr`, `CreateSrv6`, `Get`, `List`, `Delete`, `SegmentListImport`, `SegmentListExport`, `SegmentListPreview`, `SegmentListValidate`, `PreviewTunnelSid`, `Srv6OamStart`, `Srv6OamStop`                                                                                                         |
+| `BfdService`        | ⛔ 0/15                  | —                                                                                                                         | `Create`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `AdminUp`, `AdminDown`, `EnableDemand`, `DisableDemand`, `InitiatePoll`, `ResumePdus`, `StopPdus`, `SetDiagnostic`                                                                                                                    |
+| `SwitchingService`  | ⛔ 0/13                  | —                                                                                                                         | `CreateStp`, `CreateLacp`, `CreateSrp`, `Get`, `List`, `Delete`, `StpStartCist`, `StpStartMsti`, `StpStartBridge`, `StpStop`, `StpSendTopoChange`, `StartAllLacp`, `SrpControl`                                                                                                                     |
+| `TunnelService`     | ⛔ 0/14                  | —                                                                                                                         | `CreateVxlan`, `CreateGre`, `CreateTrill`, `Get`, `List`, `Delete`, `VxlanSelectVtep`, `VxlanSelectVm`, `VxlanSelectMulticastGroup`, `VxlanStartPing`, `VxlanPing`, `TrillStart`, `TrillStop`, `TrillReadvertiseLsps`                                                                               |
+| `ControllerService` | ⛔ 0/17                  | —                                                                                                                         | `CreateOpenFlow`, `CreateNetconf`, `CreateOvsdb`, `CreatePcep`, `Get`, `List`, `Delete`, `OpenFlowStart`, `OpenFlowStop`, `OpenFlowExecute`, `NetconfStart`, `NetconfGetYang`, `OvsdbQuery`, `OvsdbStartRefresh`, `PcepEstablish`, `PcepInitiateLsp`, `PcepReportLsp`                               |
 
 #### 接入/会话
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `DhcpService` | ⛔ 0/24 | — | `CreateV4Client`, `CreateV4Server`, `CreateV4Relay`, `CreateV6Client`, `CreateV6Server`, `Get`, `List`, `Delete`, `Bind`, `Renew`, `Rebind`, `Release`, `Reboot`, `Inform`, `ForceRenew`, `WaitForState`, `StartServer`, `StopServer`, `StartReplyingNak`, `StopReplyingNak`, `LeaseQuery`, `BulkLeaseQuery`, `ActiveLeaseQuery`, `StartTls` |
-| `PppoeService` | ⛔ 0/11 | — | `CreateClient`, `CreateServer`, `Get`, `List`, `Delete`, `Connect`, `Disconnect`, `Abort`, `ChangeMode`, `WaitForState`, `SessionInfo` |
-| `L2tpService` | ⛔ 0/8 | — | `Create`, `Get`, `List`, `Delete`, `Connect`, `Disconnect`, `Abort`, `WaitForState` |
-| `IptvService` | ⛔ 0/7 | — | `Create`, `Get`, `List`, `Delete`, `StartTest`, `StopTest`, `WaitForCompletion` |
-| `Dot1xService` | ⛔ 0/8 | — | `Create`, `Get`, `List`, `Delete`, `UploadCertificate`, `DeleteCertificate`, `Abort`, `WaitForAuthState` |
+| Service        | 状态    | 已支持 RPC | 未支持 RPC                                                                                                                                                                                                                                                                                                                                   |
+| -------------- | ------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DhcpService`  | ⛔ 0/24 | —          | `CreateV4Client`, `CreateV4Server`, `CreateV4Relay`, `CreateV6Client`, `CreateV6Server`, `Get`, `List`, `Delete`, `Bind`, `Renew`, `Rebind`, `Release`, `Reboot`, `Inform`, `ForceRenew`, `WaitForState`, `StartServer`, `StopServer`, `StartReplyingNak`, `StopReplyingNak`, `LeaseQuery`, `BulkLeaseQuery`, `ActiveLeaseQuery`, `StartTls` |
+| `PppoeService` | ⛔ 0/11 | —          | `CreateClient`, `CreateServer`, `Get`, `List`, `Delete`, `Connect`, `Disconnect`, `Abort`, `ChangeMode`, `WaitForState`, `SessionInfo`                                                                                                                                                                                                       |
+| `L2tpService`  | ⛔ 0/8  | —          | `Create`, `Get`, `List`, `Delete`, `Connect`, `Disconnect`, `Abort`, `WaitForState`                                                                                                                                                                                                                                                          |
+| `IptvService`  | ⛔ 0/7  | —          | `Create`, `Get`, `List`, `Delete`, `StartTest`, `StopTest`, `WaitForCompletion`                                                                                                                                                                                                                                                              |
+| `Dot1xService` | ⛔ 0/8  | —          | `Create`, `Get`, `List`, `Delete`, `UploadCertificate`, `DeleteCertificate`, `Abort`, `WaitForAuthState`                                                                                                                                                                                                                                     |
 
 #### OAM/时间同步
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `CfmService` | ⛔ 0/11 | — | `Create`, `Get`, `List`, `Delete`, `StartCc`, `StopCc`, `StartLinkTrace`, `StopLinkTrace`, `StartLoopBack`, `StopLoopBack`, `ExpandWizard` |
-| `Y1731Service` | ⛔ 0/14 | — | `Create`, `Get`, `List`, `Delete`, `StartCcm`, `StartLbm`, `StartLtm`, `StartDmm`, `StartLmm`, `Start1Dm`, `StartAis`, `StartLck`, `StartCfm`, `Stop` |
-| `EfmService` | ⛔ 0/11 | — | `Create`, `Get`, `List`, `Delete`, `Apply`, `StartLoopBack`, `StartLinkTrace`, `StartVarReq`, `StartEventNotification`, `StartOrgSpec`, `Stop` |
-| `GptpService` | ⛔ 0/14 | — | `Create`, `Get`, `List`, `Delete`, `SendPacket`, `SendSignaling`, `SendErrorSync`, `ResumeAnnounce`, `ResumeSync`, `ResumeFollowUp`, `StopAnnounce`, `StopSync`, `StopFollowUp`, `ConfigureClockSync` |
-| `TwampService` | ⛔ 0/12 | — | `Create`, `Get`, `List`, `Delete`, `Control`, `RequestSession`, `StartSession`, `StopSession`, `PauseSession`, `ResumeSession`, `Start`, `Stop` |
-| `SaaService` | ⛔ 0/6 | — | `Create`, `Get`, `List`, `Delete`, `Start`, `Stop` |
-| `Srv6OamService` | ⛔ 0/6 | — | `Create`, `Get`, `List`, `Delete`, `Start`, `Stop` |
+| Service          | 状态    | 已支持 RPC | 未支持 RPC                                                                                                                                                                                            |
+| ---------------- | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CfmService`     | ⛔ 0/11 | —          | `Create`, `Get`, `List`, `Delete`, `StartCc`, `StopCc`, `StartLinkTrace`, `StopLinkTrace`, `StartLoopBack`, `StopLoopBack`, `ExpandWizard`                                                            |
+| `Y1731Service`   | ⛔ 0/14 | —          | `Create`, `Get`, `List`, `Delete`, `StartCcm`, `StartLbm`, `StartLtm`, `StartDmm`, `StartLmm`, `Start1Dm`, `StartAis`, `StartLck`, `StartCfm`, `Stop`                                                 |
+| `EfmService`     | ⛔ 0/11 | —          | `Create`, `Get`, `List`, `Delete`, `Apply`, `StartLoopBack`, `StartLinkTrace`, `StartVarReq`, `StartEventNotification`, `StartOrgSpec`, `Stop`                                                        |
+| `GptpService`    | ⛔ 0/14 | —          | `Create`, `Get`, `List`, `Delete`, `SendPacket`, `SendSignaling`, `SendErrorSync`, `ResumeAnnounce`, `ResumeSync`, `ResumeFollowUp`, `StopAnnounce`, `StopSync`, `StopFollowUp`, `ConfigureClockSync` |
+| `TwampService`   | ⛔ 0/12 | —          | `Create`, `Get`, `List`, `Delete`, `Control`, `RequestSession`, `StartSession`, `StopSession`, `PauseSession`, `ResumeSession`, `Start`, `Stop`                                                       |
+| `SaaService`     | ⛔ 0/6  | —          | `Create`, `Get`, `List`, `Delete`, `Start`, `Stop`                                                                                                                                                    |
+| `Srv6OamService` | ⛔ 0/6  | —          | `Create`, `Get`, `List`, `Delete`, `Start`, `Stop`                                                                                                                                                    |
 
 #### 性能/基准
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `BenchmarkService` | ⛔ 0/15 | — | `GetWizard`, `Create`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `UpdateConfig`, `Expand`, `WriteDb`, `ListResults`, `CreateTrafficGroup`, `AssignTrafficGroup`, `ParallelSearch` |
-| `SmartScripterService` | ⛔ 0/8 | — | `Create`, `Get`, `Update`, `Delete`, `Start`, `Stop`, `Pause`, `GetState` |
+| Service                | 状态    | 已支持 RPC | 未支持 RPC                                                                                                                                                                                  |
+| ---------------------- | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BenchmarkService`     | ⛔ 0/15 | —          | `GetWizard`, `Create`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `UpdateConfig`, `Expand`, `WriteDb`, `ListResults`, `CreateTrafficGroup`, `AssignTrafficGroup`, `ParallelSearch` |
+| `SmartScripterService` | ⛔ 0/8  | —          | `Create`, `Get`, `Update`, `Delete`, `Start`, `Stop`, `Pause`, `GetState`                                                                                                                   |
 
 #### L4–L7
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `L47Service` | ⛔ 0/11 | — | `CreateClient`, `CreateServer`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `StartAll`, `StopAll`, `GetStats` |
-| `CertificateService` | ⛔ 0/4 | — | `UploadCertificate`, `UploadPrivateKey`, `UploadCaCertificate`, `DeleteCertificates` |
+| Service              | 状态    | 已支持 RPC | 未支持 RPC                                                                                                            |
+| -------------------- | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------- |
+| `L47Service`         | ⛔ 0/11 | —          | `CreateClient`, `CreateServer`, `Get`, `List`, `Update`, `Delete`, `Start`, `Stop`, `StartAll`, `StopAll`, `GetStats` |
+| `CertificateService` | ⛔ 0/4  | —          | `UploadCertificate`, `UploadPrivateKey`, `UploadCaCertificate`, `DeleteCertificates`                                  |
 
 #### 配置/用例/文件
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `ConfigService` | ✅ 14/14（YAML 文本） | `DraftOpen`, `DraftGet`, `DraftPut`, `DraftDiscard`, `DraftValidate`, `DraftCreate`, `DraftUpdate`, `DraftDelete`, `DraftDiff`, `ConfigApply`, `ConfigGet`, `ConfigRevert`, `ResGet`, `ResList` | — |
-| `TestCaseService` | ⛔ 0/4 | — | `Save`, `Load`, `List`, `Delete` |
-| `TestSuiteService` | ⛔ 0/8 | — | `Load`, `Start`, `Stop`, `Pause`, `Resume`, `Skip`, `Unload`, `List` |
-| `WorkspaceService` | ⛔ 0/2 | — | `Save`, `Load` |
-| `FileService` | 🟡 5/5（需 `state_dir`；上传/下载均分块） | `List`, `Delete`, `Stat`, `Upload`, `Download` | — |
+| Service            | 状态                                      | 已支持 RPC                                                                                                                                                                                      | 未支持 RPC                                                           |
+| ------------------ | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `ConfigService`    | ✅ 14/14（YAML 文本）                     | `DraftOpen`, `DraftGet`, `DraftPut`, `DraftDiscard`, `DraftValidate`, `DraftCreate`, `DraftUpdate`, `DraftDelete`, `DraftDiff`, `ConfigApply`, `ConfigGet`, `ConfigRevert`, `ResGet`, `ResList` | —                                                                    |
+| `TestCaseService`  | ⛔ 0/4                                    | —                                                                                                                                                                                               | `Save`, `Load`, `List`, `Delete`                                     |
+| `TestSuiteService` | ⛔ 0/8                                    | —                                                                                                                                                                                               | `Load`, `Start`, `Stop`, `Pause`, `Resume`, `Skip`, `Unload`, `List` |
+| `WorkspaceService` | ⛔ 0/2                                    | —                                                                                                                                                                                               | `Save`, `Load`                                                       |
+| `FileService`      | 🟡 5/5（需 `state_dir`；上传/下载均分块） | `List`, `Delete`, `Stat`, `Upload`, `Download`                                                                                                                                                  | —                                                                    |
 
 #### 统计/结果
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `StatsService` | 🟡 4/4（行 v2：bytes/FCS/p50/p99/时间戳） | `Subscribe`, `Snapshot`, `GetAlert`, `SetAlert` | — |
-| `ResultService` | ✅ 13/13 | `CreateView`, `CreateColumn`, `GetView`, `ListViews`, `Subscribe`, `Unsubscribe`, `UnsubscribeAll`, `Refresh`, `Pause`, `Resume`, `Clear`, `GetByKey`, `Export` | — |
-| `ChartService` | ✅ 6/6 | `Create`, `Update`, `RemoveSeries`, `StartHistory`, `StopHistory`, `ListHistory` | — |
-| `ReportService` | ✅ 4/4 | `Generate`, `ExportResult`, `ImportResult`, `DeleteResult` | — |
-| `EventService` | ✅ 2/2 | `Subscribe`, `Ack` | — |
+| Service         | 状态                                      | 已支持 RPC                                                                                                                                                      | 未支持 RPC |
+| --------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `StatsService`  | 🟡 4/4（行 v2：bytes/FCS/p50/p99/时间戳） | `Subscribe`, `Snapshot`, `GetAlert`, `SetAlert`                                                                                                                 | —          |
+| `ResultService` | ✅ 13/13                                  | `CreateView`, `CreateColumn`, `GetView`, `ListViews`, `Subscribe`, `Unsubscribe`, `UnsubscribeAll`, `Refresh`, `Pause`, `Resume`, `Clear`, `GetByKey`, `Export` | —          |
+| `ChartService`  | ✅ 6/6                                    | `Create`, `Update`, `RemoveSeries`, `StartHistory`, `StopHistory`, `ListHistory`                                                                                | —          |
+| `ReportService` | ✅ 4/4                                    | `Generate`, `ExportResult`, `ImportResult`, `DeleteResult`                                                                                                      | —          |
+| `EventService`  | ✅ 2/2                                    | `Subscribe`, `Ack`                                                                                                                                              | —          |
 
 #### 捕获
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `CaptureService` | ✅ 14/14 | `Create`, `Get`, `List`, `Delete`, `Update`, `Start`, `Stop`, `StartAll`, `StopAll`, `Download`, `AbortDownload`, `ReadByIndex`, `SubscribeRealtime`, `ResetParser` | — |
+| Service          | 状态     | 已支持 RPC                                                                                                                                                          | 未支持 RPC |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `CaptureService` | ✅ 14/14 | `Create`, `Get`, `List`, `Delete`, `Update`, `Start`, `Stop`, `StartAll`, `StopAll`, `Download`, `AbortDownload`, `ReadByIndex`, `SubscribeRealtime`, `ResetParser` | —          |
 
 #### 场景向导
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `ScenarioService` | ⛔ 0/7 | — | `Create`, `Get`, `List`, `Update`, `Delete`, `Expand`, `Save` |
+| Service           | 状态   | 已支持 RPC | 未支持 RPC                                                    |
+| ----------------- | ------ | ---------- | ------------------------------------------------------------- |
+| `ScenarioService` | ⛔ 0/7 | —          | `Create`, `Get`, `List`, `Update`, `Delete`, `Expand`, `Save` |
 
 #### 运行/作业
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
-| `RunService` | ✅ 6/6（需先 apply/开端口） | `StartTest`, `StopTest`, `PauseTest`, `ResumeTest`, `GetRun`, `ListRuns` | — |
-| `JobService` | ✅ 3/3 | `GetJob`, `ListJobs`, `CancelJob` | — |
+| Service      | 状态                        | 已支持 RPC                                                               | 未支持 RPC |
+| ------------ | --------------------------- | ------------------------------------------------------------------------ | ---------- |
+| `RunService` | ✅ 6/6（需先 apply/开端口） | `StartTest`, `StopTest`, `PauseTest`, `ResumeTest`, `GetRun`, `ListRuns` | —          |
+| `JobService` | ✅ 3/3                      | `GetJob`, `ListJobs`, `CancelJob`                                        | —          |
 
 #### 自定义扩展
 
-| Service | 状态 | 已支持 RPC | 未支持 RPC |
-|---|---|---|---|
+| Service            | 状态    | 已支持 RPC                                                                                                                                                              | 未支持 RPC             |
+| ------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | `ExtensionService` | 🟡 9/10 | `ListHeaderTypes`, `ListHeaderProperties`, `ListHeaders`, `CreateHeader`, `InsertHeader`, `UpdateHeader`, `DeleteHeader`, `CreateDynamicClass`, `CreateDynamicProperty` | `CreateDynamicNetwork` |
 
 ### 4.3 能力备注（避免误读）

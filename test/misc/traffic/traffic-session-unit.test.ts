@@ -1,7 +1,4 @@
-import type {
-  TrafficBackend,
-  TransmitHandle,
-} from "@/utils/backends/contract";
+import type { TrafficBackend, TransmitHandle } from "@/utils/backends/contract";
 import { BackendRegistry } from "@/utils/backends/registry";
 import { PacketBuilder } from "@/utils/packet/model";
 import { StreamPort } from "@/utils/traffic/model";

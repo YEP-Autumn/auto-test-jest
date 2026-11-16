@@ -16,7 +16,10 @@ import type {
 } from "../backends/contract";
 import { BackendRegistry } from "../backends/registry";
 import type { PacketSpec } from "../packet/model";
-import { assertTrafficCapability, getTrafficCapabilities } from "./capabilities";
+import {
+  assertTrafficCapability,
+  getTrafficCapabilities,
+} from "./capabilities";
 import { StreamPort } from "./model";
 import { StreamPortResolver } from "./resolver";
 import type { ResolvedPort } from "./types";

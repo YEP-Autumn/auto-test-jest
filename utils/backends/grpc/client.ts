@@ -164,9 +164,7 @@ export class StreamControlClient {
       read(this.settings.ca),
       read(this.settings.key),
       read(this.settings.cert),
-      this.settings.tlsInsecure
-        ? { rejectUnauthorized: false }
-        : undefined,
+      this.settings.tlsInsecure ? { rejectUnauthorized: false } : undefined,
     );
   }
 }

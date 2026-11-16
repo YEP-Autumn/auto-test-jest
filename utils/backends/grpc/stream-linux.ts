@@ -20,10 +20,7 @@ import {
 import { FieldType, PacketSpec } from "../../packet/model";
 import { TransmitMode } from "../../packet/types";
 import { canUseFixedSnmpTemplate, encodeSnmpMessage } from "../codec/snmp";
-import {
-  HeaderInstance,
-  packetToHeaders,
-} from "../codec/grpc/headers";
+import { HeaderInstance, packetToHeaders } from "../codec/grpc/headers";
 import { CaptureManager } from "./capture";
 import {
   cleanupResources,
@@ -139,9 +136,13 @@ export class StreamControlBackend implements TrafficBackend {
     await this.captureManager.release(port);
 
     try {
-      const reply = await this.client.unary<any>(this.client.port, "ClosePort", {
-        name: port.address,
-      });
+      const reply = await this.client.unary<any>(
+        this.client.port,
+        "ClosePort",
+        {
+          name: port.address,
+        },
+      );
       assertResult(reply.result, `PortService.ClosePort(${port.address})`);
     } catch {
       // 端口可能已关闭
@@ -329,7 +330,9 @@ export class StreamControlBackend implements TrafficBackend {
       assertResult(tpl.result, "TrafficService.CreateTemplate");
       templateRef = tpl.resource?.meta?.ref;
       if (!templateRef) {
-        throw new Error("[streamcontrol] CreateTemplate 未返回 resource.meta.ref");
+        throw new Error(
+          "[streamcontrol] CreateTemplate 未返回 resource.meta.ref",
+        );
       }
 
       const transmit = this.transmitConfig(options);
@@ -348,7 +351,9 @@ export class StreamControlBackend implements TrafficBackend {
       assertResult(ch.result, "TrafficService.CreateChannel");
       channelRef = ch.resource?.meta?.ref;
       if (!channelRef) {
-        throw new Error("[streamcontrol] CreateChannel 未返回 resource.meta.ref");
+        throw new Error(
+          "[streamcontrol] CreateChannel 未返回 resource.meta.ref",
+        );
       }
 
       const prof = await this.client.unary<any>(
@@ -414,7 +419,11 @@ export class StreamControlBackend implements TrafficBackend {
       this.runManager.add(record);
       return this.runManager.createHandle(record);
     } catch (err) {
-      await cleanupResources(this.client, { templateRef, channelRef, profileRef });
+      await cleanupResources(this.client, {
+        templateRef,
+        channelRef,
+        profileRef,
+      });
       throw err;
     }
   }
@@ -449,7 +458,9 @@ export class StreamControlBackend implements TrafficBackend {
     if (transmit?.mode !== TransmitMode.BURST) return undefined;
     const param: any = transmit.param ?? {};
     const hasBurst =
-      param.burst_size != null || param.burst_count != null || param.gap != null;
+      param.burst_size != null ||
+      param.burst_count != null ||
+      param.gap != null;
     if (!hasBurst) return undefined;
 
     if (param.gap != null && !this.features.includes("traffic-burst-gap")) {
@@ -491,7 +502,11 @@ export class StreamControlBackend implements TrafficBackend {
     if (mode === TransmitMode.TIME) {
       return { transmit_mode: 3, burst_size: 0 };
     }
-    if (mode === TransmitMode.STEP || mode === TransmitMode.BURST || frames > 0) {
+    if (
+      mode === TransmitMode.STEP ||
+      mode === TransmitMode.BURST ||
+      frames > 0
+    ) {
       return { transmit_mode: 2, burst_size: Math.max(1, frames) };
     }
     return { transmit_mode: 1, burst_size: 0 };
@@ -559,6 +574,4 @@ export class StreamControlBackend implements TrafficBackend {
       throw new Error("[streamcontrol] backend 未初始化，请先调用 init()");
     }
   }
-
-
 }

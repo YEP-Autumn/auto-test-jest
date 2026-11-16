@@ -47,18 +47,18 @@ gRPC 相关环境变量：
 
 ## 当前状态
 
-| 能力                   | Renix HTTP                    | streamcontrol gRPC                                                             |
-| ---------------------- | ----------------------------- | ------------------------------------------------------------------------------ |
-| init / 鉴权            | ✅ login                      | ✅ Hello + Bearer metadata                                                     |
-| 端口占用/释放          | ✅                            | ✅ GetPort/OpenPort/ClosePort                                                  |
-| 抓包启停               | ✅                            | ✅ CaptureService（Create/Reset/Start/Stop）                                   |
-| 抓包读取               | ✅ thrift PacketList          | ✅ ReadByIndex + pcap 批量下载                                                 |
-| 发送报文               | ✅ thrift + modifier/transmit | ✅ template/channel + `TrafficService.Start`（默认）                            |
+| 能力                   | Renix HTTP                    | streamcontrol gRPC                                                |
+| ---------------------- | ----------------------------- | ----------------------------------------------------------------- |
+| init / 鉴权            | ✅ login                      | ✅ Hello + Bearer metadata                                        |
+| 端口占用/释放          | ✅                            | ✅ GetPort/OpenPort/ClosePort                                     |
+| 抓包启停               | ✅                            | ✅ CaptureService（Create/Reset/Start/Stop）                      |
+| 抓包读取               | ✅ thrift PacketList          | ✅ ReadByIndex + pcap 批量下载                                    |
+| 发送报文               | ✅ thrift + modifier/transmit | ✅ template/channel + `TrafficService.Start`（默认）              |
 | Dot3 / LLC / SNAP 发送 | ✅                            | ✅ `HeaderType.DOT3/LLC/SNAP` + `payload`（RAW 用 `blob/custom`） |
-| IPv4/TCP options       | ✅ thrift options             | ✅ `HeaderOption[]` + 自动 IHL/data_off                                        |
-| SNMP 发送              | ✅                            | ✅ 固定 43B 模板 + 可变 PDU `payload: custom`                                  |
-| SNMP 解码              | ✅                            | ✅ v1/v2c/v3（抓包校验）                                                       |
-| 停止发送               | ✅                            | ✅ `TrafficService.Stop`                                                       |
+| IPv4/TCP options       | ✅ thrift options             | ✅ `HeaderOption[]` + 自动 IHL/data_off                           |
+| SNMP 发送              | ✅                            | ✅ 固定 43B 模板 + 可变 PDU `payload: custom`                     |
+| SNMP 解码              | ✅                            | ✅ v1/v2c/v3（抓包校验）                                          |
+| 停止发送               | ✅                            | ✅ `TrafficService.Stop`                                          |
 
 Renix 和 Scapy 共享 `HttpTrafficTransport`：登录、token、multipart 上传只实现
 一次，请求体里的 `backend` 由具体端口决定。`TrafficSession` 混用两个 provider
@@ -100,8 +100,8 @@ await backend.sendPacket(port, spec, { wait: true, timeoutMs: 30000 });
 
 ```ts
 const handle = await backend.startTransmit(port, spec, options);
-await handle.wait(30000);      // 等待并自动 StopTest，释放 run 槽位
-await handle.stop();           // 提前停止
+await handle.wait(30000); // 等待并自动 StopTest，释放 run 槽位
+await handle.stop(); // 提前停止
 const state = await handle.state();
 ```
 
@@ -132,8 +132,8 @@ testHelper.addPktSender({
 - `CaptureService.Create` 的 spec 必须是 Struct 形态，`port` 必须是端口名字符串；
   `mode: 1` 表示 WRAP。
 - `TrafficService.CreateTemplate/CreateChannel/CreateLoadProfile/SetPortConfig`
-  + `TrafficService.Start` 可实际发包；抓包读回并解码后与 PacketBuilder
-  期望字段匹配。
+  - `TrafficService.Start` 可实际发包；抓包读回并解码后与 PacketBuilder
+    期望字段匹配。
 - **VLAN（重新部署后复测通过）**：抓到
   `...aabb 8100 000a 0800 ...`，解码出 Ethernet type=0x8100 + VLAN vid=10。
 - **地址 modifier start（重新部署后复测通过）**：

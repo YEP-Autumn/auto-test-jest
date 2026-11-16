@@ -54,10 +54,7 @@ describe("stream port config", () => {
 
   test("reordering streamPorts changes the physical mapping only", () => {
     const original = [...streamPorts];
-    [streamPorts[0], streamPorts[1]] = [
-      streamPorts[1],
-      streamPorts[0],
-    ];
+    [streamPorts[0], streamPorts[1]] = [streamPorts[1], streamPorts[0]];
     try {
       expect(resolve(StreamPort.A)).toMatchObject({
         id: "A",
@@ -112,9 +109,7 @@ describe("stream port config", () => {
     const original = [...streamPorts];
     streamPorts.splice(0, streamPorts.length);
     try {
-      expect(() => resolve(StreamPort.A)).toThrow(
-        /streamPorts 只有 0 项/,
-      );
+      expect(() => resolve(StreamPort.A)).toThrow(/streamPorts 只有 0 项/);
     } finally {
       streamPorts.push(...original);
     }
@@ -125,15 +120,12 @@ describe("stream port config", () => {
   });
 
   test("topology resolution does not depend on the selected provider", () => {
-    const topology = resolverFromEnv(streamPorts).resolveTopology(
-      StreamPort.A,
-    );
+    const topology = resolverFromEnv(streamPorts).resolveTopology(StreamPort.A);
     process.env.TRAFFIC_PROVIDER_A = "stream-linux";
-    expect(
-      resolverFromEnv(streamPorts).resolveTopology(StreamPort.A),
-    ).toEqual(topology);
+    expect(resolverFromEnv(streamPorts).resolveTopology(StreamPort.A)).toEqual(
+      topology,
+    );
   });
-
 
   test("resolvedPortKey is stable for the internal endpoint", () => {
     const resolved = resolve(StreamPort.A);

@@ -168,8 +168,7 @@ export class RunManager {
     const record = this.runs.get(runId);
     if (!record) return; // 已经被 stop/回收
 
-    const limit =
-      timeoutMs ?? Math.max(15_000, record.durationMs + 60_000);
+    const limit = timeoutMs ?? Math.max(15_000, record.durationMs + 60_000);
     const deadline = Date.now() + limit;
     while (Date.now() < deadline) {
       const run = await this.client.unary<any>(this.client.run, "GetRun", {

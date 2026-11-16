@@ -15,10 +15,17 @@
  * 需要直接使用后端/编解码内部模块的单元测试，仍可从 `@/utils/<module>` 导入。
  */
 
-export * from "./base";
+export * from "./shared/base";
 
 /** 测试编排、逻辑端口与报文构造 */
-export * from "./testing";
+export * from "./runtime/test-helper";
+export { StreamPort } from "./domain/traffic/stream-port";
+export type { TrafficPortId } from "./domain/traffic/stream-port";
+export { PacketBuilder } from "./domain/packet/model";
+export type { PacketLayer, PacketSpec } from "./domain/packet/model";
+export { TransmitMode } from "./domain/packet/types";
+export type { TransmitHandle } from "./contracts/traffic-backend";
+export { createTrafficSession } from "./runtime/create-session";
 
 /** 声明式拓扑与内置拓扑 */
 export {
@@ -26,10 +33,14 @@ export {
   LinkConstraint,
   topo,
   validateTopo,
-} from "./topo/link-constraint";
-export type { Link, PortMapping, TopoLinks } from "./topo/link-constraint";
-export { dut, traffic } from "./topo/endpoints";
-export type { DutName, Endpoint, PortName } from "./topo/endpoints";
+} from "./runtime/topologies/catalog";
+export type { Link, PortMapping, TopoLinks } from "./domain/topology/model";
+export { dut, traffic } from "./runtime/topologies/endpoints";
+export type {
+  DutName,
+  Endpoint,
+  PortName,
+} from "./runtime/topologies/endpoints";
 
 /** 发送/校验参数与常用枚举 */
 export {
@@ -41,9 +52,9 @@ export {
   LessThan,
   ModifierField,
   ModifierMode,
-} from "./comm/components";
-export type { PacketCheckParam, PacketSendParam } from "./comm/components";
+} from "./runtime/actions";
+export type { PacketCheckParam, PacketSendParam } from "./runtime/actions";
 
 /** 设备与环境配置 */
-export { Config } from "./comm/config";
-export { Dut } from "./comm/dut";
+export { Config } from "./runtime/config";
+export { Dut } from "./adapters/device/dut";

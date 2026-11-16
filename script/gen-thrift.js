@@ -3,7 +3,7 @@
  * 生成 thrift 代码（utils/rpc/gen-nodejs/packet_types.js）。
  *
  * gen-nodejs 目录被 .gitignore 忽略，因此全新 clone 或 CI 上缺少该文件会导致
- * Jest 报错：Cannot find module '../rpc/gen-nodejs/packet_types'。
+ * Jest 报错：Cannot find module 'utils/rpc/gen-nodejs/packet_types'。
  *
  * 用法：
  *   node script/gen-thrift.js          # 缺失或 thrift 源文件更新时生成
@@ -27,9 +27,7 @@ const force = process.argv.includes("--force");
 function needsGenerate() {
   if (force || !fs.existsSync(outputFile)) return true;
   try {
-    return (
-      fs.statSync(thriftSource).mtimeMs > fs.statSync(outputFile).mtimeMs
-    );
+    return fs.statSync(thriftSource).mtimeMs > fs.statSync(outputFile).mtimeMs;
   } catch {
     return true;
   }
@@ -47,7 +45,7 @@ const result = spawnSync("thrift", ["--gen", "js:node", thriftFile], {
 
 if (result.error) {
   console.error(
-    "[gen-thrift] 无法执行 thrift 命令，请先安装 Thrift 编译器（例如 apt install thrift）。"
+    "[gen-thrift] 无法执行 thrift 命令，请先安装 Thrift 编译器（例如 apt install thrift）。",
   );
   console.error(result.error.message);
   process.exit(1);

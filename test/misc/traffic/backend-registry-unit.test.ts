@@ -1,5 +1,5 @@
-import type { TrafficBackend } from "@/utils/backends/contract";
-import { BackendRegistry } from "@/utils/backends/registry";
+import type { TrafficBackend } from "@/utils/contracts/traffic-backend";
+import { BackendRegistry } from "@/utils/runtime/traffic/registry";
 
 function fakeBackend(calls: string[]): TrafficBackend {
   return {

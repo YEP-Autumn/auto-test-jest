@@ -1,10 +1,10 @@
-import { parsePcapFrames } from "@/utils/backends/grpc/pcap";
+import { parsePcapFrames } from "@/utils/adapters/traffic/streamcontrol/pcap";
 import {
   durationFromOptions,
   framesFromOptions,
-} from "@/utils/backends/grpc/template";
-import { FieldType } from "@/utils/packet/model";
-import { TransmitMode } from "@/utils/packet/types";
+} from "@/utils/adapters/traffic/streamcontrol/template";
+import { FieldType } from "@/utils/domain/packet/model";
+import { TransmitMode } from "@/utils/domain/packet/types";
 
 function pcapWithFrame(frame: Buffer): Buffer {
   const header = Buffer.alloc(24);

@@ -123,7 +123,7 @@ test("配置 LDP 后邻居进入 OPERATIONAL", async () => {
 - `Port.A/B/C/D/E/F`（值形如 `<PortA>`）是**端口占位符**，DUT 最多支持 6 个端口；命令字符串里直接写
   `` `interface ${Port.A}` ``，执行前会按当前 DUT 的 `portList` 替换为真实端口名。
 - 流量收发端口使用 `StreamPort.A`-`J`，只填逻辑端口；实际后端/地址由
-  `Config.streamPorts` 的数组顺序决定。`StreamPort` 暂时作为兼容别名保留。
+  `config/env/default.json` 的 `traffic.ports` 数组顺序决定（代码中对应 `streamPorts`）。
 
 ---
 

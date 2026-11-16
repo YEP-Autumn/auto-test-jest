@@ -1,8 +1,12 @@
-import { createTrafficSession } from "@/utils/composition";
-import { FieldType, PacketBuilder } from "@/utils/packet/model";
-import { BurstGapUnit, TransmitMode } from "@/utils/packet/types";
-import { StreamPort } from "@/utils/testing";
-import type { TrafficSession } from "@/utils/traffic/session";
+import {
+  BurstGapUnit,
+  createTrafficSession,
+  PacketBuilder,
+  StreamPort,
+  TransmitMode,
+} from "@/utils";
+import { FieldType } from "@/utils/domain/packet/model";
+import type { TrafficSession } from "@/utils/runtime/traffic/session";
 
 // 显式开关仅用于决定是否运行 E2E；连接参数统一在 config/env/local.json。
 const enabled = process.env.STREAM_CONTROL_E2E === "true";

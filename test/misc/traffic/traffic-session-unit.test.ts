@@ -1,9 +1,9 @@
-import type { TrafficBackend, TransmitHandle } from "@/utils/backends/contract";
-import { BackendRegistry } from "@/utils/backends/registry";
-import { PacketBuilder } from "@/utils/packet/model";
-import { StreamPort } from "@/utils/traffic/model";
-import { StreamPortResolver } from "@/utils/traffic/resolver";
-import { TrafficSession } from "@/utils/traffic/session";
+import type { TrafficBackend, TransmitHandle } from "@/utils/contracts/traffic-backend";
+import { BackendRegistry } from "@/utils/runtime/traffic/registry";
+import { PacketBuilder } from "@/utils/domain/packet/model";
+import { StreamPort } from "@/utils/domain/traffic/stream-port";
+import { StreamPortResolver } from "@/utils/runtime/traffic/resolver";
+import { TrafficSession } from "@/utils/runtime/traffic/session";
 
 function createFakeBackend(calls: string[]): TrafficBackend {
   return {

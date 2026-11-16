@@ -79,23 +79,13 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── feature/                # 特性用例：<NN-模块>/<NN-UG小节>[/<NN-子功能>[_类型]]/NNNN-<模块>[-<子功能>].test.ts
 │   └── misc/bugfix/<缺陷号>/   # 缺陷回归用例
 ├── utils/
-│   ├── test-helper.ts          # TestHelper / DutIdx / 报文 MAC 等
-│   ├── index.ts                # sleep、Port 占位符、日志前缀
-│   ├── comm/                   # 设备通信与配置
-│   │   ├── config.ts           # Config：DUT 列表、后端地址、默认会话参数
-│   │   ├── dut.ts              # Dut：登录 / exec，自动抛出 % 错误
-│   │   ├── transport.ts        # Telnet / SSH 传输实现
-│   │   └── components.ts       # Actuator：配置、校验、抓包、流量发送等动作
-│   ├── stream/                 # 流量收发后端
-│   │   ├── stream-backend-api.ts   # 端口预约/释放、发包、抓包 HTTP API
-│   │   ├── thrift-packet.ts        # PacketBuilder / PacketListParser
-│   │   └── thrift-protocol.factory.ts
-│   ├── topo/                   # 拓扑
-│   │   ├── topo-backend-api.ts # 拓扑 CRUD HTTP API
-│   │   ├── link-constraint.ts  # 拓扑 DSL 与内置拓扑
-│   │   ├── endpoints.ts        # dut()/traffic() 端点解析
-│   │   └── types.ts
-│   └── rpc/                    # Thrift IDL 与生成物（gen-* 被忽略）
+│   ├── index.ts                # 测试用例唯一入口
+│   ├── shared/                 # sleep / Port / 日志前缀
+│   ├── domain/                 # 纯领域：packet / traffic / topology
+│   ├── contracts/              # TrafficBackend / ITransport 契约
+│   ├── adapters/               # DUT、Renix、streamcontrol、TopoApi
+│   ├── runtime/                # 配置、动作、会话、拓扑目录、TestHelper
+│   └── rpc/                    # Thrift / gRPC IDL 与生成物（gen-* 被忽略）
 ├── test-report/                # jest-html-reporter 产物
 ├── jest.config.cjs             # 根配置（默认仅匹配 test/demo.test.ts）
 ├── babel.config.js             # babel-jest 的 TS 转译配置
@@ -240,25 +230,19 @@ npm run list:cases -- --profile mpls --suite regression --status skip,failing
   - 与 `default.json` 深合并，数组整体替换
 
 DUT 连接行为默认值（`shellPrompt`、分页正则、超时、缓冲区、终端尺寸等）
-仍保留在 `utils/comm/dut-defaults.ts`，不放进 JSON；JSON 只覆盖
+仍保留在 `utils/runtime/config/device-defaults.ts`，不放进 JSON；JSON 只覆盖
 `dut.connection` 中的 `protocol`、`username`、`password`。
 
-### DUT 与端口映射（`utils/comm/config.ts`）
-
-- `Config.dut_list` 从 `config/env/default.json` 的 `dut.list` 读取，下标与 `DutIdx.A`(0) ~ `DutIdx.L`(11) 一一对应。
-- 每台 DUT 通过 `portList` 和 `portMapping` 描述物理连接。
-- `Config.streamPorts` 从 `traffic.ports` 读取；测试代码使用 `StreamPort.A/B/...` 逻辑端口令牌。
-- `Config.defaultTopoName` 从 `topo.name` 读取。
-- `Config.default_cfg` 由代码默认值 + `dut.connection` 合并而成。
-
-### DUT 与端口映射（`utils/comm/config.ts`）
+### DUT 与端口映射（`utils/runtime/config/index.ts`）
 
 - `Config.dut_list` 决定被测设备清单，下标与 `DutIdx.A`(0) ~ `DutIdx.L`(11) 一一对应，最多支持 12 台。
 - 每台 DUT 通过 `portList`（如 `eth-0-1 ~ eth-0-4`，最多支持 6 个端口）和 `portMapping`
   （`{ device, if_index }`，指向拓扑/流量收发后端里的真实端口）描述物理连接。
-- `Config.streamPorts` 定义测试仪/Scapy 端口；测试代码使用 `@/utils` 的 `StreamPort.A/B/...` 逻辑端口令牌，provider/address 在 `startTest()` 时解析。
+- `traffic.ports` 定义测试仪/Scapy 端口；测试代码使用 `@/utils` 的 `StreamPort.A/B/...` 逻辑端口令牌，
+  provider/address 在 `startTest()` 时由 `runtime/config/traffic.ts` 的 `streamPorts` 解析。
 - `Config.defaultTopoName`（默认 `auto-test-topo`）：`TestHelper.init()` 会先删除同名旧拓扑再重建。
-- `Config.default_cfg` 是 Telnet/SSH 会话默认参数（超时、分页、缓冲区、终端宽高等）。
+- `Config.default_cfg` 是 Telnet/SSH 会话默认参数（超时、分页、缓冲区、终端宽高等），由代码默认值
+  + `dut.connection` 合并而成。
 
 ## 编写测试用例
 
@@ -460,7 +444,7 @@ runner** 上（`workflow_dispatch` 或 nightly 触发），详见 [docs/spec/ci.
 |---|---|
 | `无法执行 thrift 命令` | 未安装 Thrift 编译器，执行 `sudo apt-get install -y thrift-compiler` |
 | `Cannot find module '../rpc/gen-nodejs/packet_types'` | 未生成 Thrift 代码，执行 `npm run gen`，或确认 `postinstall` 未被 `--ignore-scripts` 跳过 |
-| `DUT X 未配置或未初始化` | `Config.dut_list` 未配置对应设备，检查 `utils/comm/config.ts` |
+| `DUT X 未配置或未初始化` | `Config.dut_list` 未配置对应设备，检查 `utils/runtime/config/index.ts` |
 | `Renix/DUT 未配置端口 X` | `portMapping` 缺少对应端口，补齐后才可解析拓扑端点 |
 | Telnet 命令超时 `response not received` | 分页提示未命中；确认 `default_cfg.pageSeparator` 能匹配设备 `--More--` 输出 |
 | 回显被按 80 列硬换行导致正则不匹配 | `default_cfg.terminalWidth/Height` 已放大，可进一步调整 |

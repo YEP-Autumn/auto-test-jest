@@ -1,11 +1,11 @@
-import { PacketBuilder, FieldType } from "@/utils/packet/model";
+import { PacketBuilder, FieldType } from "@/utils/domain/packet/model";
 import {
   HeaderType,
   headerOptionBytesLength,
   packetToHeaders,
-} from "@/utils/backends/codec/grpc/headers";
-import { encodeSnmpMessage } from "@/utils/backends/codec/snmp";
-import { decodeFrame } from "@/utils/backends/codec/frame/decode";
+} from "@/utils/adapters/traffic/codec/grpc/headers";
+import { encodeSnmpMessage } from "@/utils/adapters/traffic/codec/snmp";
+import { decodeFrame } from "@/utils/adapters/traffic/codec/frame/decode";
 
 function wrapSnmp(pdu: Buffer, sport = 161, dport = 162): Buffer {
   const eth = Buffer.from("00112233445566778899aabb0800", "hex");

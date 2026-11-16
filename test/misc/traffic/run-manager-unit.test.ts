@@ -1,5 +1,5 @@
-import type { BackendEndpoint } from "@/utils/backends/contract";
-import { RunManager } from "@/utils/backends/grpc/run";
+import type { BackendEndpoint } from "@/utils/contracts/traffic-backend";
+import { RunManager } from "@/utils/adapters/traffic/streamcontrol/run";
 
 const port: BackendEndpoint = {
   provider: "stream-linux",

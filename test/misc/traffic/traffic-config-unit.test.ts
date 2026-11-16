@@ -1,10 +1,10 @@
-import { Config } from "@/utils/comm/config";
-import { StreamPort } from "@/utils/testing";
-import { streamPorts } from "@/utils/config/traffic";
-import { loadConfig, validateConfig } from "@/utils/config/loader";
-import { TRAFFIC_PORT_IDS } from "@/utils/traffic/model";
-import { StreamPortResolver } from "@/utils/traffic/resolver";
-import { resolvedPortKey } from "@/utils/traffic/types";
+import { Config } from "@/utils/runtime/config/index";
+import { StreamPort } from "@/utils";
+import { streamPorts } from "@/utils/runtime/config/traffic";
+import { loadConfig, validateConfig } from "@/utils/runtime/config/loader";
+import { TRAFFIC_PORT_IDS } from "@/utils/domain/traffic/stream-port";
+import { StreamPortResolver } from "@/utils/runtime/traffic/resolver";
+import { resolvedPortKey } from "@/utils/domain/traffic/resolved-port";
 
 function resolve(port: StreamPort) {
   return new StreamPortResolver(streamPorts).resolve(port);

@@ -1,6 +1,4 @@
-import { Port } from "@/utils";
-import { DeviceARouteMac, TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { DeviceARouteMac, LinkConstraint, Port, TestHelper } from "@/utils";
 
 let testHelper: TestHelper;
 

@@ -1,6 +1,4 @@
-import { Port } from "@/utils";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, Port, TestHelper } from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -16,19 +14,19 @@ afterAll(async () => {
 
 /**
  *
- *                       +--------+
- *     RenixA <-> PortD-|  DUTA  |--PortA---+
- *                      +--------+          |
- *                       |      |         PortA
- *                     PortB  PortC         |
- *                       |      |       +--------+
- *                       |      |       |  DUTB  |
- *                       |      |       +--------+
- *                     PortB  PortC         |
- *                       |      |         PortB
- *                      +--------+          |
- *     RenixB <-> PortD-|  DUTC  |--PortA---+
- *                      +--------+
+ *                            +--------+
+ *     StreamPort.A <-> PortD-|  DUTA  |--PortA---+
+ *                            +--------+          |
+ *                            |        |         PortA
+ *                           PortB  PortC         |
+ *                            |        |       +--------+
+ *                            |        |       |  DUTB  |
+ *                            |        |       +--------+
+ *                           PortB  PortC         |
+ *                            |        |         PortB
+ *                            +--------+          |
+ *     StreamPort.B <-> PortD-|  DUTC  |--PortA---+
+ *                            +--------+
  *
  */
 
@@ -173,8 +171,9 @@ test("测试 bgp evpn vxlan loopback ping功能, 模拟两台PC分别通过普�
 
   testHelper.sleep(20000);
 
-  testHelper.ExecRetMatchDutA("ping vrf pc2 11.1.1.1", " 0% packet loss");
-  testHelper.ExecRetMatchDutA("ping vrf pc1 10.1.1.1", " 0% packet loss");
+  // 首次 ping 可能因 ARP/路由收敛丢包，使用 ReadyCheck 重试。
+  testHelper.ReadyCheckDutA("ping vrf pc2 11.1.1.1", " 0% packet loss", 60_000);
+  testHelper.ReadyCheckDutA("ping vrf pc1 10.1.1.1", " 0% packet loss", 60_000);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

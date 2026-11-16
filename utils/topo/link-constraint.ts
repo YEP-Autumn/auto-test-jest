@@ -82,9 +82,9 @@ function cached(name: string, build: () => TopoLinks): TopoLinks {
 export class LinkConstraint {
   /**
    *
-   *                    +--------+
-   *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
-   *                    +--------+
+   *                          +--------+
+   *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+   *                          +--------+
    *
    */
   static get one_device_topo_links_type_1(): TopoLinks {
@@ -98,11 +98,11 @@ export class LinkConstraint {
 
   /**
    *
-   *                    +--------+                   +--------+
-   *                    |        |--PortA <=> PortA--|        |
-   *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
-   *                    |        |--PortC <=> PortC--|        |
-   *                    +--------+                   +--------+
+   *                          +--------+                   +--------+
+   *                          |        |--PortA <=> PortA--|        |
+   *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+   *                          |        |--PortC <=> PortC--|        |
+   *                          +--------+                   +--------+
    *
    */
   static get two_devices_topo_links_type_1(): TopoLinks {
@@ -135,11 +135,11 @@ export class LinkConstraint {
   }
 
   /**
-   *                    +--------+
-   *  RenixA <=> PortD--|        |                    +--------+
-   *                    |  DUTA  | --PortA <=> PortA--|  DUTB  |--PortD <=> RenixB
-   *  RenixC <=> PortB--|        |                    +--------+
-   *                    +--------+
+   *                          +--------+
+   *  StreamPort.A <=> PortD--|        |                    +--------+
+   *                          |  DUTA  | --PortA <=> PortA--|  DUTB  |--PortD <=> StreamPort.B
+   *  StreamPort.C <=> PortB--|        |                    +--------+
+   *                          +--------+
    */
   static get two_devices_topo_links_type_3(): TopoLinks {
     return cached("two_devices_topo_links_type_3", () =>
@@ -153,15 +153,15 @@ export class LinkConstraint {
   }
 
   /**
-   *                    +--------+                   +--------+
-   *                    |        |--PortA <=> PortA--|        |
-   *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortB
-   *                    |        |--PortC <=> PortC--|        |    |
-   *                    +--------+                   +--------+    |
-   *                                                               |
-   *                                                 +--------+    |
-   *                               RenixB <=> PortD--|  DUTC  |--PortB
-   *                                                 +--------+
+   *                          +--------+                   +--------+
+   *                          |        |--PortA <=> PortA--|        |
+   *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortB
+   *                          |        |--PortC <=> PortC--|        |    |
+   *                          +--------+                   +--------+    |
+   *                                                                     |
+   *                                                       +--------+    |
+   *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+   *                                                       +--------+
    */
   static get three_devices_topo_links_type_1(): TopoLinks {
     return cached("three_devices_topo_links_type_1", () =>
@@ -176,15 +176,15 @@ export class LinkConstraint {
   }
 
   /*
-   *                    +--------+                   +--------+
-   *  RenixA <=> PortD--|        |                   |        |
-   *                    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
-   *  RenixC <=> PortB--|        |                   |        |    |
-   *                    +--------+                   +--------+    |
-   *                                                               |
-   *                                                 +--------+    |
-   *                               RenixB <=> PortD--|  DUTC  |--PortB
-   *                                                 +--------+
+   *                          +--------+                   +--------+
+   *  StreamPort.A <=> PortD--|        |                   |        |
+   *                          |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+   *  StreamPort.C <=> PortB--|        |                   |        |    |
+   *                          +--------+                   +--------+    |
+   *                                                                     |
+   *                                                       +--------+    |
+   *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+   *                                                       +--------+
    */
   static get three_devices_topo_links_type_2(): TopoLinks {
     return cached("three_devices_topo_links_type_2", () =>
@@ -200,19 +200,19 @@ export class LinkConstraint {
 
   /**
    *
-   *                       +--------+
-   *     RenixA <-> PortD-|  DUTA  |--PortA---+
-   *                      +--------+          |
-   *                       |      |         PortA
-   *                     PortB  PortC         |
-   *                       |      |       +--------+
-   *                       |      |       |  DUTB  |
-   *                       |      |       +--------+
-   *                     PortB  PortC         |
-   *                       |      |         PortB
-   *                      +--------+          |
-   *     RenixB <-> PortD-|  DUTC  |--PortA---+
-   *                      +--------+
+   *                            +--------+
+   *     StreamPort.A <-> PortD-|  DUTA  |--PortA---+
+   *                            +--------+          |
+   *                            |        |         PortA
+   *                          PortB    PortC        |
+   *                            |        |       +--------+
+   *                            |        |       |  DUTB  |
+   *                            |        |       +--------+
+   *                          PortB    PortC        |
+   *                            |        |         PortB
+   *                            +--------+          |
+   *     StreamPort.B <-> PortD-|  DUTC  |--PortA---+
+   *                            +--------+
    *
    */
   static get three_devices_topo_links_type_3(): TopoLinks {
@@ -245,13 +245,13 @@ export class LinkConstraint {
   }
 
   /**
-   *                    +--------+                   +--------+
-   *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
-   *                    +--------+                   +--------+    |
-   *                                                               |
-   *                                                 +--------+    |
-   *                               RenixB <=> PortD--|  DUTC  |--PortB
-   *                                                 +--------+
+   *                          +--------+                   +--------+
+   *  StreamPort.A <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+   *                          +--------+                   +--------+    |
+   *                                                                     |
+   *                                                       +--------+    |
+   *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+   *                                                       +--------+
    */
   static get three_devices_topo_links_type_5(): TopoLinks {
     return cached("three_devices_topo_links_type_5", () =>
@@ -287,23 +287,23 @@ export class LinkConstraint {
 
   /**
    *
-   *                                  +--------+
-   *         +-----------------PortC--|  DUTD  |--PortA-----------------+
-   *         |                        +--------+                       |
-   *         |                            |                            |
-   *         |                          PortB                          |
-   *         |                            |                            |
-   *       PortC                        PortC                        PortA
-   *         |                            |                            |
-   *    +--------+                   +--------+                   +--------+
-   *    |        |--PortA <=> PortA--|        |                   |        |
-   *    |  DUTA  |                   |  DUTB  |                   |  DUTC  |
-   *    |        |--PortB <=> PortB--|        |                   |        |
-   *    +--------+                   +--------+                   +--------+
-   *        |                            |                            |
-   *      PortD                        PortD                        PortD
-   *        |                            |                            |
-   *     RenixA                       RenixB                       RenixC
+   *                                        +--------+
+   *               +-----------------PortC--|  DUTD  |--PortA-----------------+
+   *               |                        +--------+                       |
+   *               |                            |                            |
+   *               |                          PortB                          |
+   *               |                            |                            |
+   *             PortC                        PortC                        PortA
+   *               |                            |                            |
+   *          +--------+                   +--------+                   +--------+
+   *          |        |--PortA <=> PortA--|        |                   |        |
+   *          |  DUTA  |                   |  DUTB  |                   |  DUTC  |
+   *          |        |--PortB <=> PortB--|        |                   |        |
+   *          +--------+                   +--------+                   +--------+
+   *              |                            |                            |
+   *            PortD                        PortD                        PortD
+   *              |                            |                            |
+   *        StreamPort.A                 StreamPort.B                 StreamPort.C
    *
    */
   static get four_devices_topo_links_type_2(): TopoLinks {

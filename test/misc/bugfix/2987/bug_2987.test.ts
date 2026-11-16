@@ -20,7 +20,7 @@ afterAll(async () => {
  *               |                            |                            |
  *               |                          PortB                          |
  *               |                            |                            |
- *       PortC                        PortC                        PortA
+ *             PortC                        PortC                        PortA
  *               |                            |                            |
  *          +--------+                   +--------+                   +--------+
  *          |        |--PortA <=> PortA--|        |                   |        |
@@ -28,7 +28,7 @@ afterAll(async () => {
  *          |        |--PortB <=> PortB--|        |                   |        |
  *          +--------+                   +--------+                   +--------+
  *              |                            |                            |
- *      PortD                        PortD                        PortD
+ *            PortD                        PortD                        PortD
  *              |                            |                            |
  *     StreamPort.A                       StreamPort.B                      *StreamPort.C
  *

@@ -1,6 +1,4 @@
-import { Port } from "@/utils";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, Port, TestHelper } from "@/utils";
 
 jest.setTimeout(1000 * 60 * 10);
 
@@ -18,11 +16,11 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
- *                    |        |--PortC <=> PortC--|        |
- *                    +--------+                   +--------+
+ *                          +--------+                   +--------+
+ *                          |        |--PortA <=> PortA--|        |
+ *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+ *                          |        |--PortC <=> PortC--|        |
+ *                          +--------+                   +--------+
  *
  */
 test("同一目的网络配置两条等价静态路由时，两个下一跳均被优选形成多路径", async () => {

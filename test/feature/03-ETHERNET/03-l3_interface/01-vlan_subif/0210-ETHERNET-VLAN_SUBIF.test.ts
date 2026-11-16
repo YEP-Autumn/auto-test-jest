@@ -1,5 +1,4 @@
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, TestHelper } from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -15,9 +14,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  *
  */
 test.skip("支持在VLAN子接口上配置DHCPv6 Relay", async () => {});

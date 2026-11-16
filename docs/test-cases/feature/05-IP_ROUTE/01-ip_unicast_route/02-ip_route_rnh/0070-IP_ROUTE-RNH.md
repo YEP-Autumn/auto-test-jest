@@ -46,9 +46,9 @@
 ### 2.1 拓扑 1
 
 ```text
-                   +--------+
- RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
-                   +--------+
+                         +--------+
+ StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+                         +--------+
 ```
 
 适用用例：0070
@@ -194,7 +194,7 @@ testHelper.addPktChecker({
 
 **脚本注释中的预期现象**
 
-- 流量发送验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文
+- 流量发送验证: 10.10.10.0/24路由生效(递归解析成功), StreamPort.B 应收到对应报文
 
 **清理**
 

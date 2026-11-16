@@ -47,11 +47,11 @@
 ### 2.1 拓扑 1
 
 ```text
-                   +--------+
- RenixA <=> PortD--|        |                    +--------+
-                   |  DUTA  | --PortA <=> PortA--|  DUTB  |--PortD <=> RenixB
- RenixC <=> PortB--|        |                    +--------+
-                   +--------+
+                         +--------+
+ StreamPort.A <=> PortD--|        |                    +--------+
+                         |  DUTA  | --PortA <=> PortA--|  DUTB  |--PortD <=> StreamPort.B
+ StreamPort.C <=> PortB--|        |                    +--------+
+                         +--------+
 ```
 
 适用用例：0010
@@ -202,9 +202,9 @@ end
 
 **脚本注释中的预期现象**
 
-- RenixA发送vlan tag 2的报文, RenixB 可以收到
-- RenixA发送vlan tag 123的报文, RenixC 可以收到vlan tag为333的报文
-- RenixA发送vlan tag 100 200 的报文, RenixC 可以收到vlan tag为100 444的报文
+- StreamPort.A 发送vlan tag 2的报文, StreamPort.B 可以收到
+- StreamPort.A 发送vlan tag 123的报文, StreamPort.C 可以收到vlan tag为333的报文
+- StreamPort.A 发送vlan tag 100 200 的报文, StreamPort.C 可以收到vlan tag为100 444的报文
 - (删除其中任意一个'mpls或vlan-translate'不会影响另一个的功能)
 
 **清理**

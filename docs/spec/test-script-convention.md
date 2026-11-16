@@ -28,9 +28,7 @@ node script/check-test-names.js   # 或 npm run check:test-names
 每个 `.test.ts` 都遵循同一结构：**导入 → 超时 → 声明 → `beforeAll` → `afterAll` → `test(...)`**。
 
 ```ts
-import { Port } from "@/utils";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, Port, TestHelper } from "@/utils";
 
 // 1) 超时：设备交互耗时较长，应显式放宽（仅 CLI 场景常用 30 分钟）
 jest.setTimeout(1000 * 60 * 10);
@@ -200,7 +198,7 @@ testHelper.ReadyCheckDutB(
 **`addPktChecker` 会自动执行 `startCapture`/`stopCapture`**，通常由该动作完成抓包起止。
 
 ```ts
-import { PacketBuilder, StreamPort, TransmitMode } from "@/utils/testing";
+import { PacketBuilder, StreamPort, TransmitMode } from "@/utils";
 
 testHelper.startCapture(StreamPort.B);
 
@@ -243,8 +241,7 @@ testHelper.addPktChecker({
 - 需要自定义时用声明式 DSL：
 
 ```ts
-import { dut, traffic } from "@/utils/topo/endpoints";
-import { link, topo } from "@/utils/topo/link-constraint";
+import { dut, link, topo, traffic } from "@/utils";
 
 new TestHelper(
   topo(
@@ -264,7 +261,7 @@ new TestHelper(
 ### ExecCustomDutX：无法用通用动作表达时
 
 ```ts
-import { DutHandle } from "@/utils/comm/components";
+import { DutHandle } from "@/utils";
 
 testHelper.ExecCustomDutA(async (dut) => {
   await dut.safeExec("end");
@@ -316,8 +313,7 @@ describe("VLAN trunk translate 接口模式", () => {
 ### 9.1 最小示例
 
 ```ts
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, TestHelper } from "@/utils";
 
 jest.setTimeout(1000 * 60 * 10);
 let testHelper: TestHelper;

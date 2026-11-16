@@ -1,4 +1,4 @@
-import { TestHelper } from "@/utils/testing";
+import { TestHelper } from "@/utils";
 
 jest.setTimeout(1000 * 60 * 20);
 

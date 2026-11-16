@@ -46,11 +46,11 @@
 ### 2.1 拓扑 1
 
 ```text
-                   +--------+                   +--------+
-                   |        |--PortA <=> PortA--|        |
- RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
-                   |        |--PortC <=> PortC--|        |
-                   +--------+                   +--------+
+                         +--------+                   +--------+
+                         |        |--PortA <=> PortA--|        |
+ StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+                         |        |--PortC <=> PortC--|        |
+                         +--------+                   +--------+
 ```
 
 适用用例：0050

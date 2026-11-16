@@ -49,15 +49,15 @@
 ### 2.2 拓扑 2
 
 ```text
-                   +--------+                   +--------+
-                   |        |--PortA <=> PortA--|        |
- RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortB
-                   |        |--PortC <=> PortC--|        |    |
-                   +--------+                   +--------+    |
-                                                              |
-                                                +--------+    |
-                              RenixB <=> PortD--|  DUTC  |--PortB
-                                                +--------+
+                         +--------+                   +--------+
+                         |        |--PortA <=> PortA--|        |
+ StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortB
+                         |        |--PortC <=> PortC--|        |    |
+                         +--------+                   +--------+    |
+                                                                    |
+                                                      +--------+    |
+                              StreamPort.B <=> PortD--|  DUTC  |--PortB
+                                                      +--------+
 ```
 
 适用用例：0140

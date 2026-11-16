@@ -1,9 +1,11 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -18,15 +20,15 @@ afterAll(async () => {
 });
 
 /*
- *                    +--------+                   +--------+
- *  RenixA <=> PortD--|        |                   |        |
- *                    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *  RenixC <=> PortB--|        |                   |        |    |
- *                    +--------+                   +--------+    |
- *                                                               |
- *                                                 +--------+    |
- *                               RenixB <=> PortD--|  DUTC  |--PortB
- *                                                 +--------+
+ *                          +--------+                   +--------+
+ *  StreamPort.A <=> PortD--|        |                   |        |
+ *                          |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *  StreamPort.C <=> PortB--|        |                   |        |    |
+ *                          +--------+                   +--------+    |
+ *                                                                     |
+ *                                                       +--------+    |
+ *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+ *                                                       +--------+
  */
 test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
   testHelper.ExecConfigDutA([
@@ -183,7 +185,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     1000 * 45,
   );
 
-  // RenixA 发送 vlan 30-40 或 50-60 之间的报文时, RenixB能够收到报文
+  // StreamPort.A 发送 vlan 30-40 或 50-60 之间的报文时, StreamPort.B 能够收到报文
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -218,7 +220,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     expected_count: 10,
   });
 
-  // RenixA 发送 vlan 200的报文时, RenixC能够收到vlan 400的报文
+  // StreamPort.A 发送 vlan 200的报文时, StreamPort.C 能够收到vlan 400的报文
   testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -253,7 +255,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     expected_count: 10,
   });
 
-  // RenixA 发送 vlan 201 202的报文时, RenixC能够收到vlan 201 401的报文
+  // StreamPort.A 发送 vlan 201 202的报文时, StreamPort.C 能够收到vlan 201 401的报文
   testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -290,7 +292,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     expected_count: 10,
   });
 
-  // RenixA 发送 vlan 203的报文时, RenixC能够收到vlan 203 402的报文
+  // StreamPort.A 发送 vlan 203的报文时, StreamPort.C 能够收到vlan 203 402的报文
   testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -326,7 +328,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     expected_count: 10,
   });
 
-  // RenixA 发送 vlan 不带vlan的报文时, RenixC能够收到vlan 403的报文
+  // StreamPort.A 发送 vlan 不带vlan的报文时, StreamPort.C 能够收到vlan 403的报文
   testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -360,7 +362,7 @@ test("vlan range ac可以和qinq flex mode模式同时使用", async () => {
     expected_count: 10,
   });
 
-  // RenixA 发送 vlan 其他vlan的报文时, RenixC能够收到 报文原vlan + 外层 vlan 500的报文 (需要portB和portD都配置允许该vlan通行)
+  // StreamPort.A 发送 vlan 其他vlan的报文时, StreamPort.C 能够收到 报文原vlan + 外层 vlan 500的报文 (需要portB和portD都配置允许该vlan通行)
   testHelper.startCapture(StreamPort.C);
   testHelper.addPktSender({
     port: StreamPort.A,

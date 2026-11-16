@@ -1,13 +1,13 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
 import {
   DeviceARouteMac,
   DeviceBRouteMac,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
   TestHelper,
-} from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -23,11 +23,11 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
- *                    |        |--PortC <=> PortC--|        |
- *                    +--------+                   +--------+
+ *                          +--------+                   +--------+
+ *                          |        |--PortA <=> PortA--|        |
+ *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+ *                          |        |--PortC <=> PortC--|        |
+ *                          +--------+                   +--------+
  *
  */
 test("支持通过VLAN子接口建立OSPF邻居连接", async () => {

@@ -46,9 +46,9 @@
 ### 2.1 拓扑 1
 
 ```text
-                   +--------+
- RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
-                   +--------+
+                         +--------+
+ StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+                         +--------+
 ```
 
 适用用例：0020
@@ -320,9 +320,9 @@ testHelper.addPktChecker({
 
 **脚本注释中的预期现象**
 
-- 流量发送验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文
-- 流量发送验证: 11.11.11.0/24路由inactive(recursive-lookup host-route未生效), RenixB不应收到报文
-- 流量发送验证: 12.12.12.0/24路由生效(recursive-lookup host-route生效), RenixB应收到对应报文
+- 流量发送验证: 10.10.10.0/24路由生效(递归解析成功), StreamPort.B 应收到对应报文
+- 流量发送验证: 11.11.11.0/24路由inactive(recursive-lookup host-route未生效), StreamPort.B 不应收到报文
+- 流量发送验证: 12.12.12.0/24路由生效(recursive-lookup host-route生效), StreamPort.B 应收到对应报文
 
 **清理**
 

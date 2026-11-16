@@ -1,9 +1,12 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { DeviceARouteMac, TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  DeviceARouteMac,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -19,9 +22,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  *
  */
 test("支持在VLAN子接口上配置ACL", async () => {

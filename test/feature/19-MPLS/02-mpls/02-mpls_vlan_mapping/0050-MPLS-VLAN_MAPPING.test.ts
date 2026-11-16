@@ -1,6 +1,4 @@
-import { Port } from "@/utils";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, Port, TestHelper } from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -15,15 +13,15 @@ afterAll(async () => {
 });
 
 /*
- *                    +--------+                   +--------+
- *  RenixA <=> PortD--|        |                   |        |
- *                    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *  RenixC <=> PortB--|        |                   |        |    |
- *                    +--------+                   +--------+    |
- *                                                               |
- *                                                 +--------+    |
- *                               RenixB <=> PortD--|  DUTC  |--PortB
- *                                                 +--------+
+ *                          +--------+                   +--------+
+ *  StreamPort.A <=> PortD--|        |                   |        |
+ *                          |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *  StreamPort.C <=> PortB--|        |                   |        |    |
+ *                          +--------+                   +--------+    |
+ *                                                                     |
+ *                                                       +--------+    |
+ *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+ *                                                       +--------+
  */
 test("支持在开启了vlan-translate功能的接口上配置vlan + cvlan 类型mpls-vpls ac", async () => {
   testHelper.ExecConfigDutA([
@@ -137,9 +135,9 @@ test("支持在开启了vlan-translate功能的接口上配置vlan + cvlan 类�
   testHelper.sleep(45000);
 
   /**
-   * RenixA发送vlan tag 3 2 的报文, RenixB 可以收到
-   * RenixA发送vlan tag 123的报文, RenixC 可以收到vlan tag为333的报文
-   * RenixA发送vlan tag 100 200 的报文, RenixC 可以收到vlan tag为100 444的报文
+   * StreamPort.A 发送vlan tag 3 2 的报文, StreamPort.B 可以收到
+   * StreamPort.A 发送vlan tag 123的报文, StreamPort.C 可以收到vlan tag为333的报文
+   * StreamPort.A 发送vlan tag 100 200 的报文, StreamPort.C 可以收到vlan tag为100 444的报文
    *
    * (删除其中任意一个'mpls或vlan-translate'不会影响另一个的功能)
    */

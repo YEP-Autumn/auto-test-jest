@@ -1,13 +1,13 @@
-import { Port } from "@/utils";
 import {
+  LinkConstraint,
   ModifierField,
   ModifierMode,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
   TransmitMode,
-} from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -23,14 +23,14 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *                    |        |--PortC <=> PortC--|        |    |
- *                    +--------+                   +--------+    |
- *                                                               |
- *                                                 +--------+    |
- *                               RenixB <=> PortD--|  DUTC  |--PortB
- *                                                 +--------+
+ *                          +--------+                   +--------+
+ *  StreamPort.A <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *                          |        |--PortC <=> PortC--|        |    |
+ *                          +--------+                   +--------+    |
+ *                                                                     |
+ *                                                       +--------+    |
+ *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+ *                                                       +--------+
  */
 test("重启中间节点，负载分担功能失效(实际原因为先配置hash-value global port-channel select mpls，后创建linkagg时，linkagg未更新lb-hash offset)", async () => {
   testHelper.ExecConfigDutB(["clear counters"]);

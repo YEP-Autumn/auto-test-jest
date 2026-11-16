@@ -1,6 +1,4 @@
-import { Port } from "@/utils";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, Port, TestHelper } from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -16,11 +14,11 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
- *                    |        |--PortC <=> PortC--|        |
- *                    +--------+                   +--------+
+ *                          +--------+                   +--------+
+ *                          |        |--PortA <=> PortA--|        |
+ *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+ *                          |        |--PortC <=> PortC--|        |
+ *                          +--------+                   +--------+
  *
  */
 test("测试设备支持创建AGG VLAN子接口", async () => {

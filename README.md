@@ -32,7 +32,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
   `ExecConfigDutA` ~ `ExecConfigDutL` 等便捷方法覆盖常见场景。
 - **Telnet / SSH 双传输**：`Dut` 依据 `protocol` 字段自动选择 `TelnetConnection` 或
   `SshConnection`，对上暴露统一的 `exec` / `safeExec` 接口。
-- **声明式拓扑**：用 `dut("A", "D")`、`renix("A")`、`link(...)`、`topo(...)` 描述连线，
+- **声明式拓扑**：用 `dut("A", "D")`、`traffic("A")`、`link(...)`、`topo(...)` 描述连线，
   `LinkConstraint` 提供可复用的内置拓扑。
 - **报文构造与校验**：`PacketBuilder` 逐步拼装 Ethernet / VLAN / IPv4 / IPv6 / ARP /
   TCP / UDP / ICMP / LLC / SNMP / RAW，配合 `PacketSender`、`PacketChecker` 完成收发校验。
@@ -93,7 +93,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── topo/                   # 拓扑
 │   │   ├── topo-backend-api.ts # 拓扑 CRUD HTTP API
 │   │   ├── link-constraint.ts  # 拓扑 DSL 与内置拓扑
-│   │   ├── endpoints.ts        # dut()/renix() 端点解析
+│   │   ├── endpoints.ts        # dut()/traffic() 端点解析
 │   │   └── types.ts
 │   └── rpc/                    # Thrift IDL 与生成物（gen-* 被忽略）
 ├── test-report/                # jest-html-reporter 产物
@@ -244,7 +244,7 @@ npm run list:cases -- --profile mpls --suite regression --status skip,failing
 - `Config.dut_list` 决定被测设备清单，下标与 `DutIdx.A`(0) ~ `DutIdx.L`(11) 一一对应，最多支持 12 台。
 - 每台 DUT 通过 `portList`（如 `eth-0-1 ~ eth-0-4`，最多支持 6 个端口）和 `portMapping`
   （`{ device, if_index }`，指向拓扑/流量收发后端里的真实端口）描述物理连接。
-- `Config.Renix.portList` 定义测试仪/Scapy 端口，`RenixPort.A/B/C/D` 是常用端口的快捷方式。
+- `Config.streamPorts` 定义测试仪/Scapy 端口；测试代码使用 `@/utils` 的 `StreamPort.A/B/...` 逻辑端口令牌，provider/address 在 `startTest()` 时解析。
 - `Config.defaultTopoName`（默认 `auto-test-topo`）：`TestHelper.init()` 会先删除同名旧拓扑再重建。
 - `Config.default_cfg` 是 Telnet/SSH 会话默认参数（超时、分页、缓冲区、终端宽高等）。
 
@@ -253,11 +253,13 @@ npm run list:cases -- --profile mpls --suite regression --status skip,failing
 一个用例的结构：
 
 ```ts
-import { RenixPort } from "@/utils/comm/config";
-import { TransmitMode } from "@/utils/comm/components";
-import { PacketBuilder } from "@/utils/stream/thrift-packet";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
-import { TestHelper } from "@/utils/test-helper";
+import {
+  LinkConstraint,
+  PacketBuilder,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 jest.setTimeout(1000 * 60 * 10);
 
@@ -277,7 +279,7 @@ test("DUTA 配置 VLAN 100 后，DUTB 能收到带 VLAN 100 的报文", async ()
   t.ReadyCheckDutA("show vlan 100", /VLAN100\s+active/);
 
   t.addPktSender({
-    port: RenixPort.A,
+    port: StreamPort.A,
     packet: new PacketBuilder()
       .setEthernet({ dst: "00:00:00:11:22:44", src: "00:00:00:11:22:33" })
       .setVLAN({ vlan: 100 })
@@ -287,7 +289,7 @@ test("DUTA 配置 VLAN 100 后，DUTB 能收到带 VLAN 100 的报文", async ()
   });
 
   t.addPktChecker({
-    port: RenixPort.B,
+    port: StreamPort.B,
     packet: new PacketBuilder().setEthernet({ dst: "00:00:00:11:22:44" }).setVLAN({ vlan: 100 }),
     expected_count: 1,
   });
@@ -307,11 +309,11 @@ test("DUTA 配置 VLAN 100 后，DUTB 能收到带 VLAN 100 的报文", async ()
 | 生命周期 | `init()` | 登录拓扑后端、连接全部 DUT、按需重建拓扑 |
 | | `destroy()` | 断开 DUT、释放流量收发端口、删除拓扑 |
 | | `startTest()` / `result()` | 执行全部动作 / 取值 |
-| 配置 | `ExecConfigDut(idx, cmds)`、`ExecConfigDutA..D` | 下发配置命令 |
-| 清理 | `CleanConfigDut(idx, cmds)`、`CleanConfigDutA..D` | 清理配置（失败也继续执行） |
-| 回显校验 | `ExecRetMatchDut(idx, cmd, expect, notMatch?)`、`..A..D` | 执行命令并校验回显 |
-| 就绪等待 | `ReadyCheckDut(idx, cmd, expect, timeout?, notMatch?)`、`..A..D` | 轮询直到匹配或超时 |
-| 自定义 | `ExecCustomDut(idx, cb, exec_clean?)`、`..A..D` | 回调内通过 `DutHandle` 安全执行 |
+| 配置 | `ExecConfigDut(idx, cmds)`、`ExecConfigDutA..L` | 下发配置命令 |
+| 清理 | `CleanConfigDut(idx, cmds)`、`CleanConfigDutA..L` | 清理配置（失败也继续执行） |
+| 回显校验 | `ExecRetMatchDut(idx, cmd, expect, notMatch?)`、`..A..L` | 执行命令并校验回显 |
+| 就绪等待 | `ReadyCheckDut(idx, cmd, expect, timeout?, notMatch?)`、`..A..L` | 轮询直到匹配或超时 |
+| 自定义 | `ExecCustomDut(idx, cb, exec_clean?)`、`..A..L` | 回调内通过 `DutHandle` 安全执行 |
 | 流量发送/抓包 | `addPktSender(...)`、`startCapture(port)`、`stopStream(port)`、`addPktChecker(...)` | 见 `components.ts` |
 | 延时 | `sleep(ms)` | 固定等待 |
 
@@ -326,7 +328,7 @@ DUT 的 `portList` 自动替换为真实端口名。`expect` 传入 `string` 按
 
 发送参数 `PacketSendParam`：
 
-- `port`：`RenixPort.A` 等 `StreamPort`；
+- `port`：`StreamPort.A` 等逻辑端口令牌；
 - `packet`：`PacketBuilder` 实例；
 - `modifier_param`（可选）：按 `ModifierField` / `ModifierMode` 做字段递增、递减或随机；
 - `transmit_param`：`mode` 取 `TransmitMode.CONTINUOUS | BURST | STEP | TIME`，配合对应参数。
@@ -337,8 +339,7 @@ DUT 的 `portList` 自动替换为真实端口名。`expect` 传入 `string` 按
 ### 拓扑
 
 ```ts
-import { dut, renix } from "@/utils/topo/endpoints";
-import { link, topo, LinkConstraint } from "@/utils/topo/link-constraint";
+import { dut, link, LinkConstraint, topo, traffic } from "@/utils";
 
 // 方式一：直接引用内置拓扑
 new TestHelper(LinkConstraint.xxx).init();
@@ -346,7 +347,7 @@ new TestHelper(LinkConstraint.xxx).init();
 // 方式二：自定义拓扑
 new TestHelper(
   topo(
-    link(dut("A", "D"), renix("A")),
+    link(dut("A", "D"), traffic("A")),
     link(dut("A", "A"), dut("B", "A"), { vlan: 100 }),
   ),
 ).init();

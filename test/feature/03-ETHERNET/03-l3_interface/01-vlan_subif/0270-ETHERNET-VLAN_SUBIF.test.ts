@@ -1,6 +1,4 @@
-import { Port } from "@/utils";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, Port, TestHelper } from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -16,11 +14,11 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
- *                    |        |--PortC <=> PortC--|        |
- *                    +--------+                   +--------+
+ *                          +--------+                   +--------+
+ *                          |        |--PortA <=> PortA--|        |
+ *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+ *                          |        |--PortC <=> PortC--|        |
+ *                          +--------+                   +--------+
  *
  */
 test("支持在VLAN子接口上配置PIMv6-SM", async () => {

@@ -1,13 +1,13 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
 import {
   DeviceARouteMac,
   DeviceBRouteMac,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
   TestHelper,
-} from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+  TransmitMode,
+} from "@/utils";
 
 jest.setTimeout(1000 * 60 * 10);
 
@@ -25,11 +25,11 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
- *                    |        |--PortC <=> PortC--|        |
- *                    +--------+                   +--------+
+ *                          +--------+                   +--------+
+ *                          |        |--PortA <=> PortA--|        |
+ *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+ *                          |        |--PortC <=> PortC--|        |
+ *                          +--------+                   +--------+
  *
  */
 test("多条静态路由共用同一网关时，远端网络与主机路由均被安装且目的地址可达", async () => {
@@ -95,7 +95,7 @@ test("多条静态路由共用同一网关时，远端网络与主机路由均�
   testHelper.ExecRetMatchDutA("ping 10.10.12.1", " 0% packet loss");
   testHelper.ExecRetMatchDutA("ping 192.168.0.2", " 0% packet loss");
 
-  /** 打流验证: 远端网络路由命中的报文应从 DUTB PortD 转发到 RenixB */
+  /** 打流验证: 远端网络路由命中的报文应从 DUTB PortD 转发到 StreamPort.B */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,

@@ -1,9 +1,11 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -19,9 +21,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  */
 
 test("支持配置 2 to 1 vlan translate", async () => {
@@ -49,8 +51,8 @@ test("支持配置 2 to 1 vlan translate", async () => {
   ]);
 
   /**
-   * RenixA发送vlan [10/20]的报文，RenixB能够收到vlan [10/200]的报文
-   * RenixB发送vlan [10/200]的报文，RenixB能够收到vlan [10/20]的报文
+   * StreamPort.A 发送vlan [10/20]的报文，StreamPort.B 能够收到vlan [10/200]的报文
+   * StreamPort.B 发送vlan [10/200]的报文，StreamPort.B 能够收到vlan [10/20]的报文
    */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({

@@ -1,6 +1,4 @@
-import { Port } from "@/utils";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, Port, TestHelper } from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -17,15 +15,15 @@ afterAll(async () => {
 });
 
 /**
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortB
- *                    |        |--PortC <=> PortC--|        |    |
- *                    +--------+                   +--------+    |
- *                                                               |
- *                                                 +--------+    |
- *                               RenixB <=> PortD--|  DUTC  |--PortB
- *                                                 +--------+
+ *                          +--------+                   +--------+
+ *                          |        |--PortA <=> PortA--|        |
+ *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortB
+ *                          |        |--PortC <=> PortC--|        |    |
+ *                          +--------+                   +--------+    |
+ *                                                                     |
+ *                                                       +--------+    |
+ *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+ *                                                       +--------+
  */
 test("测试MPLS L3VPN 多跳 PING功能 (explicit-null)", async () => {
   testHelper.ExecConfigDutA([

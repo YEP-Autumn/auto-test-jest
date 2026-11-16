@@ -1,9 +1,12 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { DeviceARouteMac, TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  DeviceARouteMac,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -19,9 +22,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  *
  */
 test("测试无 VRF 静态路由配置recursive-lookup host-route", async () => {
@@ -59,7 +62,7 @@ test("测试无 VRF 静态路由配置recursive-lookup host-route", async () => 
     new RegExp("11.11.11.0/24.*?inactive"),
   );
 
-  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
+  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), StreamPort.B 应收到对应报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -94,7 +97,7 @@ test("测试无 VRF 静态路由配置recursive-lookup host-route", async () => 
     expected_count: 10,
   });
 
-  /** 打流验证: 11.11.11.0/24路由inactive(recursive-lookup host-route未生效), RenixB不应收到报文 */
+  /** 打流验证: 11.11.11.0/24路由inactive(recursive-lookup host-route未生效), StreamPort.B 不应收到报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -129,7 +132,7 @@ test("测试无 VRF 静态路由配置recursive-lookup host-route", async () => 
     expected_count: 0,
   });
 
-  /** 打流验证: 12.12.12.0/24路由生效(recursive-lookup host-route生效), RenixB应收到对应报文 */
+  /** 打流验证: 12.12.12.0/24路由生效(recursive-lookup host-route生效), StreamPort.B 应收到对应报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,

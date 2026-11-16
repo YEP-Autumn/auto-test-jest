@@ -1,4 +1,4 @@
-import { Port, sleep, STR_DEBUG_INFO, STR_FAILED, STR_SUCCESS } from "..";
+import { Port, sleep, STR_DEBUG_INFO, STR_FAILED, STR_SUCCESS } from "../base";
 import { formatPktList } from "../packet/format";
 import {
   matchARP,
@@ -221,8 +221,7 @@ export class PacketSender implements Actuator {
       await sleep(this.param.wait_time);
       const mode = this.param.transmit_param.mode;
       const waitForCompletion =
-        this.param.wait_for_completion ??
-        mode !== TransmitModeValue.CONTINUOUS;
+        this.param.wait_for_completion ?? mode !== TransmitModeValue.CONTINUOUS;
 
       const handle = await session.startTransmit(
         this.param.port,

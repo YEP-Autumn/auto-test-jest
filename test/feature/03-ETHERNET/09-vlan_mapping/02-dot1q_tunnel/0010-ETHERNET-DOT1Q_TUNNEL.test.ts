@@ -1,9 +1,11 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -19,9 +21,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  */
 
 test("支持配置 1 to 1 vlan translate", async () => {
@@ -51,8 +53,8 @@ test("支持配置 1 to 1 vlan translate", async () => {
   testHelper.sleep(1000 * 3);
 
   /**
-   * RenixA发送vlan 10的报文，RenixB能够收到vlan 200的报文
-   * RenixB发送vlan 200的报文，RenixB能够收到vlan 10的报文
+   * StreamPort.A 发送vlan 10的报文，StreamPort.B 能够收到vlan 200的报文
+   * StreamPort.B 发送vlan 200的报文，StreamPort.B 能够收到vlan 10的报文
    */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
@@ -171,9 +173,9 @@ test("配置不同vlan映射到相同vlan后, egress方向不会还原vlan tag",
   ]);
 
   /**
-   * RenixA发送vlan 10的报文，RenixB能够收到vlan 200的报文
-   * RenixA发送vlan 20的报文，RenixB能够收到vlan 200的报文
-   * RenixB发送vlan 200的报文，RenixA能够收到vlan 200的报文
+   * StreamPort.A 发送vlan 10的报文，StreamPort.B 能够收到vlan 200的报文
+   * StreamPort.A 发送vlan 20的报文，StreamPort.B 能够收到vlan 200的报文
+   * StreamPort.B 发送vlan 200的报文，StreamPort.A 能够收到vlan 200的报文
    */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({

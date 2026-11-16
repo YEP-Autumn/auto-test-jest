@@ -1,7 +1,7 @@
 /**
- * 测试侧公共入口。
+ * 测试侧内部聚合。
  *
- * 测试用例只需要从这里 import：
+ * 测试用例统一从 `@/utils` 导入；这里只负责把测试侧 API 汇总给 `utils/index.ts`：
  *   - StreamPort：逻辑端口令牌
  *   - PacketBuilder：报文构造
  *   - TestHelper：测试动作编排

@@ -1,13 +1,13 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
 import {
   DeviceARouteMac,
   DeviceBRouteMac,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
   TestHelper,
-} from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+  TransmitMode,
+} from "@/utils";
 
 jest.setTimeout(1000 * 60 * 10);
 
@@ -25,11 +25,11 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
- *                    |        |--PortC <=> PortC--|        |
- *                    +--------+                   +--------+
+ *                          +--------+                   +--------+
+ *                          |        |--PortA <=> PortA--|        |
+ *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+ *                          |        |--PortC <=> PortC--|        |
+ *                          +--------+                   +--------+
  *
  */
 test("配置默认静态路由后，未匹配明细路由的流量经默认网关转发且路由表显示默认路由", async () => {
@@ -99,7 +99,7 @@ test("配置默认静态路由后，未匹配明细路由的流量经默认网�
 
   testHelper.ExecRetMatchDutA("ping 2.2.2.1", " 0% packet loss");
 
-  /** 打流验证: 未匹配明细路由的报文经默认路由从 DUTB PortD 转发到 RenixB */
+  /** 打流验证: 未匹配明细路由的报文经默认路由从 DUTB PortD 转发到 StreamPort.B */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,

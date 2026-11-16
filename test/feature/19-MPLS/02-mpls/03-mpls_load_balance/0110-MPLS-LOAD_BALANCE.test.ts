@@ -1,13 +1,13 @@
-import { Port } from "@/utils";
 import {
+  LinkConstraint,
   ModifierField,
   ModifierMode,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
   TransmitMode,
-} from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -22,13 +22,13 @@ afterAll(async () => {
 });
 
 /**
- *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *                    +--------+                   +--------+    |
- *                                                               |
- *                                                 +--------+    |
- *                               RenixB <=> PortD--|  DUTC  |--PortB
- *                                                 +--------+
+ *                          +--------+                   +--------+
+ *  StreamPort.A <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *                          +--------+                   +--------+    |
+ *                                                                     |
+ *                                                       +--------+    |
+ *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+ *                                                       +--------+
  */
 test("测试MPLS AC出口支持agg接口对MPLS内层dst ip进行负载均衡", async () => {
   testHelper.ExecConfigDutA(["clear counters"]);

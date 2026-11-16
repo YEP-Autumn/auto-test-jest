@@ -1,13 +1,13 @@
-import { Port } from "@/utils";
 import {
   BurstGapUnit,
   BurstRateUnit,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
   TransmitMode,
-} from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -23,9 +23,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  *
  */
 test("开启storm control action shutdown时，如果接口已经处于风暴控制状态，则直接将接口errdisable", async () => {

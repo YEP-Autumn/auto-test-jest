@@ -1,13 +1,13 @@
-import { Port } from "@/utils";
 import {
+  LinkConstraint,
   ModifierField,
   ModifierMode,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
   TransmitMode,
-} from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -23,11 +23,11 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
- *                    |        |--PortC <=> PortC--|        |
- *                    +--------+                   +--------+
+ *                          +--------+                   +--------+
+ *                          |        |--PortA <=> PortA--|        |
+ *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+ *                          |        |--PortC <=> PortC--|        |
+ *                          +--------+                   +--------+
  *
  */
 test("[GX-链路聚合] 修改链路聚合的hash-field值不生效，不能按配置的的值进行负载分担", async () => {

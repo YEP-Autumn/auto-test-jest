@@ -1,13 +1,13 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
 import {
   DeviceARouteMac,
   DeviceBRouteMac,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
   TestHelper,
-} from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+  TransmitMode,
+} from "@/utils";
 
 jest.setTimeout(1000 * 60 * 10);
 
@@ -25,11 +25,11 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
- *                    |        |--PortC <=> PortC--|        |
- *                    +--------+                   +--------+
+ *                          +--------+                   +--------+
+ *                          |        |--PortA <=> PortA--|        |
+ *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+ *                          |        |--PortC <=> PortC--|        |
+ *                          +--------+                   +--------+
  *
  */
 test("删除静态路由后，路由表中对应条目消失且目的网络恢复不可达", async () => {
@@ -88,7 +88,7 @@ test("删除静态路由后，路由表中对应条目消失且目的网络恢�
 
   testHelper.ExecRetMatchDutA("ping 2.2.2.1", " 0% packet loss");
 
-  /** 打流验证: 删除前报文应命中静态路由并从 DUTB PortD 转发到 RenixB */
+  /** 打流验证: 删除前报文应命中静态路由并从 DUTB PortD 转发到 StreamPort.B */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -134,7 +134,7 @@ test("删除静态路由后，路由表中对应条目消失且目的网络恢�
   /** 等待 RIB 删除同步到 FIB，避免删除后仍有短时残留转发 */
   testHelper.sleep(1000);
 
-  /** 打流验证: 删除后报文不再命中静态路由，RenixB 不应收到报文 */
+  /** 打流验证: 删除后报文不再命中静态路由，StreamPort.B 不应收到报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,

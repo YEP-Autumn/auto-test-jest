@@ -1,6 +1,4 @@
-import { Port } from "@/utils";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, Port, TestHelper } from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -18,11 +16,11 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+                   +--------+
- *                    |        |--PortA <=> PortA--|        |
- *  RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
- *                    |        |--PortC <=> PortC--|        |
- *                    +--------+                   +--------+
+ *                          +--------+                   +--------+
+ *                          |        |--PortA <=> PortA--|        |
+ *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+ *                          |        |--PortC <=> PortC--|        |
+ *                          +--------+                   +--------+
  *
  */
 test.skip("[MPLS][l3vpn][SDK577] 引入3000条vpnv4路由。SDK577版本底层无法将路由全部写入。使用SDK559版本正常。", async () => {
@@ -132,7 +130,7 @@ test.skip("[MPLS][l3vpn][SDK577] 引入3000条vpnv4路由。SDK577版本底层�
 
   /**
    * TODO:
-   * 打流仪RenixA创建OSPF协议配置邻居，发布1k条路由
+   * 打流仪StreamPort.A 创建OSPF协议配置邻居，发布1k条路由
    */
 
   /** 验证ping连通性 */

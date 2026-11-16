@@ -46,9 +46,9 @@
 ### 2.1 拓扑 1
 
 ```text
-                   +--------+
- RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
-                   +--------+
+                         +--------+
+ StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+                         +--------+
 ```
 
 适用用例：0090
@@ -193,7 +193,7 @@ testHelper.addPktChecker({
 
 **脚本注释中的预期现象**
 
-- RenixB发送vlan [100/200]报文，RenixA能够收到带vlan 111的报文
+- StreamPort.B 发送vlan [100/200]报文，StreamPort.A 能够收到带vlan 111的报文
 
 **清理**
 

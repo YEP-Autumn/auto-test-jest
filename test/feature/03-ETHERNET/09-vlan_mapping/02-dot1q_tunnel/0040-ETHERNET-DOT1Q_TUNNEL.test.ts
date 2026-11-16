@@ -1,9 +1,11 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -19,9 +21,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  */
 
 test("支持为没有VLAN Tag的报文添加单层Tag", async () => {
@@ -49,8 +51,8 @@ test("支持为没有VLAN Tag的报文添加单层Tag", async () => {
   ]);
 
   /**
-   * RenixA发送不带vlan的报文，RenixB能够收到vlan 200的报文
-   * RenixB发送vlan 200的报文，RenixA能够收到不带vlan的报文
+   * StreamPort.A 发送不带vlan的报文，StreamPort.B 能够收到vlan 200的报文
+   * StreamPort.B 发送vlan 200的报文，StreamPort.A 能够收到不带vlan的报文
    */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({

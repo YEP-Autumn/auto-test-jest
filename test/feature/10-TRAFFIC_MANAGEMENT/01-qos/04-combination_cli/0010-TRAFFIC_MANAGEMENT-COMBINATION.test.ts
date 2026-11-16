@@ -1,5 +1,4 @@
-import { Port } from "@/utils";
-import { TestHelper } from "@/utils/testing";
+import { Port, TestHelper } from "@/utils";
 
 jest.setTimeout(1000 * 60 * 20);
 

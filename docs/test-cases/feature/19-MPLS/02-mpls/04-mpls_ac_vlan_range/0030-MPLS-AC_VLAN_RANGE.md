@@ -48,15 +48,15 @@
 ### 2.2 拓扑 2
 
 ```text
-                   +--------+                   +--------+
- RenixA <=> PortD--|        |                   |        |
-                   |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- RenixC <=> PortB--|        |                   |        |    |
-                   +--------+                   +--------+    |
-                                                              |
-                                                +--------+    |
-                              RenixB <=> PortD--|  DUTC  |--PortB
-                                                +--------+
+                         +--------+                   +--------+
+ StreamPort.A <=> PortD--|        |                   |        |
+                         |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ StreamPort.C <=> PortB--|        |                   |        |    |
+                         +--------+                   +--------+    |
+                                                                    |
+                                                      +--------+    |
+                              StreamPort.B <=> PortD--|  DUTC  |--PortB
+                                                      +--------+
 ```
 
 适用用例：0030
@@ -541,11 +541,11 @@ testHelper.addPktChecker({
 
 **脚本注释中的预期现象**
 
-- RenixA发送vlan 30~40,50~60的报文, RenixB可以收到vlan 2的报文
-- RenixA发送vlan 123的报文, RenixC可以收到vlan 333的报文
-- RenixA发送vlan 100/200的报文, RenixC可以收到vlan 100/444的报文
-- RenixC发送vlan 333的报文, RenixA可以收到vlan 123的报文
-- RenixC发送vlan 444的报文, RenixA可以收到vlan 100/200的报文
+- StreamPort.A 发送vlan 30~40,50~60的报文, StreamPort.B 可以收到vlan 2的报文
+- StreamPort.A 发送vlan 123的报文, StreamPort.C 可以收到vlan 333的报文
+- StreamPort.A 发送vlan 100/200的报文, StreamPort.C 可以收到vlan 100/444的报文
+- StreamPort.C 发送vlan 333的报文, StreamPort.A 可以收到vlan 123的报文
+- StreamPort.C 发送vlan 444的报文, StreamPort.A 可以收到vlan 100/200的报文
 
 **清理**
 

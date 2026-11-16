@@ -1,9 +1,12 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { DeviceARouteMac, TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  DeviceARouteMac,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -19,9 +22,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  *
  */
 test("测试recursive-lookup host-route不影响匹配直连网段路由", async () => {
@@ -49,7 +52,7 @@ test("测试recursive-lookup host-route不影响匹配直连网段路由", async
 
   testHelper.ExecRetMatchDutA("show ip route", "10.10.10.0/24");
 
-  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
+  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), StreamPort.B 应收到对应报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,

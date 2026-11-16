@@ -63,11 +63,11 @@
 ### 2.3 拓扑 3
 
 ```text
-                   +--------+                   +--------+
-                   |        |--PortA <=> PortA--|        |
- RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
-                   |        |--PortC <=> PortC--|        |
-                   +--------+                   +--------+
+                         +--------+                   +--------+
+                         |        |--PortA <=> PortA--|        |
+ StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+                         |        |--PortC <=> PortC--|        |
+                         +--------+                   +--------+
 ```
 
 适用用例：0040

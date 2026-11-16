@@ -46,11 +46,11 @@
 ### 2.1 拓扑 1
 
 ```text
-                   +--------+                   +--------+
-                   |        |--PortA <=> PortA--|        |
- RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
-                   |        |--PortC <=> PortC--|        |
-                   +--------+                   +--------+
+                         +--------+                   +--------+
+                         |        |--PortA <=> PortA--|        |
+ StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+                         |        |--PortC <=> PortC--|        |
+                         +--------+                   +--------+
 ```
 
 适用用例：0010
@@ -218,7 +218,7 @@ testHelper.addPktChecker({
 
 **脚本注释中的预期现象**
 
-- 流量发送验证: 命中静态路由的报文应从 DUTB PortD 转发到 RenixB
+- 流量发送验证: 命中静态路由的报文应从 DUTB PortD 转发到 StreamPort.B
 
 **清理**
 

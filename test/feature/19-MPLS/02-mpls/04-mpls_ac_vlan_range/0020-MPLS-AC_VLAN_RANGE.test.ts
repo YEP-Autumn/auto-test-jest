@@ -1,9 +1,11 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -18,13 +20,13 @@ afterAll(async () => {
 });
 
 /**
- *                    +--------+                   +--------+
- *  RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- *                    +--------+                   +--------+    |
- *                                                               |
- *                                                 +--------+    |
- *                               RenixB <=> PortD--|  DUTC  |--PortB
- *                                                 +--------+
+ *                          +--------+                   +--------+
+ *  StreamPort.A <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ *                          +--------+                   +--------+    |
+ *                                                                     |
+ *                                                       +--------+    |
+ *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+ *                                                       +--------+
  */
 test("vlan range ac bunlding可以和 vlan ac 同时使用", async () => {
   testHelper.ExecConfigDutA([
@@ -141,7 +143,7 @@ test("vlan range ac bunlding可以和 vlan ac 同时使用", async () => {
     1000 * 45,
   );
 
-  /** RenixA发送vlan 2的报文, RenixB可以收到vlan 2的报文 */
+  /** StreamPort.A 发送vlan 2的报文, StreamPort.B 可以收到vlan 2的报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -176,7 +178,7 @@ test("vlan range ac bunlding可以和 vlan ac 同时使用", async () => {
     expected_count: 10,
   });
 
-  /** RenixA发送vlan 30~40,50~60的报文, RenixB可以收到vlan 2的报文 */
+  /** StreamPort.A 发送vlan 30~40,50~60的报文, StreamPort.B 可以收到vlan 2的报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -245,7 +247,7 @@ test("vlan range ac bunlding可以和 vlan ac 同时使用", async () => {
     expected_count: 10,
   });
 
-  /** RenixA发送vlan 30~40,50~60以外的报文, RenixB不能收到 */
+  /** StreamPort.A 发送vlan 30~40,50~60以外的报文, StreamPort.B 不能收到 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,

@@ -1,9 +1,12 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { DeviceARouteMac, TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  DeviceARouteMac,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -19,9 +22,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  *
  */
 test("[SDK5.7.7-E530] 已有静态路由新增参数recursive-lookup host-route, 配置成功, 实际未生效", async () => {
@@ -54,7 +57,7 @@ test("[SDK5.7.7-E530] 已有静态路由新增参数recursive-lookup host-route,
     "ip route 10.10.10.0/24 99.99.99.99",
   );
 
-  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
+  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), StreamPort.B 应收到对应报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -106,7 +109,7 @@ test("[SDK5.7.7-E530] 已有静态路由新增参数recursive-lookup host-route,
     new RegExp("10.10.10.0/24.*?inactive"),
   );
 
-  /** 打流验证: 10.10.10.0/24路由inactive(recursive-lookup host-route未生效), RenixB不应收到报文 */
+  /** 打流验证: 10.10.10.0/24路由inactive(recursive-lookup host-route未生效), StreamPort.B 不应收到报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -154,7 +157,7 @@ test("[SDK5.7.7-E530] 已有静态路由新增参数recursive-lookup host-route,
   );
   testHelper.ExecRetMatchDutA("show ip route", "10.10.10.0/24");
 
-  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
+  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), StreamPort.B 应收到对应报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -238,7 +241,7 @@ test("静态路由更新recursive-lookup host-route参数 (存在主机路由的
   );
   testHelper.ExecRetMatchDutA("show ip route", "10.10.10.0/24");
 
-  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
+  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), StreamPort.B 应收到对应报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -286,7 +289,7 @@ test("静态路由更新recursive-lookup host-route参数 (存在主机路由的
   );
   testHelper.ExecRetMatchDutA("show ip route", "10.10.10.0/24");
 
-  /** 打流验证: 10.10.10.0/24路由下一跳的主机路由存在, RenixB可以收到报文 */
+  /** 打流验证: 10.10.10.0/24路由下一跳的主机路由存在, StreamPort.B 可以收到报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -334,7 +337,7 @@ test("静态路由更新recursive-lookup host-route参数 (存在主机路由的
   );
   testHelper.ExecRetMatchDutA("show ip route", "10.10.10.0/24");
 
-  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), RenixB应收到对应报文 */
+  /** 打流验证: 10.10.10.0/24路由生效(递归解析成功), StreamPort.B 应收到对应报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,

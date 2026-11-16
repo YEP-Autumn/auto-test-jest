@@ -1,9 +1,12 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { DeviceARouteMac, TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  DeviceARouteMac,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -19,9 +22,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  *
  */
 test("测试当主机路由消失后，recursive-lookup host-route路由失效", async () => {
@@ -51,7 +54,7 @@ test("测试当主机路由消失后，recursive-lookup host-route路由失效",
 
   testHelper.ExecRetMatchDutA("show ip route", "12.12.12.0/24");
 
-  /** 打流验证: 主机路由99.99.99.100/32存在, 12.12.12.0/24路由生效, RenixB应收到对应报文 */
+  /** 打流验证: 主机路由99.99.99.100/32存在, 12.12.12.0/24路由生效, StreamPort.B 应收到对应报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,
@@ -96,7 +99,7 @@ test("测试当主机路由消失后，recursive-lookup host-route路由失效",
 
   testHelper.ExecRetMatchDutA("show ip route", "12.12.12.0/24", true);
 
-  /** 打流验证: 主机路由99.99.99.100/32消失后, 12.12.12.0/24路由inactive, RenixB不应收到报文 */
+  /** 打流验证: 主机路由99.99.99.100/32消失后, 12.12.12.0/24路由inactive, StreamPort.B 不应收到报文 */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
     port: StreamPort.A,

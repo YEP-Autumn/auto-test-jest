@@ -47,15 +47,15 @@
 ### 2.2 拓扑 2
 
 ```text
-                   +--------+                   +--------+
- RenixA <=> PortD--|        |                   |        |
-                   |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
- RenixC <=> PortB--|        |                   |        |    |
-                   +--------+                   +--------+    |
-                                                              |
-                                                +--------+    |
-                              RenixB <=> PortD--|  DUTC  |--PortB
-                                                +--------+
+                         +--------+                   +--------+
+ StreamPort.A <=> PortD--|        |                   |        |
+                         |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+ StreamPort.C <=> PortB--|        |                   |        |    |
+                         +--------+                   +--------+    |
+                                                                    |
+                                                      +--------+    |
+                              StreamPort.B <=> PortD--|  DUTC  |--PortB
+                                                      +--------+
 ```
 
 适用用例：0060
@@ -263,13 +263,13 @@ end
 
 **脚本注释中的预期现象**
 
-- RenixA 发送 vlan 3 2 的报文时, RenixB能够收到报文
-- RenixA 发送 vlan 200的报文时, RenixC能够收到vlan 400的报文
-- RenixA 发送 vlan 201 202的报文时, RenixC能够收到vlan 201 401的报文
-- RenixA 发送 vlan 203的报文时, RenixC能够收到vlan 203 402的报文
-- RenixA 发送 vlan 不带vlan的报文时, RenixC能够收到vlan 403的报文
-- RenixA 发送 vlan 100-150的报文时, RenixC能够收到携带内层100-150, 外层404的报文
-- RenixA 发送 vlan 其他vlan的报文时, RenixC能够收到 报文原vlan + 外层 vlan 500的报文 (需要portB和portD都配置允许该vlan通行)
+- StreamPort.A 发送 vlan 3 2 的报文时, StreamPort.B 能够收到报文
+- StreamPort.A 发送 vlan 200的报文时, StreamPort.C 能够收到vlan 400的报文
+- StreamPort.A 发送 vlan 201 202的报文时, StreamPort.C 能够收到vlan 201 401的报文
+- StreamPort.A 发送 vlan 203的报文时, StreamPort.C 能够收到vlan 203 402的报文
+- StreamPort.A 发送 vlan 不带vlan的报文时, StreamPort.C 能够收到vlan 403的报文
+- StreamPort.A 发送 vlan 100-150的报文时, StreamPort.C 能够收到携带内层100-150, 外层404的报文
+- StreamPort.A 发送 vlan 其他vlan的报文时, StreamPort.C 能够收到 报文原vlan + 外层 vlan 500的报文 (需要portB和portD都配置允许该vlan通行)
 - (携带vlan 100 200的报文从PortD接口出时, 会剥离两层tag)
 - (携带vlan 200 300的报文从PortD接口出时, 会替换为vlan 123)
 

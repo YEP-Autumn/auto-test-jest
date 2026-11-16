@@ -48,13 +48,13 @@
 ### 2.1 拓扑 1
 
 ```text
-                   +--------+                   +--------+
- RenixA <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
-                   +--------+                   +--------+    |
-                                                              |
-                                                +--------+    |
-                              RenixB <=> PortD--|  DUTC  |--PortB
-                                                +--------+
+                         +--------+                   +--------+
+ StreamPort.A <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
+                         +--------+                   +--------+    |
+                                                                    |
+                                                      +--------+    |
+                              StreamPort.B <=> PortD--|  DUTC  |--PortB
+                                                      +--------+
 ```
 
 适用用例：0070
@@ -395,8 +395,8 @@ testHelper.addPktChecker({
 
 **脚本注释中的预期现象**
 
-- RenixA发送svlan 30~40,50~60 cvlan 为 100 的报文, RenixB可以收到携带vlan的报文
-- RenixA发送svlan 30~40,50~60以外 和 cvlan 为 100的报文, RenixB不能收到
+- StreamPort.A 发送svlan 30~40,50~60 cvlan 为 100 的报文, StreamPort.B 可以收到携带vlan的报文
+- StreamPort.A 发送svlan 30~40,50~60以外 和 cvlan 为 100的报文, StreamPort.B 不能收到
 
 **清理**
 

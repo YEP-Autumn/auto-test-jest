@@ -1,6 +1,4 @@
-import { sleep } from "@/utils";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, sleep, TestHelper } from "@/utils";
 
 jest.setTimeout(1000 * 60 * 10);
 

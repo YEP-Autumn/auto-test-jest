@@ -1,6 +1,4 @@
-import { Port } from "@/utils";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import { LinkConstraint, Port, TestHelper } from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -16,23 +14,23 @@ afterAll(async () => {
 
 /**
  *
- *                                  +--------+
- *         +-----------------PortC--|  DUTD  |--PortA-----------------+
- *         |                        +--------+                       |
- *         |                            |                            |
- *         |                          PortB                          |
- *         |                            |                            |
+ *                                        +--------+
+ *               +-----------------PortC--|  DUTD  |--PortA----------------+
+ *               |                        +--------+                       |
+ *               |                            |                            |
+ *               |                          PortB                          |
+ *               |                            |                            |
  *       PortC                        PortC                        PortA
- *         |                            |                            |
- *    +--------+                   +--------+                   +--------+
- *    |        |--PortA <=> PortA--|        |                   |        |
- *    |  DUTA  |                   |  DUTB  |                   |  DUTC  |
- *    |        |--PortB <=> PortB--|        |                   |        |
- *    +--------+                   +--------+                   +--------+
- *        |                            |                            |
+ *               |                            |                            |
+ *          +--------+                   +--------+                   +--------+
+ *          |        |--PortA <=> PortA--|        |                   |        |
+ *          |  DUTA  |                   |  DUTB  |                   |  DUTC  |
+ *          |        |--PortB <=> PortB--|        |                   |        |
+ *          +--------+                   +--------+                   +--------+
+ *              |                            |                            |
  *      PortD                        PortD                        PortD
- *        |                            |                            |
- *     RenixA                       RenixB                      *RenixC
+ *              |                            |                            |
+ *     StreamPort.A                       StreamPort.B                      *StreamPort.C
  *
  */
 test("M-LAG+VXLAN分布式网关场景下，调整RT规则，跨租户跨设备的Type5外部路由总是会学不完整", async () => {

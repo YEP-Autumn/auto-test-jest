@@ -1,9 +1,11 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -19,9 +21,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  */
 
 test("支持Egress为指定双层VLAN ID的报文替换为单层VLAN Tag", async () => {
@@ -48,7 +50,7 @@ test("支持Egress为指定双层VLAN ID的报文替换为单层VLAN Tag", async
   testHelper.sleep(5000);
 
   /**
-   * RenixB发送vlan [100/200]报文，RenixA能够收到带vlan 111的报文
+   * StreamPort.B 发送vlan [100/200]报文，StreamPort.A 能够收到带vlan 111的报文
    */
   testHelper.startCapture(StreamPort.A);
   testHelper.addPktSender({

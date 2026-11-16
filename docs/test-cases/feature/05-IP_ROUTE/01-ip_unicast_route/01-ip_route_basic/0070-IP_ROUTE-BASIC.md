@@ -46,11 +46,11 @@
 ### 2.1 拓扑 1
 
 ```text
-                   +--------+                   +--------+
-                   |        |--PortA <=> PortA--|        |
- RenixA <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> RenixB
-                   |        |--PortC <=> PortC--|        |
-                   +--------+                   +--------+
+                         +--------+                   +--------+
+                         |        |--PortA <=> PortA--|        |
+ StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+                         |        |--PortC <=> PortC--|        |
+                         +--------+                   +--------+
 ```
 
 适用用例：0070
@@ -311,8 +311,8 @@ async (dut) => {
 
 **脚本注释中的预期现象**
 
-- 流量发送验证: 删除前报文应命中静态路由并从 DUTB PortD 转发到 RenixB
-- 流量发送验证: 删除后报文不再命中静态路由，RenixB 不应收到报文
+- 流量发送验证: 删除前报文应命中静态路由并从 DUTB PortD 转发到 StreamPort.B
+- 流量发送验证: 删除后报文不再命中静态路由，StreamPort.B 不应收到报文
 
 **清理**
 

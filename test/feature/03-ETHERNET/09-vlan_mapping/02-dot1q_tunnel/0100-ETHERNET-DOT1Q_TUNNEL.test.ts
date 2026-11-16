@@ -1,9 +1,11 @@
-import { Port } from "@/utils";
-import { TransmitMode } from "@/utils/comm/components";
-import { StreamPort } from "@/utils/testing";
-import { PacketBuilder } from "@/utils/testing";
-import { TestHelper } from "@/utils/testing";
-import { LinkConstraint } from "@/utils/topo/link-constraint";
+import {
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 let testHelper: TestHelper;
 
@@ -19,9 +21,9 @@ afterAll(async () => {
 
 /**
  *
- *                    +--------+
- *  RenixA <=> PortA--|  DUTA  |--PortB <=> RenixB
- *                    +--------+
+ *                          +--------+
+ *  StreamPort.A <=> PortA--|  DUTA  |--PortB <=> StreamPort.B
+ *                          +--------+
  */
 
 test("支持配置miss-forward命令", async () => {
@@ -49,7 +51,7 @@ test("支持配置miss-forward命令", async () => {
   ]);
 
   /**
-   * RenixA发送vlan 101的报文，RenixB不能收到
+   * StreamPort.A 发送vlan 101的报文，StreamPort.B 不能收到
    */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({
@@ -92,7 +94,7 @@ test("支持配置miss-forward命令", async () => {
     "end",
   ]);
   /**
-   * RenixA发送vlan 101的报文，RenixB能够收到
+   * StreamPort.A 发送vlan 101的报文，StreamPort.B 能够收到
    */
   testHelper.startCapture(StreamPort.B);
   testHelper.addPktSender({

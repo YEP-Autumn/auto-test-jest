@@ -1,4 +1,6 @@
-import { TestHelper } from "@/utils/testing";
+import { Port, TestHelper } from "@/utils";
+
+jest.setTimeout(1000 * 60 * 10);
 
 let testHelper: TestHelper;
 
@@ -10,76 +12,299 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-describe("******一、测试 vlan trunk translate 接口模式******", () => {
-  describe("1. 测试支持的配置项", () => {
-    test("1.1 支持配置 raw-vlan VLAN_ID evc", async () => {
-      testHelper.ExecConfigDutA(["configure terminal", "end"]);
+/**
+ *
+ *          +--------+
+ *          |  DUTA  |--PortA
+ *          +--------+
+ */
 
-      testHelper.CleanConfigDutA(["configure terminal", "end"]);
+describe("VLAN trunk translate 映射表配置", () => {
+  test("支持配置单层 raw-vlan 映射并在映射表中显示", async () => {
+    testHelper.ExecConfigDutA([
+      "configure terminal",
+      "vlan database",
+      "vlan 10,200",
+      "exit",
+      "ethernet evc 1",
+      "dot1q mapped-vlan 200",
+      "exit",
+      "vlan mapping table vm",
+      "raw-vlan 10 evc 1",
+      "exit",
+      `interface ${Port.A}`,
+      "switchport",
+      "switchport mode trunk",
+      "switchport trunk vlan-translation",
+      "switchport trunk vlan-translation mapping table vm",
+      "switchport trunk allowed vlan all",
+      "end",
+    ]);
 
-      expect((await testHelper.startTest()).result()).toBeTruthy();
-    });
+    testHelper.ExecRetMatchDutA(
+      "show vlan mapping table",
+      new RegExp("vm\\s+1\\s+200\\s+10"),
+    );
+    testHelper.ExecRetMatchDutA(
+      "show vlan mapping table applied-interface",
+      new RegExp(`vm\\s+${Port.A}\\s+VLAN Translation`),
+    );
+    testHelper.ExecRetMatchDutA(
+      `show interface switchport interface ${Port.A}`,
+      [
+        new RegExp("Switchport mode\\s*:\\s*trunk"),
+        new RegExp("VLAN traslation\\s*:\\s*enable"),
+        new RegExp("VLAN mapping table\\s*:\\s*vm"),
+      ],
+    );
+    testHelper.ExecRetMatchDutA("show running-config", [
+      "raw-vlan 10 evc 1",
+      "dot1q mapped-vlan 200",
+      "switchport trunk vlan-translation",
+      "switchport trunk vlan-translation mapping table vm",
+    ]);
 
-    test("1.2 支持配置 raw-vlan VLAN_ID VLAN_ID evc", async () => {
-      testHelper.ExecConfigDutA(["configure terminal", "end"]);
+    testHelper.CleanConfigDutA([
+      "configure terminal",
+      `interface ${Port.A}`,
+      "no switchport trunk vlan-translation mapping table",
+      "no switchport trunk vlan-translation",
+      "switchport mode access",
+      "exit",
+      "no vlan mapping table vm",
+      "no ethernet evc 1",
+      "vlan database",
+      "no vlan 10,200",
+      "exit",
+      "end",
+    ]);
 
-      testHelper.CleanConfigDutA(["configure terminal", "end"]);
+    await testHelper.startTest();
 
-      expect((await testHelper.startTest()).result()).toBeTruthy();
-    });
-
-    /** 配置 多个 raw-vlan 映射相同 evc 或 evc 中使用相同vlan时，无默认egress规则 */
-    test("1.3 测试 raw-vlan VLAN_ID evc egress流量", async () => {});
-
-    test("1.4 测试 raw-vlan VLAN_ID VLAN_ID evc egress流量", async () => {});
+    expect(testHelper.result()).toBeTruthy();
   });
 
-  describe("1. 测试不支持的配置项", () => {
-    test("2.1 不支持配置相同的 evc 或者 evc 中使用相同的 vlan", async () => {
-      testHelper.ExecConfigDutA(["configure terminal", "end"]);
+  test("支持配置双层 raw-vlan 映射并在映射表中显示", async () => {
+    testHelper.ExecConfigDutA([
+      "configure terminal",
+      "vlan database",
+      "vlan 100,200,400",
+      "exit",
+      "ethernet evc 2",
+      "dot1q mapped-vlan 400",
+      "exit",
+      "vlan mapping table vm",
+      "raw-vlan 100 200 evc 2",
+      "exit",
+      `interface ${Port.A}`,
+      "switchport",
+      "switchport mode trunk",
+      "switchport trunk vlan-translation",
+      "switchport trunk vlan-translation mapping table vm",
+      "switchport trunk allowed vlan all",
+      "end",
+    ]);
 
-      testHelper.CleanConfigDutA(["configure terminal", "end"]);
+    testHelper.ExecRetMatchDutA(
+      "show vlan mapping table",
+      new RegExp("vm\\s+2\\s+400\\s+200\\(100\\)"),
+    );
+    testHelper.ExecRetMatchDutA("show running-config", [
+      "raw-vlan 100 200 evc 2",
+      "dot1q mapped-vlan 400",
+    ]);
+    testHelper.ExecRetMatchDutA(
+      "show vlan mapping table applied-interface",
+      new RegExp(`vm\\s+${Port.A}\\s+VLAN Translation`),
+    );
 
-      expect((await testHelper.startTest()).result()).toBeTruthy();
-    });
+    testHelper.CleanConfigDutA([
+      "configure terminal",
+      `interface ${Port.A}`,
+      "no switchport trunk vlan-translation mapping table",
+      "no switchport trunk vlan-translation",
+      "switchport mode access",
+      "exit",
+      "no vlan mapping table vm",
+      "no ethernet evc 2",
+      "vlan database",
+      "no vlan 100,200,400",
+      "exit",
+      "end",
+    ]);
 
-    test("2.2 不支持配置使用双层 tag 的 evc", async () => {
-      testHelper.ExecConfigDutA(["configure terminal", "end"]);
+    await testHelper.startTest();
 
-      testHelper.CleanConfigDutA(["configure terminal", "end"]);
+    expect(testHelper.result()).toBeTruthy();
+  });
 
-      expect((await testHelper.startTest()).result()).toBeTruthy();
-    });
-    test("2.3 不支持配置 raw-vlan group", async () => {
-      testHelper.ExecConfigDutA(["configure terminal", "end"]);
+  test("支持配置 raw-vlan out-of-range 映射并显示 out-of-range 条目", async () => {
+    testHelper.ExecConfigDutA([
+      "configure terminal",
+      "vlan database",
+      "vlan 10,11,200,300",
+      "exit",
+      "ethernet evc 1",
+      "dot1q mapped-vlan 200",
+      "exit",
+      "ethernet evc 2",
+      "dot1q mapped-vlan 300",
+      "exit",
+      "vlan mapping table vm",
+      "raw-vlan 10 evc 1",
+      "raw-vlan out-of-range evc 2",
+      "exit",
+      `interface ${Port.A}`,
+      "switchport",
+      "switchport mode trunk",
+      "switchport trunk vlan-translation",
+      "switchport trunk vlan-translation mapping table vm",
+      "switchport trunk allowed vlan all",
+      "end",
+    ]);
 
-      testHelper.CleanConfigDutA(["configure terminal", "end"]);
+    testHelper.ExecRetMatchDutA("show vlan mapping table", [
+      new RegExp("vm\\s+1\\s+200\\s+10"),
+      new RegExp("\\b2\\s+300\\s+out-of-range"),
+    ]);
+    testHelper.ExecRetMatchDutA("show running-config", [
+      "raw-vlan 10 evc 1",
+      "raw-vlan out-of-range evc 2",
+    ]);
+    testHelper.ExecRetMatchDutA(
+      "show vlan mapping table applied-interface",
+      new RegExp(`vm\\s+${Port.A}\\s+VLAN Translation`),
+    );
 
-      expect((await testHelper.startTest()).result()).toBeTruthy();
-    });
+    testHelper.CleanConfigDutA([
+      "configure terminal",
+      `interface ${Port.A}`,
+      "no switchport trunk vlan-translation mapping table",
+      "no switchport trunk vlan-translation",
+      "switchport mode access",
+      "exit",
+      "no vlan mapping table vm",
+      "no ethernet evc 1",
+      "no ethernet evc 2",
+      "vlan database",
+      "no vlan 10,11,200,300",
+      "exit",
+      "end",
+    ]);
 
-    test("2.4 不支持配置 raw-vlan untagged", async () => {
-      testHelper.ExecConfigDutA(["configure terminal", "end"]);
+    await testHelper.startTest();
 
-      testHelper.CleanConfigDutA(["configure terminal", "end"]);
+    expect(testHelper.result()).toBeTruthy();
+  });
 
-      expect((await testHelper.startTest()).result()).toBeTruthy();
-    });
+  test("支持多个 raw-vlan 映射同一 EVC 并在配置中合并显示", async () => {
+    testHelper.ExecConfigDutA([
+      "configure terminal",
+      "vlan database",
+      "vlan 10,20,200",
+      "exit",
+      "ethernet evc 1",
+      "dot1q mapped-vlan 200",
+      "exit",
+      "vlan mapping table vm",
+      "raw-vlan 10 evc 1",
+      "raw-vlan 20 evc 1",
+      "exit",
+      `interface ${Port.A}`,
+      "switchport",
+      "switchport mode trunk",
+      "switchport trunk vlan-translation",
+      "switchport trunk vlan-translation mapping table vm",
+      "switchport trunk allowed vlan all",
+      "end",
+    ]);
 
-    test("2.5 不支持配置 raw-vlan out-of-range", async () => {
-      testHelper.ExecConfigDutA(["configure terminal", "end"]);
+    testHelper.ExecRetMatchDutA(
+      "show vlan mapping table",
+      new RegExp("vm\\s+1\\s+200\\s+10,\\s+20"),
+    );
+    testHelper.ExecRetMatchDutA("show running-config", "raw-vlan 10,20 evc 1");
+    testHelper.ExecRetMatchDutA(
+      "show vlan mapping table applied-interface",
+      new RegExp(`vm\\s+${Port.A}\\s+VLAN Translation`),
+    );
 
-      testHelper.CleanConfigDutA(["configure terminal", "end"]);
+    testHelper.CleanConfigDutA([
+      "configure terminal",
+      `interface ${Port.A}`,
+      "no switchport trunk vlan-translation mapping table",
+      "no switchport trunk vlan-translation",
+      "switchport mode access",
+      "exit",
+      "no vlan mapping table vm",
+      "no ethernet evc 1",
+      "vlan database",
+      "no vlan 10,20,200",
+      "exit",
+      "end",
+    ]);
 
-      expect((await testHelper.startTest()).result()).toBeTruthy();
-    });
+    await testHelper.startTest();
 
-    test("2.6 不支持配置 raw-vlan VLAN_ID egress-vlan", async () => {
-      testHelper.ExecConfigDutA(["configure terminal", "end"]);
+    expect(testHelper.result()).toBeTruthy();
+  });
 
-      testHelper.CleanConfigDutA(["configure terminal", "end"]);
+  test("支持不同 EVC 使用相同 mapped VLAN 并分别显示映射条目", async () => {
+    testHelper.ExecConfigDutA([
+      "configure terminal",
+      "vlan database",
+      "vlan 10,20,200",
+      "exit",
+      "ethernet evc 1",
+      "dot1q mapped-vlan 200",
+      "exit",
+      "ethernet evc 2",
+      "dot1q mapped-vlan 200",
+      "exit",
+      "vlan mapping table vm",
+      "raw-vlan 10 evc 1",
+      "raw-vlan 20 evc 2",
+      "exit",
+      `interface ${Port.A}`,
+      "switchport",
+      "switchport mode trunk",
+      "switchport trunk vlan-translation",
+      "switchport trunk vlan-translation mapping table vm",
+      "switchport trunk allowed vlan all",
+      "end",
+    ]);
 
-      expect((await testHelper.startTest()).result()).toBeTruthy();
-    });
+    testHelper.ExecRetMatchDutA("show vlan mapping table", [
+      new RegExp("vm\\s+1\\s+200\\s+10"),
+      new RegExp("\\b2\\s+200\\s+20"),
+    ]);
+    testHelper.ExecRetMatchDutA("show running-config", [
+      "raw-vlan 10 evc 1",
+      "raw-vlan 20 evc 2",
+    ]);
+    testHelper.ExecRetMatchDutA(
+      "show vlan mapping table applied-interface",
+      new RegExp(`vm\\s+${Port.A}\\s+VLAN Translation`),
+    );
+
+    testHelper.CleanConfigDutA([
+      "configure terminal",
+      `interface ${Port.A}`,
+      "no switchport trunk vlan-translation mapping table",
+      "no switchport trunk vlan-translation",
+      "switchport mode access",
+      "exit",
+      "no vlan mapping table vm",
+      "no ethernet evc 1",
+      "no ethernet evc 2",
+      "vlan database",
+      "no vlan 10,20,200",
+      "exit",
+      "end",
+    ]);
+
+    await testHelper.startTest();
+
+    expect(testHelper.result()).toBeTruthy();
   });
 });

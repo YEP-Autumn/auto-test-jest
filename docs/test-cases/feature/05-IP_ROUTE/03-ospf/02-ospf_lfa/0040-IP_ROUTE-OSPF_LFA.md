@@ -58,7 +58,7 @@
 | Area | 0 | 多区域用例按拓扑使用 Area 1 |
 | Network Type | point-to-point | 网络类型用例单独说明 |
 | Hello / Dead | 10s / 40s | 设备默认值 |
-| LFA | `fast-reroute per-prefix enable` | 功能用例均使能 |
+| LFA | `fast-reroute per-prefix enable` | 在初始 OSPF 配置中使能 |
 
 ### 3.2 初始状态
 
@@ -76,11 +76,13 @@ DUTA：
 configure terminal
 interface <PortA>
 no switchport
+no shutdown
 ip address 10.0.12.1/24
 ip ospf network point-to-point
 exit
 interface loopback0
 ip address 1.1.1.1/32
+no shutdown
 exit
 router ospf
 network 10.0.12.0/24 area 0
@@ -96,16 +98,19 @@ DUTB：
 configure terminal
 interface <PortA>
 no switchport
+no shutdown
 ip address 10.0.12.2/24
 ip ospf network point-to-point
 exit
 interface <PortB>
 no switchport
+no shutdown
 ip address 10.0.23.1/24
 ip ospf network point-to-point
 exit
 interface loopback0
 ip address 2.2.2.2/32
+no shutdown
 exit
 router ospf
 network 10.0.12.0/24 area 0
@@ -122,11 +127,13 @@ DUTC：
 configure terminal
 interface <PortB>
 no switchport
+no shutdown
 ip address 10.0.23.2/24
 ip ospf network point-to-point
 exit
 interface loopback0
 ip address 3.3.3.3/32
+no shutdown
 exit
 router ospf
 network 10.0.23.0/24 area 0

@@ -45,8 +45,7 @@ afterAll(async () => {
  *   Loopback0: A=1.1.1.1/32  B=2.2.2.2/32  C=3.3.3.3/32
  *
  * 说明：拓扑中的 A PortC <=> C PortC 并行链路保持二层默认状态，不参与 OSPF。
- * 为规避设备在邻接 Full 前使能 LFA 时保护计数不刷新的已知问题，
- * 本用例在所有邻居 Full 后再使能 LFA。
+ * 本用例在初始 OSPF 配置中使能 LFA。
  */
 test("RFC 6571 Triangle 拓扑中直连链路故障后可通过第三条边恢复", async () => {
   testHelper.ExecConfigDutA([
@@ -70,6 +69,7 @@ test("RFC 6571 Triangle 拓扑中直连链路故障后可通过第三条边恢�
     "network 10.0.12.0/24 area 0",
     "network 10.0.13.0/24 area 0",
     "network 1.1.1.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -95,6 +95,7 @@ test("RFC 6571 Triangle 拓扑中直连链路故障后可通过第三条边恢�
     "network 10.0.12.0/24 area 0",
     "network 10.0.23.0/24 area 0",
     "network 2.2.2.2/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -120,6 +121,7 @@ test("RFC 6571 Triangle 拓扑中直连链路故障后可通过第三条边恢�
     "network 10.0.13.0/24 area 0",
     "network 10.0.23.0/24 area 0",
     "network 3.3.3.3/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -132,27 +134,6 @@ test("RFC 6571 Triangle 拓扑中直连链路故障后可通过第三条边恢�
   // 再使能 LFA，确保保护表按最终拓扑计算。
   testHelper.ReadyCheckDutA("show ip ospf route", "2.2.2.2/32", 90_000);
   testHelper.ReadyCheckDutA("show ip ospf route", "3.3.3.3/32", 90_000);
-  testHelper.ExecConfigDutA([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutB([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutC([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
 
   testHelper.ReadyCheckDutA("show ip ospf route", "3.3.3.3/32", 60_000);
   testHelper.ReadyCheckDutA(

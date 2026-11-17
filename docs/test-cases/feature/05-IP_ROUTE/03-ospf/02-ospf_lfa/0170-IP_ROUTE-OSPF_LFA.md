@@ -69,7 +69,7 @@ C1、C2 上配置相同的 `192.0.2.1/32` 作为 anycast/MHP。必须显式配�
 | Area | 0 | 单区域 |
 | Network Type | point-to-point | 排除广播网 DR/BDR 影响 |
 | Hello / Dead | 10s / 40s | 设备默认值 |
-| LFA | `fast-reroute per-prefix enable` | 在邻居 Full 后使能 |
+| LFA | `fast-reroute per-prefix enable` | 在初始 OSPF 配置中使能 |
 
 ### 3.2 初始状态
 
@@ -185,7 +185,7 @@ show ip ospf processes-count
 | --- | --- | --- |
 | 1 | 拓扑说明 | 本用例为 RFC 6571 Figure 2 原图的 4 设备版本，保留 C1/C2/E1/E2 和 C1-C2、C1/E1、C2/E1、C1/E2、C2/E2 全部 5 条链路 |
 | 2 | MHP 说明 | `192.0.2.1/32` 在 C1、C2 上重复配置，属于 anycast/MHP；必须显式配置 Router ID |
-| 3 | 配置时序 | 邻居 Full 后再使能 LFA，避免设备保护表不刷新的已知问题 |
+| 3 | 配置时序 | LFA 已在初始配置中使能，邻居 Full 后检查保护计数 |
 | 4 | 观测限制 | MHP 逐前缀 LFA 条目可能不稳定；必检项为 ECMP、保护计数和故障后可达性 |
 
 ## 7. 执行与结果记录

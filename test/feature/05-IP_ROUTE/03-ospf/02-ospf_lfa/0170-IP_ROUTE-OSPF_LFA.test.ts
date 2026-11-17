@@ -42,8 +42,7 @@ afterAll(async () => {
  *
  * 说明：C1、C2 上 192.0.2.1/32 是 anycast/MHP，必须显式配置 router-id，
  * 避免 OSPF 用最高 loopback 地址选到重复 Router ID。
- * 为规避设备在邻接 Full 前使能 LFA 时保护计数不刷新的已知问题，
- * 本用例在所有邻居 Full 后再使能 LFA。
+ * 本用例在初始 OSPF 配置中使能 LFA。
  */
 test("RFC 6571 Triangle 原图中 MHP 和链路保护在单链路故障后保持可达", async () => {
   testHelper.ExecConfigDutA([
@@ -79,6 +78,7 @@ test("RFC 6571 Triangle 原图中 MHP 和链路保护在单链路故障后保持
     "network 10.1.4.0/24 area 0",
     "network 10.255.0.1/32 area 0",
     "network 192.0.2.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -116,6 +116,7 @@ test("RFC 6571 Triangle 原图中 MHP 和链路保护在单链路故障后保持
     "network 10.2.4.0/24 area 0",
     "network 10.255.0.2/32 area 0",
     "network 192.0.2.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -142,6 +143,7 @@ test("RFC 6571 Triangle 原图中 MHP 和链路保护在单链路故障后保持
     "network 10.1.3.0/24 area 0",
     "network 10.2.3.0/24 area 0",
     "network 10.255.0.3/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -168,6 +170,7 @@ test("RFC 6571 Triangle 原图中 MHP 和链路保护在单链路故障后保持
     "network 10.1.4.0/24 area 0",
     "network 10.2.4.0/24 area 0",
     "network 10.255.0.4/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -177,7 +180,7 @@ test("RFC 6571 Triangle 原图中 MHP 和链路保护在单链路故障后保持
   testHelper.ReadyCheckDutC("show ip ospf neighbor", "Full", 90_000);
   testHelper.ReadyCheckDutD("show ip ospf neighbor", "Full", 90_000);
 
-  // E1 的两个上游邻居都 Full 后再使能 LFA。
+  // E1 的两个上游邻居 Full 后等待保护表刷新。
   testHelper.ReadyCheckDutC(
     "show ip ospf neighbor",
     new RegExp("10\\.255\\.0\\.1\\s+\\d+\\s+Full"),
@@ -190,34 +193,6 @@ test("RFC 6571 Triangle 原图中 MHP 和链路保护在单链路故障后保持
   );
   testHelper.ReadyCheckDutD("show ip ospf route", "192.0.2.1/32", 90_000);
 
-  testHelper.ExecConfigDutA([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutB([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutC([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutD([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
 
   testHelper.ReadyCheckDutC(
     "show ip ospf fast-reroute per-prefix",

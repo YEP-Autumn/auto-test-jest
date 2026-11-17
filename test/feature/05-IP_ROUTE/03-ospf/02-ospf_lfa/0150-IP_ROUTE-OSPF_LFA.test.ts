@@ -46,8 +46,7 @@ afterAll(async () => {
  *   C-D: 172.16.1.0/24 C=.1 D=.2（双端发布的多归前缀）
  *   Loopback0: A=1.1.1.1/32  B=2.2.2.2/32  C=3.3.3.3/32  D=4.4.4.4/32
  *
- * 说明：为规避设备在邻接 Full 前使能 LFA 时保护计数不刷新的已知问题，
- * 本用例在所有邻居 Full 后再使能 LFA。
+ * 说明：本用例在初始 OSPF 配置中使能 LFA。
  */
 test("RFC 8518 多归前缀具有不同主备下一跳时，主备路径切换与故障恢复符合预期", async () => {
   testHelper.ExecConfigDutA([
@@ -78,6 +77,7 @@ test("RFC 8518 多归前缀具有不同主备下一跳时，主备路径切换�
     "network 10.0.13.0/24 area 0",
     "network 10.0.14.0/24 area 0",
     "network 1.1.1.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -110,6 +110,7 @@ test("RFC 8518 多归前缀具有不同主备下一跳时，主备路径切换�
     "network 10.0.23.0/24 area 0",
     "network 10.0.24.0/24 area 0",
     "network 2.2.2.2/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -142,6 +143,7 @@ test("RFC 8518 多归前缀具有不同主备下一跳时，主备路径切换�
     "network 10.0.23.0/24 area 0",
     "network 172.16.1.0/24 area 0",
     "network 3.3.3.3/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -174,6 +176,7 @@ test("RFC 8518 多归前缀具有不同主备下一跳时，主备路径切换�
     "network 10.0.24.0/24 area 0",
     "network 172.16.1.0/24 area 0",
     "network 4.4.4.4/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -204,34 +207,6 @@ test("RFC 8518 多归前缀具有不同主备下一跳时，主备路径切换�
     new RegExp("4\\.4\\.4\\.4\\s+\\d+\\s+Full"),
     90_000,
   );
-  testHelper.ExecConfigDutA([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutB([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutC([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutD([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
 
   testHelper.ReadyCheckDutA("show ip ospf route", "2.2.2.2/32", 60_000);
   testHelper.ReadyCheckDutA("show ip ospf route", "3.3.3.3/32", 60_000);

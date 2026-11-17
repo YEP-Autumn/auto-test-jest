@@ -78,7 +78,7 @@ D_opt(B,C)=1 < D_opt(B,A)=1 + D_opt(A,C)=1 = 2
 | Area | 0 | 单区域 |
 | Network Type | point-to-point | 排除广播网 DR/BDR 影响 |
 | Hello / Dead | 10s / 40s | 设备默认值 |
-| LFA | `fast-reroute per-prefix enable` | 在邻居 Full 后使能 |
+| LFA | `fast-reroute per-prefix enable` | 在初始 OSPF 配置中使能 |
 
 ### 3.2 初始状态
 
@@ -179,7 +179,7 @@ show ip ospf processes-count
 | # | 项 | 说明 |
 | --- | --- | --- |
 | 1 | 拓扑裁剪 | RFC 6571 Figure 2 含 C1、C2、E1、E2 四类节点；受四设备环境限制，本用例用 C1、C2、E1 三个节点构成最小 Triangle，覆盖直连主链路与第三条边备份的核心行为 |
-| 2 | 配置时序 | 本用例在邻居 Full 后使能 LFA，避免设备在邻接建立前使能时保护计数不刷新的已记录问题 |
+| 2 | 配置时序 | 本用例在初始 OSPF 配置中使能 LFA，邻居 Full 后检查保护计数与路由收敛 |
 | 3 | 版本差异 | LFA 命令不可用时标记 `Blocked`，不将版本差异判为功能失败 |
 
 ## 7. 执行与结果记录

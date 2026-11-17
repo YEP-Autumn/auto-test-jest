@@ -77,7 +77,7 @@ D_opt(N1,D)=30 < D_opt(N1,S)=8 + D_opt(S,D)=9 = 17   // 为假
 | Area | 0 | 单区域 |
 | Network Type | point-to-point | 排除广播网 DR/BDR 影响 |
 | Hello / Dead | 10s / 40s | 设备默认值 |
-| LFA | `fast-reroute per-prefix enable` | 在邻居 Full 后使能 |
+| LFA | `fast-reroute per-prefix enable` | 在初始 OSPF 配置中使能 |
 
 ### 3.2 初始状态
 
@@ -164,7 +164,7 @@ show ip ospf processes-count
 
 | # | 项 | 说明 |
 | --- | --- | --- |
-| 1 | 配置时序 | 本用例在邻居 Full 后使能 LFA，避免设备在邻接建立前使能时保护计数不刷新的已记录问题 |
+| 1 | 配置时序 | 本用例在初始 OSPF 配置中使能 LFA，邻居 Full 后检查保护计数与路由收敛 |
 | 2 | 判定重点 | 基线 `Protected by LFA : 1` 必须结合 `Intra-area prefixes > 0` 和 0110 的 `5` 对比判定；该 1 个前缀是 N1 直连的 C-D 网段，不代表 S 到 D 的 Loopback 仍有 LFA |
 | 3 | 版本差异 | LFA 命令不可用时标记 `Blocked`，不将版本差异判为功能失败 |
 

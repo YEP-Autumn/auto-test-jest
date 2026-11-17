@@ -63,6 +63,7 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
     "network 10.1.2.0/24 area 0",
     "network 10.1.3.0/24 area 0",
     "network 10.255.0.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -89,6 +90,7 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
     "network 10.1.2.0/24 area 0",
     "network 10.2.4.0/24 area 0",
     "network 10.255.0.2/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -122,6 +124,7 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
     "network 10.3.4.0/24 area 0",
     "network 10.3.5.0/24 area 0",
     "network 10.255.0.3/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -148,6 +151,7 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
     "network 10.2.4.0/24 area 0",
     "network 10.3.4.0/24 area 0",
     "network 10.255.0.4/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -167,6 +171,7 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
     "router-id 10.255.0.5",
     "network 10.3.5.0/24 area 0",
     "network 10.255.0.5/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -183,30 +188,15 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
     "10.255.0.4/32",
     60_000,
   );
-  testHelper.ExecRetMatchDutA("show ip route 10.255.0.4", [
-    "10.255.0.4/32",
+  testHelper.ReadyCheckDutA(
+    "show ip route 10.255.0.4",
     new RegExp("10\\.1\\.2\\.2,\\s+via"),
-  ]);
+    60_000,
+  );
   testHelper.ReadyCheckDutA("ping 10.255.0.4", " 0% packet loss", 60_000);
   testHelper.ReadyCheckDutA("ping 10.255.0.5", " 0% packet loss", 60_000);
 
-  // 所有邻居 Full 后再使能 LFA。
-  for (const idx of [
-    testHelper.ExecConfigDutA,
-    testHelper.ExecConfigDutB,
-    testHelper.ExecConfigDutC,
-    testHelper.ExecConfigDutD,
-    testHelper.ExecConfigDutE,
-  ]) {
-    idx.call(testHelper, [
-      "configure terminal",
-      "router ospf",
-      "fast-reroute per-prefix enable",
-      "exit",
-      "end",
-    ]);
-  }
-
+  // LFA 已在初始配置中使能，邻居 Full 后等待保护表刷新。
   testHelper.ReadyCheckDutA(
     "show ip ospf fast-reroute per-prefix",
     new RegExp("Calculation\\s*:\\s*[1-9]\\d*\\s+runs"),
@@ -222,10 +212,11 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
   testHelper.ExecRetMatchDutC(`show running-config interface ${Port.A}`, [
     "ip ospf cost 65535",
   ]);
-  testHelper.ExecRetMatchDutA("show ip route 10.255.0.4", [
-    "10.255.0.4/32",
+  testHelper.ReadyCheckDutA(
+    "show ip route 10.255.0.4",
     new RegExp("10\\.1\\.2\\.2,\\s+via"),
-  ]);
+    60_000,
+  );
   testHelper.ReadyCheckDutA("ping 10.255.0.5", " 0% packet loss", 60_000);
 
   // 关闭 S-N1，D1 改走 N2。

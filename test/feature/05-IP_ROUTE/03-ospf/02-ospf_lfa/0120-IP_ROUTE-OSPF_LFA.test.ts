@@ -44,8 +44,7 @@ afterAll(async () => {
  *   N1-S  (D-A): 10.0.41.0/24  D=.1 A=.2  开销 8
  *   Loopback0: A=1.1.1.1/32  B=2.2.2.2/32  C=3.3.3.3/32  D=4.4.4.4/32
  *
- * 说明：为规避设备在邻接 Full 前使能 LFA 时保护计数不刷新的已知问题，
- * 本用例在所有邻居 Full 后再使能 LFA，使拓扑与无环不等式成为唯一变量。
+ * 说明：本用例在初始 OSPF 配置中使能 LFA，使拓扑与无环不等式成为唯一变量。
  */
 test("RFC 5286 Figure 1 反例中 N1-D 开销 30 不满足无环不等式，S 到 D 的 Loopback 不再受 LFA 保护", async () => {
   testHelper.ExecConfigDutA([
@@ -69,6 +68,7 @@ test("RFC 5286 Figure 1 反例中 N1-D 开销 30 不满足无环不等式，S �
     "network 10.0.12.0/24 area 0",
     "network 10.0.41.0/24 area 0",
     "network 1.1.1.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -94,6 +94,7 @@ test("RFC 5286 Figure 1 反例中 N1-D 开销 30 不满足无环不等式，S �
     "network 10.0.12.0/24 area 0",
     "network 10.0.23.0/24 area 0",
     "network 2.2.2.2/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -119,6 +120,7 @@ test("RFC 5286 Figure 1 反例中 N1-D 开销 30 不满足无环不等式，S �
     "network 10.0.23.0/24 area 0",
     "network 10.0.34.0/24 area 0",
     "network 3.3.3.3/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -144,6 +146,7 @@ test("RFC 5286 Figure 1 反例中 N1-D 开销 30 不满足无环不等式，S �
     "network 10.0.34.0/24 area 0",
     "network 10.0.41.0/24 area 0",
     "network 4.4.4.4/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -157,34 +160,6 @@ test("RFC 5286 Figure 1 反例中 N1-D 开销 30 不满足无环不等式，S �
   // 再使能 LFA，确保保护表按最终拓扑计算。
   testHelper.ReadyCheckDutA("show ip ospf route", "3.3.3.3/32", 90_000);
   testHelper.ReadyCheckDutA("show ip ospf route", "4.4.4.4/32", 90_000);
-  testHelper.ExecConfigDutA([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutB([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutC([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutD([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
 
   testHelper.ReadyCheckDutA("show ip ospf route", "3.3.3.3/32", 60_000);
   // 先等待 LFA 计算真正执行完成，再断言保护计数，避免把“计算被延迟”误判为“无 LFA”。

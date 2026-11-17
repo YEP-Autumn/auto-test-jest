@@ -83,6 +83,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "network 10.1.4.0/24 area 0",
     "network 10.255.0.1/32 area 0",
     "network 192.0.2.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -134,6 +135,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "network 10.2.6.0/24 area 0",
     "network 10.255.0.2/32 area 0",
     "network 192.0.2.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -181,6 +183,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "network 10.3.7.0/24 area 0",
     "network 10.3.8.0/24 area 0",
     "network 10.255.0.3/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -228,6 +231,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "network 10.4.7.0/24 area 0",
     "network 10.4.8.0/24 area 0",
     "network 10.255.0.4/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -261,6 +265,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "network 10.5.6.0/24 area 0",
     "network 10.5.9.0/24 area 0",
     "network 10.255.0.5/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -294,6 +299,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "network 10.5.6.0/24 area 0",
     "network 10.6.9.0/24 area 0",
     "network 10.255.0.6/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -320,6 +326,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "network 10.3.7.0/24 area 0",
     "network 10.4.7.0/24 area 0",
     "network 10.255.0.7/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -346,6 +353,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "network 10.3.8.0/24 area 0",
     "network 10.4.8.0/24 area 0",
     "network 10.255.0.8/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -372,6 +380,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "network 10.5.9.0/24 area 0",
     "network 10.6.9.0/24 area 0",
     "network 10.255.0.9/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -399,34 +408,19 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
 
   // E1 到 P 经 A1、A2 形成 ECMP。
   testHelper.ReadyCheckDutG("show ip route 192.0.2.1", "192.0.2.1/32", 90_000);
-  testHelper.ExecRetMatchDutG("show ip route 192.0.2.1", [
-    "192.0.2.1/32",
+  testHelper.ReadyCheckDutG(
+    "show ip route 192.0.2.1",
     new RegExp("10\\.3\\.7\\.1,\\s+via"),
+    60_000,
+  );
+  testHelper.ReadyCheckDutG(
+    "show ip route 192.0.2.1",
     new RegExp("10\\.4\\.7\\.1,\\s+via"),
-  ]);
+    60_000,
+  );
   testHelper.ReadyCheckDutG("ping 192.0.2.1", " 0% packet loss", 60_000);
 
-  // 所有邻居 Full 后再使能 LFA。
-  for (const idx of [
-    testHelper.ExecConfigDutA,
-    testHelper.ExecConfigDutB,
-    testHelper.ExecConfigDutC,
-    testHelper.ExecConfigDutD,
-    testHelper.ExecConfigDutE,
-    testHelper.ExecConfigDutF,
-    testHelper.ExecConfigDutG,
-    testHelper.ExecConfigDutH,
-    testHelper.ExecConfigDutL,
-  ]) {
-    idx.call(testHelper, [
-      "configure terminal",
-      "router ospf",
-      "fast-reroute per-prefix enable",
-      "exit",
-      "end",
-    ]);
-  }
-
+  // LFA 已在初始配置中使能，邻居 Full 后等待保护表刷新。
   testHelper.ReadyCheckDutG(
     "show ip ospf fast-reroute per-prefix",
     new RegExp("Calculation\\s*:\\s*[1-9]\\d*\\s+runs"),

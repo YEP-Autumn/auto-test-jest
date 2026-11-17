@@ -42,8 +42,7 @@ afterAll(async () => {
  *   MHP P: 192.0.2.1/32（E、F 双端发布，E 侧 cost 5，F 侧 cost 16）
  *
  * 说明：E/F 上 192.0.2.1/32 是 anycast/MHP，必须显式配置 router-id。
- * 为规避设备在邻接 Full 前使能 LFA 时保护计数不刷新的已知问题，
- * 本用例在所有邻居 Full 后再使能 LFA。
+ * 本用例在初始 OSPF 配置中使能 LFA。
  */
 test("RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故障后保持可达", async () => {
   testHelper.ExecConfigDutA([
@@ -75,6 +74,7 @@ test("RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故
     "network 10.1.4.0/24 area 0",
     "network 10.1.2.0/24 area 0",
     "network 10.255.0.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -101,6 +101,7 @@ test("RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故
     "network 10.1.2.0/24 area 0",
     "network 10.2.5.0/24 area 0",
     "network 10.255.0.2/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -127,6 +128,7 @@ test("RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故
     "network 10.1.3.0/24 area 0",
     "network 10.3.4.0/24 area 0",
     "network 10.255.0.3/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -160,6 +162,7 @@ test("RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故
     "network 10.3.4.0/24 area 0",
     "network 10.4.6.0/24 area 0",
     "network 10.255.0.4/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -191,6 +194,7 @@ test("RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故
     "network 10.5.6.0/24 area 0",
     "network 10.255.0.5/32 area 0",
     "network 192.0.2.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -222,6 +226,7 @@ test("RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故
     "network 10.5.6.0/24 area 0",
     "network 10.255.0.6/32 area 0",
     "network 192.0.2.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -233,7 +238,7 @@ test("RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故
   testHelper.ReadyCheckDutE("show ip ospf neighbor", "Full", 90_000);
   testHelper.ReadyCheckDutF("show ip ospf neighbor", "Full", 90_000);
 
-  // S 的三个上游邻居都 Full 后再使能 LFA。
+  // S 的三个上游邻居 Full 后等待保护表刷新。
   testHelper.ReadyCheckDutA(
     "show ip ospf neighbor",
     new RegExp("10\\.255\\.0\\.2\\s+\\d+\\s+Full"),
@@ -251,48 +256,6 @@ test("RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故
   );
   testHelper.ReadyCheckDutA("show ip ospf route", "192.0.2.1/32", 90_000);
 
-  testHelper.ExecConfigDutA([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutB([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutC([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutD([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutE([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-  testHelper.ExecConfigDutF([
-    "configure terminal",
-    "router ospf",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
 
   testHelper.ReadyCheckDutA(
     "show ip ospf fast-reroute per-prefix",

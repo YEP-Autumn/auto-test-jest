@@ -86,6 +86,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "network 10.1.4.0/24 area 0",
     "network 10.1.6.0/24 area 0",
     "network 10.255.0.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -112,6 +113,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "network 10.1.2.0/24 area 0",
     "network 10.2.3.0/24 area 0",
     "network 10.255.0.2/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -138,6 +140,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "network 10.2.3.0/24 area 0",
     "network 10.3.7.0/24 area 0",
     "network 10.255.0.3/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -171,6 +174,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "network 10.4.8.0/24 area 0",
     "network 10.4.9.0/24 area 0",
     "network 10.255.0.4/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -197,6 +201,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "network 10.5.7.0/24 area 0",
     "network 10.5.8.0/24 area 0",
     "network 10.255.0.5/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -223,6 +228,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "network 10.1.6.0/24 area 0",
     "network 10.8.6.0/24 area 0",
     "network 10.255.0.6/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -249,6 +255,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "network 10.3.7.0/24 area 0",
     "network 10.5.7.0/24 area 0",
     "network 10.255.0.7/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -282,6 +289,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "network 10.5.8.0/24 area 0",
     "network 10.8.6.0/24 area 0",
     "network 10.255.0.8/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -301,6 +309,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "router-id 10.255.0.9",
     "network 10.4.9.0/24 area 0",
     "network 10.255.0.9/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -330,6 +339,27 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     new RegExp("10\\.255\\.0\\.6\\s+\\d+\\s+Full"),
     120_000,
   );
+  // 主路径 S-C-H-D 还依赖 C-H 和 H-D 邻接。
+  testHelper.ReadyCheckDutD(
+    "show ip ospf neighbor",
+    new RegExp("10\\.255\\.0\\.8\\s+\\d+\\s+Full"),
+    120_000,
+  );
+  testHelper.ReadyCheckDutH(
+    "show ip ospf neighbor",
+    new RegExp("10\\.255\\.0\\.4\\s+\\d+\\s+Full"),
+    120_000,
+  );
+  testHelper.ReadyCheckDutH(
+    "show ip ospf neighbor",
+    new RegExp("10\\.255\\.0\\.5\\s+\\d+\\s+Full"),
+    120_000,
+  );
+  testHelper.ReadyCheckDutE(
+    "show ip ospf neighbor",
+    new RegExp("10\\.255\\.0\\.8\\s+\\d+\\s+Full"),
+    120_000,
+  );
 
   // S 到 D 的主路径经 C（DUTD）。
   testHelper.ReadyCheckDutA(
@@ -337,33 +367,14 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "10.255.0.5/32",
     90_000,
   );
-  testHelper.ExecRetMatchDutA("show ip route 10.255.0.5", [
-    "10.255.0.5/32",
+  testHelper.ReadyCheckDutA(
+    "show ip route 10.255.0.5",
     new RegExp("10\\.1\\.4\\.2,\\s+via"),
-  ]);
+    60_000,
+  );
   testHelper.ReadyCheckDutA("ping 10.255.0.5", " 0% packet loss", 60_000);
 
-  // 所有邻居 Full 后再使能 LFA。
-  for (const idx of [
-    testHelper.ExecConfigDutA,
-    testHelper.ExecConfigDutB,
-    testHelper.ExecConfigDutC,
-    testHelper.ExecConfigDutD,
-    testHelper.ExecConfigDutE,
-    testHelper.ExecConfigDutF,
-    testHelper.ExecConfigDutG,
-    testHelper.ExecConfigDutH,
-    testHelper.ExecConfigDutL,
-  ]) {
-    idx.call(testHelper, [
-      "configure terminal",
-      "router ospf",
-      "fast-reroute per-prefix enable",
-      "exit",
-      "end",
-    ]);
-  }
-
+  // LFA 已在初始配置中使能，邻居 Full 后等待保护表刷新。
   testHelper.ReadyCheckDutA(
     "show ip ospf fast-reroute per-prefix",
     new RegExp("Calculation\\s*:\\s*[1-9]\\d*\\s+runs"),

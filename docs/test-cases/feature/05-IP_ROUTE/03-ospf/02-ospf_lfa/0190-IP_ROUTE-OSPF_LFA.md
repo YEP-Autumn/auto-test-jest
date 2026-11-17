@@ -82,7 +82,7 @@
 | Area | 0 | 单区域 |
 | Network Type | point-to-point | 排除广播网 DR/BDR 影响 |
 | Hello / Dead | 10s / 40s | 设备默认值 |
-| LFA | `fast-reroute per-prefix enable` | 在邻居 Full 后使能 |
+| LFA | `fast-reroute per-prefix enable` | 在初始 OSPF 配置中使能 |
 
 ### 3.2 初始状态
 

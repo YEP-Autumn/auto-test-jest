@@ -413,9 +413,7 @@ default-information originate always metric-type 2
 
 ### 7.2 配置时序说明
 
-0110~0150 均在所有邻居 `Full` 后执行 `fast-reroute per-prefix enable`。这样做的原因是：设备在邻接建立前使能 LFA 时，后续邻接 Full 不会触发保护表重算，部分节点会长期显示 `Protected by LFA : 0`。该现象已单独记录，不在本组拓扑用例中重复判定；先建立邻接再使能 LFA，可让拓扑与 RFC 无环不等式成为唯一变量。
-
-0010~0180 仍保持原有配置顺序，后续根据设备问题结论统一决定是否调整。
+全部 `0010~0260` 在初始 OSPF 配置中使能 LFA。邻居 `Full` 后使用 `ReadyCheck` 等待关键路由收敛、`Calculation` 的 `runs` 增长和 `Protected by LFA` 刷新，再进行保护计数与转发面断言。
 
 ## 8. 参考资料
 

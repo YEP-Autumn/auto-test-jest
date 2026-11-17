@@ -68,7 +68,7 @@
 | Area | 0 | 单区域 |
 | Network Type | point-to-point | 排除广播网 DR/BDR 影响 |
 | Hello / Dead | 10s / 40s | 设备默认值 |
-| LFA | `fast-reroute per-prefix enable` | 在邻居 Full 后使能 |
+| LFA | `fast-reroute per-prefix enable` | 在初始 OSPF 配置中使能 |
 
 ### 3.2 初始状态
 
@@ -186,7 +186,7 @@ show ip ospf processes-count
 | --- | --- | --- |
 | 1 | 拓扑扩展 | 为覆盖 RFC 6571 Figure 3，本次在 `LinkConstraint` 中新增 `four_devices_topo_links_type_4` 四设备全互联拓扑 |
 | 2 | 观测限制 | 设备只提供汇总保护计数，不提供逐前缀备份下一跳明细；通过路由表、保护计数和 ping 联合判定 |
-| 3 | 配置时序 | 本用例在邻居 Full 后使能 LFA，避免设备在邻接建立前使能时保护计数不刷新的已记录问题 |
+| 3 | 配置时序 | 本用例在初始 OSPF 配置中使能 LFA，邻居 Full 后检查保护计数与路由收敛 |
 | 4 | 版本差异 | LFA 命令不可用时标记 `Blocked`，不将版本差异判为功能失败 |
 
 ## 7. 执行与结果记录

@@ -73,6 +73,7 @@ test("双 ASBR 发布同一外部前缀时，主路径故障后流量切换到�
     "network 10.1.4.0/24 area 0",
     "network 10.1.2.0/24 area 0",
     "network 10.255.0.1/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -99,6 +100,7 @@ test("双 ASBR 发布同一外部前缀时，主路径故障后流量切换到�
     "network 10.1.2.0/24 area 0",
     "network 10.2.5.0/24 area 0",
     "network 10.255.0.2/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -125,6 +127,7 @@ test("双 ASBR 发布同一外部前缀时，主路径故障后流量切换到�
     "network 10.1.3.0/24 area 0",
     "network 10.3.4.0/24 area 0",
     "network 10.255.0.3/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -158,6 +161,7 @@ test("双 ASBR 发布同一外部前缀时，主路径故障后流量切换到�
     "network 10.3.4.0/24 area 0",
     "network 10.4.6.0/24 area 0",
     "network 10.255.0.4/32 area 0",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -188,6 +192,7 @@ test("双 ASBR 发布同一外部前缀时，主路径故障后流量切换到�
     "network 10.5.6.0/24 area 0",
     "network 10.255.0.5/32 area 0",
     "redistribute connected metric 20 metric-type 2",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -218,6 +223,7 @@ test("双 ASBR 发布同一外部前缀时，主路径故障后流量切换到�
     "network 10.5.6.0/24 area 0",
     "network 10.255.0.6/32 area 0",
     "redistribute connected metric 20 metric-type 2",
+    "fast-reroute per-prefix enable",
     "exit",
     "end",
   ]);
@@ -242,23 +248,6 @@ test("双 ASBR 发布同一外部前缀时，主路径故障后流量切换到�
   );
   testHelper.ReadyCheckDutA("ping 198.51.100.1", " 0% packet loss", 60_000);
 
-  // 邻居 Full 后再使能 LFA。
-  for (const idx of [
-    testHelper.ExecConfigDutA,
-    testHelper.ExecConfigDutB,
-    testHelper.ExecConfigDutC,
-    testHelper.ExecConfigDutD,
-    testHelper.ExecConfigDutE,
-    testHelper.ExecConfigDutF,
-  ]) {
-    idx.call(testHelper, [
-      "configure terminal",
-      "router ospf",
-      "fast-reroute per-prefix enable",
-      "exit",
-      "end",
-    ]);
-  }
   testHelper.ReadyCheckDutA(
     "show ip ospf fast-reroute per-prefix",
     new RegExp("Calculation\\s*:\\s*[1-9]\\d*\\s+runs"),

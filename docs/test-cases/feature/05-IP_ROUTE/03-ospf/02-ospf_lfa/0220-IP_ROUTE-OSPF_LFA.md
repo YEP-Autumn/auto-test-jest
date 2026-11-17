@@ -75,7 +75,7 @@ S-B-F-P： 3 + 1 + 16 = 20
 | Area | 0 | 单区域 |
 | Network Type | point-to-point | 排除广播网 DR/BDR 影响 |
 | Hello / Dead | 10s / 40s | 设备默认值 |
-| LFA | `fast-reroute per-prefix enable` | 在邻居 Full 后使能 |
+| LFA | `fast-reroute per-prefix enable` | 在初始 OSPF 配置中使能 |
 
 ### 3.2 初始状态
 
@@ -196,7 +196,7 @@ show ip ospf processes-count
 | 1 | 拓扑说明 | 本用例为 RFC 8518 Figure 2 的 6 设备原图，保留 S、N1、N2、B、E、F 全部节点和链路 |
 | 2 | MHP 说明 | `192.0.2.1/32` 在 E、F 上重复配置，属于 anycast/MHP；必须显式配置 Router ID |
 | 3 | 开销说明 | E 侧 P 的 cost 取 5，F 侧取 16，使 S 到 P 经 E/F 的路径都等于 20，符合 RFC 文字描述 |
-| 4 | 配置时序 | 邻居 Full 后再使能 LFA，避免设备保护表不刷新的已知问题 |
+| 4 | 配置时序 | LFA 已在初始配置中使能，邻居 Full 后检查保护计数 |
 | 5 | 观测限制 | MHP 逐前缀 LFA 条目可能不稳定；必检项为 ECMP、保护计数和故障后可达性 |
 
 ## 7. 执行与结果记录

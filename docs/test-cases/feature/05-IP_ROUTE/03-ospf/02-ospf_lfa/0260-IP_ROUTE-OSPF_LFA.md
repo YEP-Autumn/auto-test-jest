@@ -98,7 +98,7 @@
 | Area | 0 / 1 / 2 | A、B、ASBR 为多区域设备 |
 | Network Type | point-to-point | 排除广播网 DR/BDR 影响 |
 | 外部路由 | `redistribute connected metric 20 metric-type 2` | ASBR 发布 198.51.100.1/32 |
-| LFA | `fast-reroute per-prefix enable` | 在邻居 Full 后使能 |
+| LFA | `fast-reroute per-prefix enable` | 在初始 OSPF 配置中使能 |
 
 ### 3.2 初始状态
 

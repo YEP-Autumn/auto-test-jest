@@ -54,15 +54,15 @@ MHP/外部前缀：192.0.2.1/32 或 192.0.2.0/24
 
 ### 3.2 LFA 配置时序
 
-大拓扑同样采用：
+大拓扑采用：
 
-1. 先配置 OSPF，不使能 LFA；
+1. 在初始 OSPF 配置中直接执行 `fast-reroute per-prefix enable`；
 2. 等待所有目标邻居 `Full`；
-3. 确认关键目的路由已出现；
-4. 再执行 `fast-reroute per-prefix enable`；
-5. 等待 `Calculation` 的 `runs` 大于 0，再断言保护计数或逐前缀明细。
+3. 用 `ReadyCheck` 等待关键目的路由及其下一跳收敛；
+4. 等待 `Calculation` 的 `runs` 大于 0、`Protected by LFA` 刷新后再断言；
+5. 故障注入后同样用 `ReadyCheck` 等待备用路由收敛，再检查 ping。
 
-这样可以避开设备“邻接建立前使能 LFA 后保护表不刷新”的问题。
+
 
 ### 3.3 观测面
 
@@ -120,7 +120,7 @@ MHP/外部前缀：192.0.2.1/32 或 192.0.2.0/24
 **测试重点**
 
 - S 到 D 的主路径经 C（S-C-H-D），LFA 经 A 或 F。
-- 邻居 Full 后使能 LFA，S 的 `Protected by LFA` 大于 0。
+- S 的 `Protected by LFA` 大于 0（LFA 在初始配置中已使能）。
 - 关闭 S-C，`ping D` 仍为 0% 丢包，路由切换到 S-A-B-G-D 或 S-F-H-D。
 - 恢复 S-C 后回主路径，保护计数恢复。
 - 同时校验 A 和 F 对 D 的 LFA 覆盖，验证 RFC 6571 “多个邻居可作为 LFA”。

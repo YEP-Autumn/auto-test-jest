@@ -100,7 +100,7 @@ ip ospf cost 1
 | Network Type | point-to-point | 物理接口和隧道接口均配置 |
 | Hello / Dead | 10s / 40s | 设备默认值 |
 | 隧道 | GRE，源/目的为 Loopback0 | 隧道接口参与 OSPF |
-| LFA | `fast-reroute per-prefix enable` | 在邻居 Full 后使能 |
+| LFA | `fast-reroute per-prefix enable` | 在初始 OSPF 配置中使能 |
 
 ### 3.2 初始状态
 

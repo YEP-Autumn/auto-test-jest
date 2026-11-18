@@ -428,6 +428,46 @@ export class LinkConstraint {
   }
 
   /**
+   * 四设备环形拓扑 + 两个测试仪端口：
+   *
+   *   StreamPort.A <=> PortB--+--------+                   +--------+
+   *                           |  DUTA  |--PortA <=> PortA--|  DUTB  |
+   *                           +--------+                   +--------+
+   *                               |                            |
+   *                             PortD                        PortB
+   *                               |                            |
+   *                             PortD                        PortB
+   *                               |                            |
+   *                           +--------+                   +--------+
+   *                           |  DUTD  |--PortC <=> PortC--|  DUTC  |
+   *                           +--------+                   +--------+
+   *                                                          |
+   *                                                        PortA
+   *                                                          |
+   *                                                    StreamPort.B
+   *
+   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
+   *
+   *          StreamPort.A   DUTB          DUTC          DUTD
+   *   DUTA  PortB          PortA-PortA   —             PortD-PortD
+   *   DUTB                 —             PortB-PortB   —
+   *   DUTC  PortA          —             —             PortC-PortC
+   *   DUTD                 —             —             —
+   */
+  static get four_devices_topo_links_type_6(): TopoLinks {
+    return cached("four_devices_topo_links_type_6", () =>
+      topo(
+        link(traffic("A"), dut("A", "B")),
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("B", "B"), dut("C", "B")),
+        link(dut("C", "C"), dut("D", "C")),
+        link(dut("D", "D"), dut("A", "D")),
+        link(dut("C", "A"), traffic("B")),
+      ),
+    );
+  }
+
+  /**
    * 五设备拓扑：
    *
    *   A-B: DUTA PortA <=> DUTB PortA

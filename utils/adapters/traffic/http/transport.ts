@@ -75,7 +75,7 @@ export class HttpTrafficTransport {
   constructor(private readonly config: HttpTransportConfig = {}) {
     this.api = axios.create({
       baseURL: config.baseURL ?? StreamBackendConfig.baseURL,
-      timeout: config.timeout ?? 5000,
+      timeout: config.timeout ?? 30_000,
     });
 
     // 通过请求拦截器注入 token，确保不会被 per-request headers 覆盖

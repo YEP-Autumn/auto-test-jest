@@ -401,6 +401,22 @@
     "ports": [
       {
         "provider": "renix",
+        "address": "//172.16.254.11/5/1",
+        "topology": {
+          "device": "172.16.9.105",
+          "if_index": 47
+        }
+      },
+      {
+        "provider": "renix",
+        "address": "//172.16.254.11/5/2",
+        "topology": {
+          "device": "172.16.9.105",
+          "if_index": 48
+        }
+      },
+      {
+        "provider": "renix",
         "address": "//172.16.254.11/3/13",
         "topology": {
           "device": "172.16.9.110",
@@ -453,22 +469,6 @@
         "topology": {
           "device": "172.16.9.106",
           "if_index": 32
-        }
-      },
-      {
-        "provider": "renix",
-        "address": "//172.16.254.11/5/1",
-        "topology": {
-          "device": "172.16.9.106",
-          "if_index": 25
-        }
-      },
-      {
-        "provider": "renix",
-        "address": "//172.16.254.11/5/2",
-        "topology": {
-          "device": "172.16.9.106",
-          "if_index": 25
         }
       },
       {

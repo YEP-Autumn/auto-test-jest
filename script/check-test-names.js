@@ -7,7 +7,7 @@
  *   node script/check-test-names.js
  *
  * 设计原则：命名规范是推荐与最佳实践，脚本只强校验关键规则：
- *   1. test/ 下只允许 feature/、misc/；
+ *   1. test/ 下只允许 feature/、misc/、examples/；
  *   2. 一级特性目录 NN-UPPER_SNAKE；
  *   3. feature 下各级子目录 NN-lower_snake[_type]；
  *   4. 用例文件名 NNNN-<模块>[-<子功能>].test.ts，且以顶层模块名开头；
@@ -62,8 +62,11 @@ function listTestFiles(dir) {
 
 // ---- test/ 根 ----
 for (const name of listDirs(TEST_DIR)) {
-  if (name !== "feature" && name !== "misc") {
-    bad(path.join(TEST_DIR, name), "test/ 下只允许 feature/ 与 misc/ 两类目录");
+  if (!["feature", "misc", "examples"].includes(name)) {
+    bad(
+      path.join(TEST_DIR, name),
+      "test/ 下只允许 feature/、misc/、examples/ 三类目录",
+    );
   }
 }
 for (const name of listTestFiles(TEST_DIR)) {

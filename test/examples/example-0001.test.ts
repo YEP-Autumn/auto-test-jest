@@ -1,9 +1,4 @@
-import {
-  PacketBuilder,
-  StreamPort,
-  TestHelper,
-  TransmitMode,
-} from "@/utils";
+import { PacketBuilder, StreamPort, TestHelper, TransmitMode } from "@/utils";
 
 jest.setTimeout(1000 * 60 * 10);
 
@@ -17,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("", async () => {
+test("构造并发送 TCP/ARP/UDP/IPv6 报文", async () => {
   let packet = new PacketBuilder()
     .setEthernet({
       dst: "00:00:00:11:22:44",

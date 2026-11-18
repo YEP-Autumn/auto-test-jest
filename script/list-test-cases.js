@@ -38,7 +38,7 @@ const MISC_MODULE_TITLES = {
   stack: "堆叠场景",
 };
 const DOC_MODULE_TITLES = {
-  test_script_tutorials: "教程示例",
+  examples: "教程示例",
 };
 
 // ---------- 参数 ----------
@@ -207,6 +207,19 @@ function resolveModule(relPath) {
       key: `misc:${id}`,
       kind: "misc",
       id: `misc/${id}`,
+      title,
+      hierarchy,
+    });
+  }
+
+  if (dirs[0] === "test" && dirs[1] === "examples") {
+    const title = "教程示例";
+    const hierarchy = [{ id: "examples", title }];
+    for (const dir of dirs.slice(2)) hierarchy.push({ id: dir, title: dir });
+    return makeModule({
+      key: "tutorial:examples",
+      kind: "tutorial",
+      id: "test/examples",
       title,
       hierarchy,
     });

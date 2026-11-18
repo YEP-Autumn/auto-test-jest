@@ -12,7 +12,7 @@ afterAll(async () => {
   await testHelper.destroy();
 });
 
-test("", async () => {
+test("抓包并按字段校验报文", async () => {
   testHelper.addPktChecker({
     port: StreamPort.A,
     packet: new PacketBuilder()

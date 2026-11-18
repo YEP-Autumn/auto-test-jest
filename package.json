@@ -6,7 +6,6 @@
     "gen": "node script/gen-thrift.js --force",
     "pretest": "node script/gen-thrift.js",
     "test": "jest -i",
-    "test:unit": "jest -i --config=config/jest.default-unit.config.cjs --verbose",
     "predefault": "node script/gen-thrift.js",
     "default": "jest -i --config=config/jest.default-regression.config.cjs --verbose",
     "preipv6": "node script/gen-thrift.js",

@@ -1,6 +1,8 @@
 {
   "suite": "example",
-  "description": "教程示例：docs/test_script_tutorials 下可直接运行的用例",
-  "include": ["docs/test_script_tutorials/**/*.test.ts"],
+  "description": "教程示例：test/examples 下的 example-* 用例",
+  "include": [
+    "test/examples/example-*.test.ts"
+  ],
   "exclude": []
 }

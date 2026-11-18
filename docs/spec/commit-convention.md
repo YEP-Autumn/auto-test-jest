@@ -136,23 +136,11 @@ scope 表示改动所在的模块或范围，用小写、可带连字符（如 `
 ## 8. 完整示例
 
 ```
-fix(config): 修正 example 套件的用例路径
+feat(test): 新增 OSPF LFA 保护切换打流用例
 
-教程文件实际位于 docs/test_script_tutorials/，此前 suites/example.json
-误写成 test/test_script_tutorials/，导致 npm run example 无法匹配用例。
-
-- 修正 config/suites/example.json 的 include
-- 本地执行 npm run example 验证可正常发现用例
-
-Refs: docs/spec/naming-convention.md
-```
-
-```
-feat(test): 新增 thrift 代码生成脚本与 static route recursive-lookup 用例
-
-- script/gen-thrift.js 按 idl 生成 utils/rpc 下代码，支持 --force 覆盖
-- 新增 recursive-lookup 用例，覆盖下一跳递归解析场景
-- package.json 增加 gen / pretest 钩子，保证用例执行前代码已生成
+- 新增 0042 用例，验证 1 包/ms 下 LFA + BFD 切换丢包少于 50 个
+- 新增 four_devices_topo_links_type_6，接入两个测试仪端口
+- 同步 0042 文档、OSPF LFA 索引和拓扑说明
 ```
 
 ## 9. 提交前检查清单

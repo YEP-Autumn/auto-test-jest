@@ -54,13 +54,12 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── jest.ipv6-regression.config.cjs
 │   ├── jest.mpls-regression.config.cjs
 │   ├── jest.default-stack.config.cjs   # 堆叠场景，用例在 test/misc/stack/
-│   ├── jest.default-example.config.cjs # 教程用例（docs/test_script_tutorials）
+│   ├── jest.default-example.config.cjs # 教程用例（test/examples）
 │   ├── jest.failed.config.cjs  # 由 gen-failed 生成（gitignore），仅执行上次失败的用例
 │   └── test-module-map.json    # 模块树唯一事实来源
 ├── docs/
 │   ├── local-setup.md          # 本地使用技巧（skip-worktree）
-│   ├── spec/                   # 用例命名、提交信息、CI 规范
-│   └── test_script_tutorials/  # 可直接运行的示例用例
+│   └── spec/                   # 用例命名、提交信息、CI 规范
 ├── script/
 │   ├── gen-thrift.js           # 生成 utils/rpc/gen-nodejs
 │   ├── check-test-names.js     # 用例命名规范校验
@@ -77,7 +76,8 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 ├── test/
 │   ├── demo.test.ts            # 最小可运行示例
 │   ├── feature/                # 特性用例：<NN-模块>/<NN-UG小节>[/<NN-子功能>[_类型]]/NNNN-<模块>[-<子功能>].test.ts
-│   └── misc/bugfix/<缺陷号>/   # 缺陷回归用例
+│   ├── misc/                   # 缺陷回归与堆叠场景
+│   └── examples/               # 教程示例
 ├── utils/
 │   ├── index.ts                # 测试用例唯一入口
 │   ├── shared/                 # sleep / Port / 日志前缀
@@ -137,7 +137,7 @@ npm run mpls      # profile=mpls（MPLS 用例仅在此 profile 生效）
 
 # 3) 其它套件
 npm run stack     # 堆叠场景（test/misc/stack）
-npm run example   # 教程示例（docs/test_script_tutorials）
+npm run example   # 教程示例（test/examples）
 
 # 4) 仅执行单个用例 / 某个子模块
 npx jest -i --config=config/jest.default-regression.config.cjs -t "BGP 实例"

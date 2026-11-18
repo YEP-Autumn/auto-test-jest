@@ -27,14 +27,16 @@ test/
 │       │       └── <NNNN>-<MODULE>-<SUBJECT>.test.ts
 │       └── <NN-section>_<type>/          # 小节无子功能时的类型变体（如 03-ospf_cli）
 │           └── <NNNN>-<MODULE>.test.ts
-└── misc/                                 # 非特性用例
-    ├── bugfix/<缺陷号>/                  # 缺陷回归
-    └── stack/<模块>/                     # 其它归类
+├── misc/                                 # 非特性用例
+│   ├── bugfix/<缺陷号>/                  # 缺陷回归
+│   └── stack/<模块>/                     # 其它归类
+└── examples/                # 教程示例
+    └── example-NNNN[-subject].test.ts    # 可独立运行的教程
 ```
 
 约束：
 
-- `test/` 下仅允许 `feature/`、`misc/` 两类目录（外加根级 `demo.test.ts`）。
+- `test/` 下仅允许 `feature/`、`misc/`、`examples/` 三类目录（外加根级 `demo.test.ts`）。
 - `feature/` **建议最多三层**：模块 → UG 小节 → 子功能；脚本对更深层级给出提示，不中断校验。
 - **容器目录仅用于分组**：包含子目录的目录（如 `07-bgp/`）承担分组职责，用例放置在叶子目录。
 - **类型后缀添加在叶子目录上**：`_cli` / `_neg` / `_spec` / `_perf` 与其功能主体同级、共用基号（见 §3）。
@@ -51,6 +53,7 @@ test/
 | feature 用例文件 | `NNNN-<模块>[-<子功能>].test.ts` | `^(\d{4})-([A-Z][A-Z0-9_-]*)\.test\.ts$` | `0010-IP_ROUTE-OSPF_LFA.test.ts` |
 | bugfix 用例文件 | `bug_<缺陷号>[_<序号>].test.ts` | — | `bug_3162_1.test.ts` |
 | misc 其它用例文件 | `[NNNN-]lower/hyphen.test.ts` | `^(\d{4}-)?[A-Za-z0-9]+([_-][A-Za-z0-9]+)*\.test\.ts$` | `0010-STACK_STANDBY_SYNC_ACL.test.ts` |
+| 教程示例文件 | `example-NNNN[-subject].test.ts` | `^example-\d{4}(-[a-z0-9-]+)?\.test\.ts$` | `example-0001.test.ts`、`example-0003.test.ts` |
 
 要点：
 
@@ -116,6 +119,8 @@ test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac_cli/0010-MPLS-BPDU_AC.test.ts  # �
 test/feature/19-MPLS/02-mpls/05-mpls_bpdu_ac_spec/0010-MPLS-BPDU_AC.test.ts # 规格
 test/feature/03-ETHERNET/12-storm_control/02-action_trap/0010-ETHERNET-ACTION_TRAP.test.ts
 test/misc/bugfix/3162/bug_3162_1.test.ts
+test/examples/example-0001.test.ts
+test/examples/example-0003.test.ts
 
 # ❌
 test/feature/05-IP_ROUTE/07-bgp/01-bgp_multiple_instance/0010-IP_ROUTE.test.ts   # 缺少子功能名
@@ -127,7 +132,7 @@ test/feature/05-IP_ROUTE/07-bgp/0010-BGP-Multiple-Instance.test.ts
 
 ## 6. 新增用例检查清单
 
-1. 目录按上表命名：模块 → UG 小节 → 子功能（可选）；包含子目录的容器目录仅用于分组，用例放置在叶子目录（§1）；
+1. 目录按上表命名：模块 → UG 小节 → 子功能（可选）；包含子目录的容器目录仅用于分组，用例放置在叶子目录（§1）；教程示例放在 `test/examples/`，统一使用 `example-*` 命名；
 2. 类型变体用**后缀**表达（`_cli` 等），加在叶子目录上（§3）；
 3. 文件 `NNNN-<模块>[-<子功能>].test.ts`，序号在所属目录内递增；
 4. 标题非空，并写明测试对象、条件与预期结果；

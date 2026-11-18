@@ -80,72 +80,84 @@ export class TestHelper {
   }
 
   async init() {
-    await this.topoApi.login();
-    for (let i = 0; i < Config.dut_list.length; i++) {
-      this.dut_list[i] = await new Dut(Config.dut_list[i]).connect();
+    try {
+      await this.topoApi.login();
+      for (let i = 0; i < Config.dut_list.length; i++) {
+        const dut = new Dut(Config.dut_list[i]);
+        // 先登记再连接：connect 中途失败时，destroy() 仍能统一回收。
+        this.dut_list[i] = dut;
+        await dut.connect();
 
-      let route_mac = await this.dut_list[i].exec("show route-mac", true);
-      let match = /\s+([0-9a-fA-F:.]+)/.exec(route_mac);
-      if (0 == i) {
-        DeviceARouteMac = match?.[1] || "";
-      } else if (1 == i) {
-        DeviceBRouteMac = match?.[1] || "";
-      } else if (2 == i) {
-        DeviceCRouteMac = match?.[1] || "";
-      } else if (3 == i) {
-        DeviceDRouteMac = match?.[1] || "";
+        let route_mac = await dut.exec("show route-mac", true);
+        let match = /\s+([0-9a-fA-F:.]+)/.exec(route_mac);
+        if (0 == i) {
+          DeviceARouteMac = match?.[1] || "";
+        } else if (1 == i) {
+          DeviceBRouteMac = match?.[1] || "";
+        } else if (2 == i) {
+          DeviceCRouteMac = match?.[1] || "";
+        } else if (3 == i) {
+          DeviceDRouteMac = match?.[1] || "";
+        }
       }
-    }
 
-    if (this.topo) {
-      const topologies = (await this.topoApi.list()) as {
-        id: number;
-        name: string;
-        links: unknown[];
-      }[];
-      const existing = topologies.find(
-        (t) => t.name === Config.defaultTopoName,
-      );
-      if (existing) {
-        await this.topoApi.delete(existing.id);
+      if (this.topo) {
+        const topologies = (await this.topoApi.list()) as {
+          id: number;
+          name: string;
+          links: unknown[];
+        }[];
+        const existing = topologies.find(
+          (t) => t.name === Config.defaultTopoName,
+        );
+        if (existing) {
+          await this.topoApi.delete(existing.id);
+        }
+        const res = await this.topoApi.create(Config.defaultTopoName);
+        this.topoId = res.id;
+        const links = this.topo.links.map((link) => ({
+          src_device: link.in_port.device,
+          src_port_index: link.in_port.if_index,
+          dst_device: link.out_port.device,
+          dst_port_index: link.out_port.if_index,
+          is_two_way: true,
+        }));
+        await this.topoApi.bulkAddLinks(this.topoId, links);
+        await this.topoApi.enable(this.topoId);
       }
-      const res = await this.topoApi.create(Config.defaultTopoName);
-      this.topoId = res.id;
-      const links = this.topo.links.map((link) => ({
-        src_device: link.in_port.device,
-        src_port_index: link.in_port.if_index,
-        dst_device: link.out_port.device,
-        dst_port_index: link.out_port.if_index,
-        is_two_way: true,
-      }));
-      await this.topoApi.bulkAddLinks(this.topoId, links);
-      await this.topoApi.enable(this.topoId);
-    }
 
-    return this;
+      return this;
+    } catch (err) {
+      // init 是资源的唯一获取点，失败时在同一层归还，避免 open handle。
+      await this.destroy();
+      throw err;
+    }
   }
 
+  /**
+   * 归还本实例持有的全部资源。
+   *
+   * 通过取走并清空字段实现幂等：重复调用不会重复释放，
+   * 也不需要额外的 destroyed 标志。单个资源释放失败不阻断其它资源。
+   */
   async destroy() {
-    let promise = new Array<Promise<unknown>>();
+    const duts = this.dut_list.splice(0);
+    const trafficSession = this.trafficSession;
+    const topoId = this.topoId;
+    this.trafficSession = undefined;
+    this.topoId = undefined;
 
-    this.dut_list.forEach((dut) => {
-      promise.push(dut.disconnect());
-    });
-
-    if (this.trafficSession) {
-      // 单个端口释放失败也要继续关闭后端，避免测试进程残留连接
-      promise.push(this.trafficSession.close());
-    }
-
+    const tasks: Promise<unknown>[] = duts.map((dut) => dut.disconnect());
+    if (trafficSession) tasks.push(trafficSession.close());
     if (
       this.topo &&
-      this.topoId &&
+      topoId &&
       this._inner_debug_preserve_scene_when_failed != true
     ) {
-      promise.push(this.topoApi.delete(this.topoId));
+      tasks.push(this.topoApi.delete(topoId));
     }
 
-    return await Promise.all(promise);
+    await Promise.allSettled(tasks);
   }
 
   async startTest() {

@@ -65,6 +65,7 @@ Renix 测试仪或 Scapy 网卡收发/抓取报文，通过**拓扑后端（topo
 │   ├── check-test-names.js     # 用例命名规范校验
 │   ├── scaffold-test-modules.js # 按 test-module-map.json 生成模块目录
 │   ├── jest-suite.js           # profile × suite 清单：--table / --list / --check
+│   ├── gen-doc-index.js        # 生成/校验 docs 用例 README 索引与计数
 │   ├── list-test-cases.js      # 静态解析、按模块分组列出用例：text / json / csv / md
 │   ├── check-commit-msg.js     # 提交信息规范校验
 │   ├── generate-jest-failed-config.js
@@ -206,6 +207,9 @@ npm run -s list:cases -- --json                   # JSON（含 modules 与 modul
 npm run list:cases -- --csv --out test-cases.csv  # CSV（含模块列）
 npm run list:cases -- --md --out test-cases.md    # Markdown（按模块分节）
 npm run list:cases -- --profile mpls --suite regression --status skip,failing
+
+# 7) 更新文档索引与脚本/文档数量
+npm run docs:index
 ```
 
 模块标题来自 `config/test-module-map.json`；`test/misc/bugfix`、`test/misc/stack`、
@@ -385,11 +389,13 @@ npm run failed       # 按该配置重新执行（报告名带 -failed）
 | `npm run list:cases -- [选项]` | 列出所有测试用例（按模块分组，支持 text / json / csv / md、profile × suite 过滤） |
 | `npm run gen` | 强制重新生成 Thrift 代码 |
 | `npm run test -- -i -t "..."` | 透传参数给 Jest（按标题过滤等） |
-| `npm run check` | 提交前自检：命名 + 模块树 + 套件清单与覆盖 + 类型检查 |
+| `npm run check` | 提交前自检：命名 + 模块树 + 套件清单与覆盖 + 文档索引 + 类型检查 |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run check:test-names` | 校验 `test/` 目录与文件命名 |
 | `npm run check:test-modules` | 校验 `test/feature` 目录树与 `config/test-module-map.json` 一致 |
 | `npm run check:jest-suites` | 校验 `profiles/`、`suites/`、各配置能展开用例，并检查 `test/feature` 覆盖 |
+| `npm run check:docs-index` | 校验 `docs/test-cases/feature` 下 README 的计数、子目录表和脚本表是否最新 |
+| `npm run docs:index` | 重新生成 `docs/test-cases/feature` 下 README 的计数和索引表 |
 | `npm run scaffold:test-modules` | 按 map 创建缺失的模块/子模块目录（`.gitkeep` 占位） |
 | `npm run check:commit-msg` | 校验最近一条提交信息 |
 | `npm run format` | Prettier 格式化 `test` 与 `utils` |

@@ -2,8 +2,8 @@
 
 - 脚本目录：`test/feature/05-IP_ROUTE/`
 - 用例文档目录：`docs/test-cases/feature/05-IP_ROUTE/`
-- 脚本数量：71
-- 用例文档数量：71
+- 脚本数量：72
+- 用例文档数量：72
 - 上级索引：[README.md](../README.md)
 
 ## 子目录索引
@@ -12,7 +12,7 @@
 | --- | --- | --- | --- |
 | `01-ip_unicast_route/` | [`01-ip_unicast_route/README.md`](01-ip_unicast_route/README.md) | 15 | 15 |
 | `02-rip/` | [`02-rip/README.md`](02-rip/README.md) | 0 | 0 |
-| `03-ospf/` | [`03-ospf/README.md`](03-ospf/README.md) | 31 | 31 |
+| `03-ospf/` | [`03-ospf/README.md`](03-ospf/README.md) | 32 | 32 |
 | `04-prefix_list/` | [`04-prefix_list/README.md`](04-prefix_list/README.md) | 0 | 0 |
 | `05-route_map/` | [`05-route_map/README.md`](05-route_map/README.md) | 0 | 0 |
 | `06-pbr/` | [`06-pbr/README.md`](06-pbr/README.md) | 0 | 0 |

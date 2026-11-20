@@ -256,7 +256,6 @@ test("RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故
   );
   testHelper.ReadyCheckDutA("show ip ospf route", "192.0.2.1/32", 90_000);
 
-
   testHelper.ReadyCheckDutA(
     "show ip ospf fast-reroute per-prefix",
     new RegExp("Calculation\\s*:\\s*[1-9]\\d*\\s+runs"),

@@ -193,7 +193,6 @@ test("RFC 6571 Triangle 原图中 MHP 和链路保护在单链路故障后保持
   );
   testHelper.ReadyCheckDutD("show ip ospf route", "192.0.2.1/32", 90_000);
 
-
   testHelper.ReadyCheckDutC(
     "show ip ospf fast-reroute per-prefix",
     new RegExp("Calculation\\s*:\\s*[1-9]\\d*\\s+runs"),

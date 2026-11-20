@@ -36,7 +36,7 @@
 ```text
       S = DUTA --10-- N1 = DUTB --10-- D1 = DUTD
          |                                  |
-        10（S->N2）                        10
+        10（S->N2）                        30
          |                                  |
       N2 = DUTC ----------------------------+
          |
@@ -52,11 +52,15 @@
 | S-N1 | 10.1.2.0/24 | S=10.1.2.1，N1=10.1.2.2 | 10 |
 | N1-D1 | 10.2.4.0/24 | N1=10.2.4.1，D1=10.2.4.2 | 10 |
 | S-N2 | 10.1.3.0/24 | S=10.1.3.1，N2=10.1.3.2 | S->N2 为 10，N2->S 为 65535 |
-| N2-D1 | 10.3.4.0/24 | N2=10.3.4.1，D1=10.3.4.2 | 10 |
+| N2-D1 | 10.3.4.0/24 | N2=10.3.4.1，D1=10.3.4.2 | 30 |
 | N2-D2 | 10.3.5.0/24 | N2=10.3.5.1，D2=10.3.5.2 | 10 |
 | Loopback0 | 主机路由 | S=10.255.0.1/32，N1=10.255.0.2/32，N2=10.255.0.3/32，D1=10.255.0.4/32，D2=10.255.0.5/32 | 1 |
 
-N2 的 `<PortA>` 上配置 `ip ospf cost 65535`，模拟 N2->S 方向的 IGP MAX_METRIC；S 的出方向仍为 10。
+N2 的 `<PortA>` 上配置 `ip ospf cost 65535`，模拟 N2->S 方向的 IGP MAX_METRIC；S 的出方向仍为 10。N2-D1 设为 30 后：
+
+- S 到 D1 的主路径为 S-N1-D1 = 20，S-N2-D1 = 40，主路径唯一，不形成 ECMP；
+- 对 N2 的 LFA 判定：`D(N2,D1)=30 < D(N2,S)=65535 + D(S,D1)=20`，因此 N2 仍可作为 D1 的候选 LFA；
+- 若 N2->S 为默认开销 10，则 `30 < 10 + 20` 不成立，用于体现 MAX_METRIC 的作用。
 
 ## 3. 预置条件
 
@@ -109,7 +113,7 @@ exit
 end
 ```
 
-DUTB（N1）、DUTD（D1）、DUTE（D2）按第 2 节地址配置。DUTC（N2）的 `<PortA>` 额外配置 `ip ospf cost 65535`。全部邻居 `Full` 后，在各设备 OSPF 进程视图执行：
+DUTB（N1）、DUTD（D1）、DUTE（D2）按第 2 节地址配置。DUTC（N2）的 `<PortA>` 额外配置 `ip ospf cost 65535`，DUTC/DUTD 的 N2-D1 接口均配置 `ip ospf cost 30`。全部邻居 `Full` 后，在各设备 OSPF 进程视图执行：
 
 ```text
 fast-reroute per-prefix enable
@@ -124,7 +128,8 @@ fast-reroute per-prefix enable
 | LFA 使能 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
 | LFA 计算 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
 | 受保护前缀 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
-| D1 主路径 | `show ip route 10.255.0.4` | 至少包含 `10.1.2.2, via <接口>` |
+| D1 的 LFA 明细 | `show ip ospf fast-reroute per-prefix` | 出现 `10.255.0.4/32`，Primary 为 `10.255.0.2`，Backup 为 `10.1.3.2` |
+| D1 主路径 | `show ip route 10.255.0.4` | 唯一包含 `10.1.2.2, via <接口>`，不包含 `10.1.3.2` |
 | 连通性 | `ping 10.255.0.4`、`ping 10.255.0.5` | 均为 `0% packet loss` |
 
 ### 4.3 故障与恢复
@@ -174,7 +179,7 @@ show ip ospf processes-count
 | 1 | 拓扑说明 | 本用例为 RFC 8518 Figure 3 原图，5 台设备、5 条链路 |
 | 2 | 方向性 | OSPF 接口开销是出方向属性，N2 的 `<PortA>` 配置 65535 只影响 N2->S 方向 |
 | 3 | 观测限制 | 若设备直接从 SPF 中排除反向 MAX_METRIC 链路，记录为“实现差异”，不判功能失败 |
-| 4 | 主路径 | 由于 S->N1 与 S->N2 开销均为 10，S 到 D1 可能形成 ECMP；用例只要求主路径包含 N1，不排除 N2 |
+| 4 | 主路径 | N2-D1 开销设为 30，S 到 D1 的主路径唯一经 N1（20），经 N2 为 40，不会形成 ECMP；D1 的 LFA 明细需明确出现 Primary N1 / Backup N2 |
 
 ## 7. 执行与结果记录
 

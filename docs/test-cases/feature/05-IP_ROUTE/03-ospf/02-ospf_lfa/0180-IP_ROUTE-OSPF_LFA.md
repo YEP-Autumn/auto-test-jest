@@ -93,6 +93,7 @@ interface <PortD>
 no switchport
 ip address 10.0.41.2/24
 ip ospf network point-to-point
+ip ospf cost 10
 exit
 interface loopback0
 ip address 1.1.1.1/32
@@ -171,6 +172,7 @@ interface <PortD>
 no switchport
 ip address 10.0.41.1/24
 ip ospf network point-to-point
+ip ospf cost 10
 exit
 interface loopback0
 ip address 4.4.4.4/32
@@ -186,7 +188,7 @@ end
 
 ### 4.2 触发
 
-在 DUTC 上把 PortC 出方向开销改为 100：
+在 DUTD 上把 PortC 出方向开销改为 100：
 
 ```text
 configure terminal
@@ -195,7 +197,7 @@ ip ospf cost 100
 end
 ```
 
-接口开销是出方向属性：DUTC 到 C 的方向变为高开销，C 到 DUTC 仍为默认开销，形成非对称开销。DUTC 到 C Loopback 的最短路径会绕回 DUTA，D 邻居不再满足 LFA 无环条件。
+接口开销是出方向属性：DUTD 到 C 的方向变为高开销，C 到 DUTD 仍为默认开销，形成非对称开销。DUTD 到 C Loopback 的最短路径会绕回 DUTA，D 邻居不再满足 LFA 无环条件。
 
 ### 4.3 观测与预期
 

@@ -20,7 +20,7 @@ afterAll(async () => {
  *
  *     S ----10---- N1 ----10---- D1
  *     |                          |
- *    10（S->N2）               10 |
+ *    10（S->N2）               30 |
  *     |                          |
  *     +-------- N2 --------------+
  *               |
@@ -29,8 +29,9 @@ afterAll(async () => {
  *              D2
  *
  * S-N2 链路在 N2->S 方向配置 MAX_METRIC（65535），S->N2 方向仍为 10。
- * 按 RFC 8518 5.1：N2 到 D1 的无环条件满足时，即使反向开销为 MAX_METRIC，
- * 该链路仍可作为 D1 的候选 LFA。
+ * N2-D1 开销设为 30：S 的主路径 S-N1-D1=20 唯一，S-N2-D1=40 不会形成 ECMP。
+ * 按 RFC 8518 5.1：D(N2,D1)=30 < D(N2,S)=65535 + D(S,D1)=20，N2 仍可作为
+ * D1 的候选 LFA；若反向开销为默认 10，则 30 < 30 不成立。
  *
  * 地址规划：
  *   S-N1: 10.1.2.0/24   S=.1 N1=.2
@@ -107,7 +108,7 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
     "no switchport",
     "ip address 10.3.4.1/24",
     "ip ospf network point-to-point",
-    "ip ospf cost 10",
+    "ip ospf cost 30",
     "exit",
     `interface ${Port.C}`,
     "no switchport",
@@ -141,7 +142,7 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
     "no switchport",
     "ip address 10.3.4.2/24",
     "ip ospf network point-to-point",
-    "ip ospf cost 10",
+    "ip ospf cost 30",
     "exit",
     "interface loopback0",
     "ip address 10.255.0.4/32",
@@ -208,6 +209,17 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
     60_000,
   );
 
+  // D1 的主下一跳是 N1，备下一跳必须是 N2；该行直接证明 D1 被 N2 保护。
+  const d1LfaRow = new RegExp(
+    "10\\.255\\.0\\.4/32\\s+\\S+\\s+10\\.255\\.0\\.2\\s+10\\.1\\.3\\.2",
+  );
+  testHelper.ReadyCheckDutA(
+    "show ip ospf fast-reroute per-prefix",
+    d1LfaRow,
+    60_000,
+  );
+  testHelper.ExecRetMatchDutA("show ip ospf fast-reroute per-prefix", d1LfaRow);
+
   // 故障前记录 N2 的反向 MAX_METRIC 配置和 D1 的主路径。
   testHelper.ExecRetMatchDutC(`show running-config interface ${Port.A}`, [
     "ip ospf cost 65535",
@@ -249,6 +261,11 @@ test("RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
   testHelper.ReadyCheckDutA(
     "show ip ospf fast-reroute per-prefix",
     new RegExp("Protected by LFA\\s*:\\s*[1-9]"),
+    60_000,
+  );
+  testHelper.ReadyCheckDutA(
+    "show ip ospf fast-reroute per-prefix",
+    d1LfaRow,
     60_000,
   );
   testHelper.ReadyCheckDutA("ping 10.255.0.4", " 0% packet loss", 60_000);

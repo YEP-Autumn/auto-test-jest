@@ -1,13 +1,23 @@
-import { LinkConstraint, Port, TestHelper } from "@/utils";
+import {
+  BurstGapUnit,
+  BurstRateUnit,
+  DeviceARouteMac,
+  GreaterThan,
+  LinkConstraint,
+  PacketBuilder,
+  Port,
+  StreamPort,
+  TestHelper,
+  TransmitMode,
+} from "@/utils";
 
 jest.setTimeout(1000 * 60 * 15);
 
 let testHelper: TestHelper;
 
 beforeAll(async () => {
-  testHelper = await new TestHelper(
-    LinkConstraint.four_devices_topo_links_type_3,
-  ).init();
+  testHelper = new TestHelper(LinkConstraint.two_devices_topo_links_type_4);
+  await testHelper.init();
 });
 
 afterAll(async () => {
@@ -15,45 +25,58 @@ afterAll(async () => {
 });
 
 /**
- * 反复主备切换稳定性：对 A-B 链路执行 3 次“关闭 -> 恢复”，
- * 每次故障后应切换到 A-D-C，恢复后应回到 A-B-C，且 LFA 保护计数
- * 始终大于 0，验证备份路径和协议状态不会在多次切换后失效。
+ * 并行链路反复主备切换稳定性：对 A-B 主链路执行 3 次“关闭 -> 恢复”。
+ * PortA 为主链路（开销 1），PortB 为备份链路（开销 10）；A 到
+ * 203.0.113.0/24 的主路径经 PortA，LFA 备份下一跳经 PortB。
  *
- *    +--------+                   +--------+
- *    |  DUTA  |--PortA <=> PortA--|  DUTB  |
- *    +--------+                   +--------+
- *        |                            |
- *      PortD                        PortB
- *        |                            |
- *      PortD                        PortB
- *        |                            |
- *    +--------+                   +--------+
- *    |  DUTD  |--PortC <=> PortC--|  DUTC  |
- *    +--------+                   +--------+
+ *   StreamPort.A <=> DUTA PortD
+ *   DUTA PortA   <=> DUTB PortA
+ *   DUTA PortB   <=> DUTB PortB
+ *   DUTB PortD   <=> StreamPort.B
  *
- * 地址规划与 0010 用例一致。
+ * 地址规划：
+ *   A-B 主链路: 10.0.12.0/24   A=.1  B=.2（开销 1）
+ *   A-B 备链路: 10.0.21.0/24   A=.1  B=.2（开销 10）
+ *   A 注入: 198.51.100.1/24
+ *   B 出口: 203.0.113.1/24，测试仪 B=203.0.113.2
+ *   Loopback0: A=1.1.1.1/32  B=2.2.2.2/32
+ *
+ * 所有 OSPF 点对点接口使能 BFD（mintx 3ms、minrx 3ms、multiplier 3），
+ * 每个周期发送 6000 个报文，要求单周期丢包少于 50 个。
  */
-test("A-B 链路连续 3 次故障恢复后，LFA 主备切换与保护计数保持稳定", async () => {
+test("并行链路连续 3 次故障恢复后，LFA 切换与单周期丢包不超过 50 个", async () => {
   testHelper.ExecConfigDutA([
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
+    "no shutdown",
     "ip address 10.0.12.1/24",
     "ip ospf network point-to-point",
     "ip ospf cost 1",
+    "bfd interval mintx 3 minrx 3 multiplier 3",
+    "ip ospf bfd",
+    "exit",
+    `interface ${Port.B}`,
+    "no switchport",
+    "no shutdown",
+    "ip address 10.0.21.1/24",
+    "ip ospf network point-to-point",
+    "ip ospf cost 10",
+    "bfd interval mintx 3 minrx 3 multiplier 3",
+    "ip ospf bfd",
     "exit",
     `interface ${Port.D}`,
     "no switchport",
-    "ip address 10.0.41.2/24",
-    "ip ospf network point-to-point",
-    "ip ospf cost 10",
+    "no shutdown",
+    "ip address 198.51.100.1/24",
     "exit",
     "interface loopback0",
     "ip address 1.1.1.1/32",
+    "no shutdown",
     "exit",
     "router ospf",
     "network 10.0.12.0/24 area 0",
-    "network 10.0.41.0/24 area 0",
+    "network 10.0.21.0/24 area 0",
     "network 1.1.1.1/32 area 0",
     "fast-reroute per-prefix enable",
     "exit",
@@ -64,70 +87,37 @@ test("A-B 链路连续 3 次故障恢复后，LFA 主备切换与保护计数保
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
+    "no shutdown",
     "ip address 10.0.12.2/24",
     "ip ospf network point-to-point",
+    "ip ospf cost 1",
+    "bfd interval mintx 3 minrx 3 multiplier 3",
+    "ip ospf bfd",
     "exit",
     `interface ${Port.B}`,
     "no switchport",
-    "ip address 10.0.23.1/24",
+    "no shutdown",
+    "ip address 10.0.21.2/24",
     "ip ospf network point-to-point",
-    "exit",
-    "interface loopback0",
-    "ip address 2.2.2.2/32",
-    "exit",
-    "router ospf",
-    "network 10.0.12.0/24 area 0",
-    "network 10.0.23.0/24 area 0",
-    "network 2.2.2.2/32 area 0",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-
-  testHelper.ExecConfigDutC([
-    "configure terminal",
-    `interface ${Port.B}`,
-    "no switchport",
-    "ip address 10.0.23.2/24",
-    "ip ospf network point-to-point",
-    "exit",
-    `interface ${Port.C}`,
-    "no switchport",
-    "ip address 10.0.34.1/24",
-    "ip ospf network point-to-point",
-    "exit",
-    "interface loopback0",
-    "ip address 3.3.3.3/32",
-    "exit",
-    "router ospf",
-    "network 10.0.23.0/24 area 0",
-    "network 10.0.34.0/24 area 0",
-    "network 3.3.3.3/32 area 0",
-    "fast-reroute per-prefix enable",
-    "exit",
-    "end",
-  ]);
-
-  testHelper.ExecConfigDutD([
-    "configure terminal",
-    `interface ${Port.C}`,
-    "no switchport",
-    "ip address 10.0.34.2/24",
-    "ip ospf network point-to-point",
+    "ip ospf cost 10",
+    "bfd interval mintx 3 minrx 3 multiplier 3",
+    "ip ospf bfd",
     "exit",
     `interface ${Port.D}`,
     "no switchport",
-    "ip address 10.0.41.1/24",
-    "ip ospf network point-to-point",
-    "ip ospf cost 10",
+    "no shutdown",
+    "ip address 203.0.113.1/24",
     "exit",
     "interface loopback0",
-    "ip address 4.4.4.4/32",
+    "ip address 2.2.2.2/32",
+    "no shutdown",
     "exit",
+    "arp 203.0.113.2 0002.0002.0002",
     "router ospf",
-    "network 10.0.34.0/24 area 0",
-    "network 10.0.41.0/24 area 0",
-    "network 4.4.4.4/32 area 0",
+    "network 10.0.12.0/24 area 0",
+    "network 10.0.21.0/24 area 0",
+    "network 203.0.113.0/24 area 0",
+    "network 2.2.2.2/32 area 0",
     "fast-reroute per-prefix enable",
     "exit",
     "end",
@@ -135,20 +125,57 @@ test("A-B 链路连续 3 次故障恢复后，LFA 主备切换与保护计数保
 
   testHelper.ReadyCheckDutA("show ip ospf neighbor", "Full", 90_000);
   testHelper.ReadyCheckDutB("show ip ospf neighbor", "Full", 90_000);
-  testHelper.ReadyCheckDutC("show ip ospf neighbor", "Full", 90_000);
-  testHelper.ReadyCheckDutD("show ip ospf neighbor", "Full", 90_000);
-  testHelper.ReadyCheckDutA("show ip ospf route", "3.3.3.3/32", 60_000);
+
+  // BFD 单跳报文需要先解析两条直连链路的 ARP。
+  testHelper.ReadyCheckDutA("ping 10.0.12.2", " 0% packet loss", 60_000);
+  testHelper.ReadyCheckDutA("ping 10.0.21.2", " 0% packet loss", 60_000);
+
+  const bfdSessionsUp = new RegExp(
+    "Session State : Up[\\s\\S]*Session State : Up",
+  );
+  testHelper.ReadyCheckDutA("show bfd session detail", bfdSessionsUp, 90_000);
+  testHelper.ReadyCheckDutB("show bfd session detail", bfdSessionsUp, 90_000);
+
+  testHelper.ReadyCheckDutA(
+    "show ip route 203.0.113.2",
+    new RegExp("10\\.0\\.12\\.2,\\s+via"),
+    90_000,
+  );
   testHelper.ReadyCheckDutA(
     "show ip ospf fast-reroute per-prefix",
-    new RegExp("Protected by LFA\\s*:\\s*[1-9]"),
-    60_000,
+    new RegExp("203\\.0\\.113\\.0/24[\\s\\S]*?10\\.0\\.21\\.2"),
+    120_000,
   );
-  testHelper.ExecRetMatchDutA("show ip ospf route", [
-    "3.3.3.3/32",
-    "via 10.0.12.2",
-  ]);
 
   for (let cycle = 1; cycle <= 3; cycle++) {
+    testHelper.startCapture(StreamPort.B);
+    testHelper.addPktSender({
+      port: StreamPort.A,
+      packet: new PacketBuilder()
+        .setEthernet({
+          dst: DeviceARouteMac,
+          src: "00:00:00:44:55:66",
+          type: 0x0800,
+        })
+        .setIPv4({ src: "198.51.100.2", dst: "203.0.113.2", proto: 17 })
+        .setUDP({ sport: 1234, dport: 5678 }),
+      transmit_param: {
+        mode: TransmitMode.BURST,
+        param: {
+          burst_size: 1,
+          burst_count: 6000,
+          gap: 1,
+          gap_unit: BurstGapUnit.MS,
+          rate: 1000,
+          rate_unit: BurstRateUnit.FRAME_PER_SEC,
+        },
+      },
+      wait_time: 1000,
+      wait_for_completion: false,
+    });
+
+    // PacketSender 启动后固定等待 3s，故障点位于本周期发流后约 4s。
+    testHelper.sleep(1000);
     testHelper.ExecConfigDutA([
       "configure terminal",
       `interface ${Port.A}`,
@@ -156,18 +183,22 @@ test("A-B 链路连续 3 次故障恢复后，LFA 主备切换与保护计数保
       "end",
     ]);
     testHelper.ReadyCheckDutA(
-      "show ip route 3.3.3.3",
-      new RegExp("10\\.0\\.41\\.1,\\s+via"),
-      30_000,
+      "show ip route 203.0.113.2",
+      new RegExp("10\\.0\\.21\\.2,\\s+via"),
+      90_000,
     );
-    // 主链路故障后只剩 A-D-C 一条路径，没有可用的 LFA 备份，
-    // 受保护前缀数应降为 0。
-    testHelper.ReadyCheckDutA(
-      "show ip ospf fast-reroute per-prefix",
-      new RegExp("Protected by LFA\\s*:\\s*0\\b"),
-      30_000,
-    );
-    testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
+    testHelper.ReadyCheckDutA("ping 2.2.2.2", " 0% packet loss", 60_000);
+
+    testHelper.sleep(6000);
+    testHelper.stopStream(StreamPort.A);
+    testHelper.addPktChecker({
+      port: StreamPort.B,
+      packet: new PacketBuilder().setIPv4({
+        src: "198.51.100.2",
+        dst: "203.0.113.2",
+      }),
+      expected_count: GreaterThan(6000 - 50),
+    });
 
     testHelper.ExecConfigDutA([
       "configure terminal",
@@ -176,16 +207,16 @@ test("A-B 链路连续 3 次故障恢复后，LFA 主备切换与保护计数保
       "end",
     ]);
     testHelper.ReadyCheckDutA(
-      "show ip route 3.3.3.3",
+      "show ip route 203.0.113.2",
       new RegExp("10\\.0\\.12\\.2,\\s+via"),
-      60_000,
+      90_000,
     );
     testHelper.ReadyCheckDutA(
       "show ip ospf fast-reroute per-prefix",
-      new RegExp("Protected by LFA\\s*:\\s*[1-9]\\d*"),
-      60_000,
+      new RegExp("203\\.0\\.113\\.0/24[\\s\\S]*?10\\.0\\.21\\.2"),
+      120_000,
     );
-    testHelper.ReadyCheckDutA("ping 3.3.3.3", " 0% packet loss", 60_000);
+    testHelper.ReadyCheckDutA("ping 2.2.2.2", " 0% packet loss", 60_000);
   }
 
   testHelper.CleanConfigDutA([
@@ -193,6 +224,17 @@ test("A-B 链路连续 3 次故障恢复后，LFA 主备切换与保护计数保
     "no router ospf",
     `interface ${Port.A}`,
     "no shutdown",
+    "no ip ospf bfd",
+    "no bfd interval",
+    "no ip ospf cost",
+    "no ip ospf network",
+    "no ip address",
+    "switchport",
+    "exit",
+    `interface ${Port.B}`,
+    "no shutdown",
+    "no ip ospf bfd",
+    "no bfd interval",
     "no ip ospf cost",
     "no ip ospf network",
     "no ip address",
@@ -200,8 +242,6 @@ test("A-B 链路连续 3 次故障恢复后，LFA 主备切换与保护计数保
     "exit",
     `interface ${Port.D}`,
     "no shutdown",
-    "no ip ospf cost",
-    "no ip ospf network",
     "no ip address",
     "switchport",
     "exit",
@@ -214,55 +254,28 @@ test("A-B 链路连续 3 次故障恢复后，LFA 主备切换与保护计数保
     "no router ospf",
     `interface ${Port.A}`,
     "no shutdown",
+    "no ip ospf bfd",
+    "no bfd interval",
+    "no ip ospf cost",
     "no ip ospf network",
     "no ip address",
     "switchport",
     "exit",
     `interface ${Port.B}`,
     "no shutdown",
-    "no ip ospf network",
-    "no ip address",
-    "switchport",
-    "exit",
-    "no interface loopback0",
-    "end",
-  ]);
-
-  testHelper.CleanConfigDutC([
-    "configure terminal",
-    "no router ospf",
-    `interface ${Port.B}`,
-    "no shutdown",
-    "no ip ospf network",
-    "no ip address",
-    "switchport",
-    "exit",
-    `interface ${Port.C}`,
-    "no shutdown",
-    "no ip ospf network",
-    "no ip address",
-    "switchport",
-    "exit",
-    "no interface loopback0",
-    "end",
-  ]);
-
-  testHelper.CleanConfigDutD([
-    "configure terminal",
-    "no router ospf",
-    `interface ${Port.C}`,
-    "no shutdown",
+    "no ip ospf bfd",
+    "no bfd interval",
+    "no ip ospf cost",
     "no ip ospf network",
     "no ip address",
     "switchport",
     "exit",
     `interface ${Port.D}`,
     "no shutdown",
-    "no ip ospf cost",
-    "no ip ospf network",
     "no ip address",
     "switchport",
     "exit",
+    "no arp 203.0.113.2",
     "no interface loopback0",
     "end",
   ]);

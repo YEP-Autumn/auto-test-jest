@@ -61,6 +61,9 @@ export class TestHelper {
   constructor(topo?: TopoLinks) {
     this.topoApi = new TopoApi();
     this.topo = topo;
+    // 调试开关：PRESERVE_SCENE=1 时，用例失败后保留拓扑与设备配置，便于现场排查。
+    this._inner_debug_preserve_scene_when_failed =
+      process.env.PRESERVE_SCENE == "1";
   }
 
   /**
@@ -152,7 +155,9 @@ export class TestHelper {
     if (
       this.topo &&
       topoId &&
-      this._inner_debug_preserve_scene_when_failed != true
+      !(
+        this._inner_debug_preserve_scene_when_failed && this.testResult == false
+      )
     ) {
       tasks.push(this.topoApi.delete(topoId));
     }

@@ -76,7 +76,7 @@ test("配置 LDP 后邻居进入 OPERATIONAL", async () => {
 一个用例内部的动作按**固定的四段**顺序注册，与 `test-case-template.md` 模板中的
 「配置 → 触发/等待 → 观测/校验 → 清理」对应：
 
-```
+```text
 1. 配置    ExecConfigDutX([...])        // 下发配置
 2. 等待    ReadyCheckDutX(...) / sleep  // 等待邻居/路由/接口就绪
 3. 校验    ExecRetMatchDutX(...) / 流量发送  // 校验回显或报文
@@ -303,8 +303,8 @@ describe("VLAN trunk translate 接口模式", () => {
 
 ### 失败时保留现场（调试用）
 
-`TestHelper` 支持失败时保留拓扑/现场（内部开关 `_inner_debug_preserve_scene_when_failed`），
-该开关仅用于本地定位问题；提交前恢复默认关闭状态。
+设置环境变量 `PRESERVE_SCENE=1` 时，`TestHelper` 会在用例失败后保留拓扑与设备配置，
+便于现场排查；默认不设置（关闭）。该开关仅用于本地定位问题，提交前无需修改代码。
 
 ---
 

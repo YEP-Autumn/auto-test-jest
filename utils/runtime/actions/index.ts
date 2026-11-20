@@ -423,8 +423,10 @@ export class PacketChecker implements Actuator {
       return false;
     }
 
-    console.log(`📦 Captured ${result.length} packet(s)`);
-    console.log(formatPktList(result.map((p) => ({ field_list: p.layers }))));
+    if (isPacketCheckDebug()) {
+      console.log(`📦 Captured ${result.length} packet(s)`);
+      console.log(formatPktList(result.map((p) => ({ field_list: p.layers }))));
+    }
 
     // 获取期望的字段列表
     const expectedFields = this.param.packet.getFields();

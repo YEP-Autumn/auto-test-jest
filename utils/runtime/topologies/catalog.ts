@@ -138,11 +138,32 @@ export class LinkConstraint {
   }
 
   /**
-   *                          +--------+
-   *  StreamPort.A <=> PortD--|        |                    +--------+
-   *                          |  DUTA  | --PortA <=> PortA--|  DUTB  |--PortD <=> StreamPort.B
-   *  StreamPort.C <=> PortB--|        |                    +--------+
-   *                          +--------+
+   *
+   *                          +--------+                   +--------+
+   *                          |        |--PortA <=> PortA--|        |
+   *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortD <=> StreamPort.B
+   *                          |        |--PortB <=> PortB--|        |
+   *                          +--------+                   +--------+
+   *
+   */
+  static get two_devices_topo_links_type_4(): TopoLinks {
+    return cached("two_devices_topo_links_type_4", () =>
+      topo(
+        link(traffic("A"), dut("A", "D")),
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("A", "B"), dut("B", "B")),
+        link(dut("B", "D"), traffic("B")),
+      ),
+    );
+  }
+
+  /**
+   *
+   *                          +--------+                   +--------+
+   *  StreamPort.A <=> PortD--|        |                   |        |
+   *                          |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortD <=> StreamPort.B
+   *  StreamPort.C <=> PortB--|        |                   |        |
+   *                          +--------+                   +--------+
    */
   static get two_devices_topo_links_type_3(): TopoLinks {
     return cached("two_devices_topo_links_type_3", () =>
@@ -158,12 +179,12 @@ export class LinkConstraint {
   /**
    *                          +--------+                   +--------+
    *                          |        |--PortA <=> PortA--|        |
-   *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortB
-   *                          |        |--PortC <=> PortC--|        |    |
-   *                          +--------+                   +--------+    |
-   *                                                                     |
-   *                                                       +--------+    |
-   *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+   *  StreamPort.A <=> PortD--|  DUTA  |                   |  DUTB  |--PortB--+
+   *                          |        |--PortC <=> PortC--|        |         |
+   *                          +--------+                   +--------+         |
+   *                                                                          |
+   *                                                       +--------+         |
+   *                               StreamPort.B <=> PortD--|  DUTC  |--PortB--+
    *                                                       +--------+
    */
   static get three_devices_topo_links_type_1(): TopoLinks {
@@ -178,15 +199,15 @@ export class LinkConstraint {
     );
   }
 
-  /*
+  /**
    *                          +--------+                   +--------+
    *  StreamPort.A <=> PortD--|        |                   |        |
-   *                          |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
-   *  StreamPort.C <=> PortB--|        |                   |        |    |
-   *                          +--------+                   +--------+    |
-   *                                                                     |
-   *                                                       +--------+    |
-   *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+   *                          |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB--+
+   *  StreamPort.C <=> PortB--|        |                   |        |         |
+   *                          +--------+                   +--------+         |
+   *                                                                          |
+   *                                                       +--------+         |
+   *                               StreamPort.B <=> PortD--|  DUTC  |--PortB--+
    *                                                       +--------+
    */
   static get three_devices_topo_links_type_2(): TopoLinks {
@@ -203,19 +224,17 @@ export class LinkConstraint {
 
   /**
    *
-   *                            +--------+
-   *     StreamPort.A <-> PortD-|  DUTA  |--PortA---+
-   *                            +--------+          |
-   *                            |        |         PortA
-   *                          PortB    PortC        |
-   *                            |        |       +--------+
-   *                            |        |       |  DUTB  |
-   *                            |        |       +--------+
-   *                          PortB    PortC        |
-   *                            |        |         PortB
-   *                            +--------+          |
-   *     StreamPort.B <-> PortD-|  DUTC  |--PortA---+
-   *                            +--------+
+   *                         +----------+                   +----------+
+   * StreamPort.A <=> PortD--|   DUTA   |--PortA <=> PortA--|   DUTB   |
+   *                         +-+-----+--+                   +----+-----+
+   *                           |     |                           |
+   *                         PortB PortC                         |
+   *                           |     |                         PortB
+   *                         PortB PortC                         |
+   *                           |     |                           |
+   *                         +-+-----+--+                        |
+   * StreamPort.B <=> PortD--|   DUTC   |--PortA-----------------+
+   *                         +----------+
    *
    */
   static get three_devices_topo_links_type_3(): TopoLinks {
@@ -249,11 +268,11 @@ export class LinkConstraint {
 
   /**
    *                          +--------+                   +--------+
-   *  StreamPort.A <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
-   *                          +--------+                   +--------+    |
-   *                                                                     |
-   *                                                       +--------+    |
-   *                               StreamPort.B <=> PortD--|  DUTC  |--PortB
+   *  StreamPort.A <=> PortD--|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB--+
+   *                          +--------+                   +--------+         |
+   *                                                                          |
+   *                                                       +--------+         |
+   *                               StreamPort.B <=> PortD--|  DUTC  |--PortB--+
    *                                                       +--------+
    */
   static get three_devices_topo_links_type_5(): TopoLinks {
@@ -270,11 +289,11 @@ export class LinkConstraint {
   /**
    *
    *    +--------+                   +--------+
-   *    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB
-   *    +--------+                   +--------+    |
-   *                                               |
-   *    +--------+                   +--------+    |
-   *    |  DUTD  |--PortA <=> PortA--|  DUTC  |--PortB
+   *    |  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB--+
+   *    +--------+                   +--------+         |
+   *                                                    |
+   *    +--------+                   +--------+         |
+   *    |  DUTD  |--PortA <=> PortA--|  DUTC  |--PortB--+
    *    +--------+                   +--------+
    *
    */
@@ -290,23 +309,23 @@ export class LinkConstraint {
 
   /**
    *
-   *                                        +--------+
-   *               +-----------------PortC--|  DUTD  |--PortA-----------------+
-   *               |                        +--------+                       |
-   *               |                            |                            |
-   *               |                          PortB                          |
-   *               |                            |                            |
-   *             PortC                        PortC                        PortA
-   *               |                            |                            |
-   *          +--------+                   +--------+                   +--------+
-   *          |        |--PortA <=> PortA--|        |                   |        |
-   *          |  DUTA  |                   |  DUTB  |                   |  DUTC  |
-   *          |        |--PortB <=> PortB--|        |                   |        |
-   *          +--------+                   +--------+                   +--------+
-   *              |                            |                            |
-   *            PortD                        PortD                        PortD
-   *              |                            |                            |
-   *        StreamPort.A                 StreamPort.B                 StreamPort.C
+   *                                    +--------+
+   *            +----------------PortC--|  DUTD  |--PortA-----------------+
+   *            |                       +----+---+                        |
+   *            |                            |                            |
+   *            |                          PortB                          |
+   *            |                            |                            |
+   *          PortC                        PortC                        PortA
+   *            |                            |                            |
+   *       +----+---+                   +----+---+                   +----+---+
+   *       |        |--PortA <=> PortA--|        |                   |        |
+   *       |  DUTA  |                   |  DUTB  |                   |  DUTC  |
+   *       |        |--PortB <=> PortB--|        |                   |        |
+   *       +----+---+                   +----+---+                   +----+---+
+   *            |                            |                            |
+   *          PortD                        PortD                        PortD
+   *            |                            |                            |
+   *      StreamPort.A                 StreamPort.B                 StreamPort.C
    *
    */
   static get four_devices_topo_links_type_2(): TopoLinks {
@@ -351,32 +370,25 @@ export class LinkConstraint {
   }
 
   /**
-   * 四设备全互联拓扑，任意两台设备之间均有一条独立链路：
-   *
-   *   A-B: DUTA PortA <=> DUTB PortA
-   *   A-C: DUTA PortB <=> DUTC PortA
-   *   A-D: DUTA PortC <=> DUTD PortA
-   *   B-C: DUTB PortB <=> DUTC PortB
-   *   B-D: DUTB PortC <=> DUTD PortB
-   *   C-D: DUTC PortC <=> DUTD PortC
-   *
-   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
-   *
-   *          DUTB          DUTC          DUTD
-   *   DUTA  PortA-PortA   PortB-PortA   PortC-PortA
-   *   DUTB                PortB-PortB   PortC-PortB
-   *   DUTC                              PortC-PortC
-   *
-   *   拓扑形状（每一条边都是一对一的点对点链路）：
-   *
-   *        DUTA --------- DUTB
-   *          | \        / |
-   *          |   \    /   |
-   *          |     \/     |
-   *          |     /\     |
-   *          |   /    \   |
-   *          | /        \ |
-   *        DUTD --------- DUTC
+   *                                    +--------+
+   *        +-------------------PortB---|  DUTB  |--PortC----------+
+   *        |                           +----+---+                 |
+   *        |                                |                     |
+   *        |                              PortA                   |
+   *        |                                |                     |
+   *        |                              PortA                   |
+   *        |                                |                     |
+   *        |                           +----+---+                 |
+   *        |     +-------------PortB---|  DUTA  |--PortC----+     |
+   *        |     |                     +--------+           |     |
+   *        |     |                                          |     |
+   *        |     |                                          |     |
+   *      PortA PortA                                      PortB PortB
+   *        |     |                                          |     |
+   *        |     |                                          |     |
+   *      +-+-----+-+                                      +-+-----+-+
+   *      |  DUTC   |-----------PortC <=> PortC------------|  DUTD   |
+   *      +---------+                                      +---------+
    */
   static get four_devices_topo_links_type_4(): TopoLinks {
     return cached("four_devices_topo_links_type_4", () =>
@@ -392,28 +404,24 @@ export class LinkConstraint {
   }
 
   /**
-   * 四设备拓扑：
    *
-   *   A-B: DUTA PortA <=> DUTB PortA
-   *   A-C: DUTA PortB <=> DUTC PortA
-   *   B-C: DUTB PortB <=> DUTC PortB
-   *   A-D: DUTA PortC <=> DUTD PortA
-   *   B-D: DUTB PortC <=> DUTD PortB
-   *
-   *        DUTA --------- DUTB
-   *          | \        / |
-   *          |   \    /   |
-   *          |     \/     |
-   *          |     /\     |
-   *          |   /    \   |
-   *          | /        \ |
-   *        DUTC          DUTD
-   *
-   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
-   *
-   *          DUTB          DUTC          DUTD
-   *   DUTA  PortA-PortA   PortB-PortA   PortC-PortA
-   *   DUTB                PortB-PortB   PortC-PortB
+   *                              +--------+
+   *  +-------------------PortA---|  DUTA  |--PortB-------------------+
+   *  |                           +---+----+                          |
+   *  |                               |                               |
+   *  |                             PortC                             |
+   *  |                               |                               |
+   *  |                             PortA                             |
+   *  |                               |                               |
+   *  |                           +---+----+                          |
+   *  |     +--------------PortB--|  DUTD  |                          |
+   *  |     |                     +--------+                          |
+   *  |     |                                                         |
+   * PortA PortC                                                     PortA
+   *  |     |                                                         |
+   * +-+-----+-+                                                 +-----+---+
+   * |  DUTB   |-----------------PortB <=> PortB-----------------|  DUTC   |
+   * +---------+                                                 +---------+
    */
   static get four_devices_topo_links_type_5(): TopoLinks {
     return cached("four_devices_topo_links_type_5", () =>
@@ -428,31 +436,22 @@ export class LinkConstraint {
   }
 
   /**
-   * 四设备环形拓扑 + 两个测试仪端口：
    *
-   *   StreamPort.A <=> PortB--+--------+                   +--------+
-   *                           |  DUTA  |--PortA <=> PortA--|  DUTB  |
    *                           +--------+                   +--------+
+   *   StreamPort.A <=> PortB--|  DUTA  |--PortA <=> PortA--|  DUTB  |
+   *                           +---+----+                   +---+----+
    *                               |                            |
    *                             PortD                        PortB
    *                               |                            |
    *                             PortD                        PortB
    *                               |                            |
-   *                           +--------+                   +--------+
+   *                           +---+----+                   +---+----+
    *                           |  DUTD  |--PortC <=> PortC--|  DUTC  |
-   *                           +--------+                   +--------+
-   *                                                          |
-   *                                                        PortA
-   *                                                          |
-   *                                                    StreamPort.B
-   *
-   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
-   *
-   *          StreamPort.A   DUTB          DUTC          DUTD
-   *   DUTA  PortB          PortA-PortA   —             PortD-PortD
-   *   DUTB                 —             PortB-PortB   —
-   *   DUTC  PortA          —             —             PortC-PortC
-   *   DUTD                 —             —             —
+   *                           +--------+                   +---+----+
+   *                                                            |
+   *                                                           PortA
+   *                                                            |
+   *                                                       StreamPort.B
    */
   static get four_devices_topo_links_type_6(): TopoLinks {
     return cached("four_devices_topo_links_type_6", () =>
@@ -468,27 +467,26 @@ export class LinkConstraint {
   }
 
   /**
-   * 五设备拓扑：
    *
-   *   A-B: DUTA PortA <=> DUTB PortA
-   *   B-D: DUTB PortB <=> DUTD PortA
-   *   A-C: DUTA PortB <=> DUTC PortA
-   *   C-D: DUTC PortB <=> DUTD PortB
-   *   C-E: DUTC PortC <=> DUTE PortA
-   *
-   *        DUTA --------- DUTB
-   *          |              |
-   *        DUTC --------- DUTD
-   *          |
-   *        DUTE
-   *
-   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
-   *
-   *          DUTB          DUTC          DUTD          DUTE
-   *   DUTA  PortA-PortA   PortB-PortA   —             —
-   *   DUTB                —             PortB-PortA   —
-   *   DUTC                              PortB-PortB   PortC-PortA
-   *   DUTD                                            —
+   * +--------+                   +--------+
+   * |  DUTA  |--PortA <=> PortA--|  DUTB  |
+   * +---+----+                   +---+----+
+   *     |                            |
+   *   PortB                        PortB
+   *     |                            |
+   *   PortA                        PortA
+   *     |                            |
+   * +---+----+                   +---+----+
+   * |  DUTC  |--PortB <=> PortB--|  DUTD  |
+   * +---+----+                   +--------+
+   *     |
+   *   PortC
+   *     |
+   *   PortA
+   *     |
+   * +---+----+
+   * |  DUTE  |
+   * +--------+
    */
   static get five_devices_topo_links_type_1(): TopoLinks {
     return cached("five_devices_topo_links_type_1", () =>
@@ -503,34 +501,34 @@ export class LinkConstraint {
   }
 
   /**
-   * 六设备拓扑：
-   *
-   *   A-B: DUTA PortA <=> DUTB PortA
-   *   A-C: DUTA PortB <=> DUTC PortA
-   *   A-D: DUTA PortC <=> DUTD PortA
-   *   B-C: DUTB PortB <=> DUTC PortB
-   *   B-D: DUTB PortC <=> DUTD PortB
-   *   C-D: DUTC PortC <=> DUTD PortC
-   *   C-E: DUTC PortD <=> DUTE PortA
-   *   C-F: DUTC PortE <=> DUTF PortA
-   *   D-E: DUTD PortD <=> DUTE PortB
-   *   D-F: DUTD PortE <=> DUTF PortB
-   *
-   *        DUTA --------- DUTB
-   *          | \        / |
-   *          |   \    /   |
-   *          |     \/     |
-   *          |     /\     |
-   *          |   /    \   |
-   *          | /        \ |
-   *        DUTC --------- DUTD
-   *          | \        / |
-   *          |   \    /   |
-   *          |     \/     |
-   *          |     /\     |
-   *          |   /    \   |
-   *          | /        \ |
-   *        DUTE --------- DUTF
+   *                               +--------+
+   *    +-------------------PortB--|  DUTB  |--PortC---------------------+
+   *    |                          +---+----+                            |
+   *    |                              |                                 |
+   *    |                            PortA                               |
+   *    |                              |                                 |
+   *    |                            PortA                               |
+   *    |                              |                                 |
+   *    |                          +---+----+                            |
+   *    |     +-------------PortB--|  DUTA  |--PortC---------------+     |
+   *    |     |                    +--------+                      |     |
+   *    |     |                                                    |     |
+   *    |     |                    +--------+                      |     |
+   *    |     |           +--------|  DUTE  |----------+           |     |
+   *    |     |           |        +--------+          |           |     |
+   *  PortB PortA         |                            |         PortA PortB
+   *    |     |         PortA                        PortB         |     |
+   *    |     |           |                            |           |     |
+   * +--+-----+-+         |                            |         +-+-----+--+
+   * |          |--PortD--+                            +--PortD--|          |
+   * |   DUTC   |                                                |   DUTD   |
+   * |          |----------------PortC <=> PortC-----------------|          |
+   * +---+------+                                                +---+------+
+   *     |                                                           |
+   *   PortE                                                       PortE
+   *     |                         +--------+                        |
+   *     +---------------PortA-----|  DUTF  |--PortB-----------------+
+   *                               +--------+
    */
   static get six_devices_topo_links_type_4(): TopoLinks {
     return cached("six_devices_topo_links_type_4", () =>
@@ -550,33 +548,78 @@ export class LinkConstraint {
   }
 
   /**
-   * 七设备拓扑：
    *
-   *   A-B: DUTA PortA <=> DUTB PortA
-   *   A-D: DUTA PortB <=> DUTD PortA
-   *   A-E: DUTA PortC <=> DUTE PortA
-   *   B-C: DUTB PortB <=> DUTC PortA
-   *   C-G: DUTC PortB <=> DUTG PortA
-   *   D-E: DUTD PortB <=> DUTE PortB
-   *   E-F: DUTE PortC <=> DUTF PortA
-   *   F-G: DUTF PortB <=> DUTG PortB
+   *                                  StreamPort.A
+   *                                        |
+   *                                      PortE
+   *                                        |
+   * +--------------------------------------+--------------------------------------+
+   * |                                    DUTA                                     |
+   * +-----+---------------------+------------------+-----------------------+------+
+   *       |                     |                  |                       |
+   *     PortC                 PortA              PortB                   PortD
+   *       |                     |                  |                       |
+   *     PortA                 PortA              PortA                   PortA
+   *       |                     |                  |                       |
+   * +-----+------+        +-----+------+     +-----+------+          +-----+------+
+   * |    DUTD    |        |    DUTB    |     |    DUTC    |          |    DUTE    |
+   * +-----+------+        +-+--------+-+     +--+------+--+          +-----+------+
+   *       |                 |        |          |      |                   |
+   *     PortB             PortC    PortB      PortB  PortC               PortB
+   *       |                 |        |          |      |                   |
+   *       +-----------------+        |          |      +-------------------+
+   *                                  |          |
+   *                                PortA      PortB
+   *                                  |          |
+   *                             +----+----------+----+
+   *                             |        DUTF        |
+   *                             +---------+----------+
+   *                                       |
+   *                                     PortC
+   *                                       |
+   *                                 StreamPort.B
    *
-   *        DUTB --------- DUTC --------------- DUTG
-   *          |                                 /
-   *        DUTA -------------- DUTE --- DUTF -/
-   *          \                 |
-   *           \                |
-   *          DUTD --------------+
+   */
+  static get six_devices_topo_links_type_5(): TopoLinks {
+    return cached("six_devices_topo_links_type_5", () =>
+      topo(
+        link(traffic("A"), dut("A", "E")),
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("A", "B"), dut("C", "A")),
+        link(dut("A", "C"), dut("D", "A")),
+        link(dut("A", "D"), dut("E", "A")),
+        link(dut("B", "B"), dut("F", "A")),
+        link(dut("C", "B"), dut("F", "B")),
+        link(dut("D", "B"), dut("B", "C")),
+        link(dut("E", "B"), dut("C", "C")),
+        link(dut("F", "C"), traffic("B")),
+      ),
+    );
+  }
+
+  /**
    *
-   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
-   *
-   *          DUTB          DUTC          DUTD          DUTE          DUTF          DUTG
-   *   DUTA  PortA-PortA   —             PortB-PortA   PortC-PortA   —             —
-   *   DUTB                PortB-PortA   —             —             —             —
-   *   DUTC                              —             —             —             PortB-PortA
-   *   DUTD                                            PortB-PortB   —             —
-   *   DUTE                                                          PortC-PortA   —
-   *   DUTF                                                                        PortB-PortB
+   *                               +----------+                     +----------+
+   *                               |   DUTA   |---PortA <=> PortA---|   DUTB   |
+   *                               +--+-----+-+                     +----+-----+
+   *                                  |     |                            |
+   *                                PortB PortC                        PortB
+   *                                  |     |                            |
+   *     +----------------------------+     |                            |
+   *     |                                  |                            |
+   *   PortA                                |                          PortA
+   *     |                                  |                            |
+   * +---+------+                           |                       +----+-----+
+   * |   DUTD   |                           |                       |   DUTC   |
+   * +--+-------+                           |                       +----+-----+
+   *    |                                   |                            |
+   *  PortB   +-----------------------------+                          PortB
+   *    |     |                                                          |
+   *  PortB PortA                                                      PortA
+   *    |     |                                                          |
+   * +--+-----+-+                    +----------+                   +----+-----+
+   * |   DUTE   |---PortC <=> PortA--|   DUTF   |--PortB <=> PortB--|   DUTG   |
+   * +----------+                    +----------+                   +----------+
    */
   static get seven_devices_topo_links_type_1(): TopoLinks {
     return cached("seven_devices_topo_links_type_1", () =>
@@ -594,28 +637,30 @@ export class LinkConstraint {
   }
 
   /**
-   * 九设备拓扑：
    *
-   *   A-B: DUTA PortA <=> DUTB PortA
-   *   A-D: DUTA PortB <=> DUTD PortA
-   *   A-F: DUTA PortC <=> DUTF PortA
-   *   B-C: DUTB PortB <=> DUTC PortA
-   *   C-G: DUTC PortB <=> DUTG PortA
-   *   D-H: DUTD PortB <=> DUTH PortA
-   *   D-I: DUTD PortC <=> DUTI PortA
-   *   E-G: DUTE PortA <=> DUTG PortB
-   *   E-H: DUTE PortB <=> DUTH PortB
-   *   F-H: DUTF PortB <=> DUTH PortC
-   *
-   *                          DUTE
-   *                         /    \
-   *                      DUTG    DUTH ------ DUTF
-   *                       |       |          /
-   *                      DUTB     |         /
-   *                       |       |        /
-   *                   DUTA ------ DUTD ----
-   *                       \       |
-   *                        \    DUTI
+   * +---------+                   +---------+                   +---------+
+   * |  DUTB   |--PortA <=> PortA--|  DUTA   |--PortC <=> PortA--|  DUTF   |
+   * +----+----+                   +----+----+                   +----+----+
+   *      |                             |                             |
+   *    PortB                         PortB                         PortB
+   *      |                             |                             |
+   *    PortA                         PortA                         PortC
+   *      |                             |                             |
+   * +----+----+                   +----+----+                   +----+----+
+   * |  DUTC   |                   |  DUTD   |--PortB <=> PortA--|  DUTH   |
+   * +----+----+                   +----+----+                   +----+----+
+   *      |                             |                             |
+   *    PortB                         PortC                         PortB
+   *      |                             |                             |
+   *    PortA                         PortA                         PortB
+   *      |                             |                             |
+   * +----+----+                   +----+----+                   +----+----+
+   * |  DUTG   |                   |  DUTL   |                   |  DUTE   |
+   * +----+----+                   +---------+                   +----+----+
+   *      |                                                           |
+   *    PortB                                                       PortA
+   *      |                                                           |
+   *      +-----------------------------------------------------------+
    */
   static get nine_devices_topo_links_type_1(): TopoLinks {
     return cached("nine_devices_topo_links_type_1", () =>
@@ -635,31 +680,41 @@ export class LinkConstraint {
   }
 
   /**
-   * 九设备拓扑：
    *
-   *   A-B: DUTA PortA <=> DUTB PortA
-   *   A-C: DUTA PortB <=> DUTC PortA
-   *   A-D: DUTA PortC <=> DUTD PortA
-   *   B-C: DUTB PortB <=> DUTC PortB
-   *   B-D: DUTB PortC <=> DUTD PortB
-   *   B-E: DUTB PortD <=> DUTE PortA
-   *   B-F: DUTB PortE <=> DUTF PortA
-   *   C-D: DUTC PortC <=> DUTD PortC
-   *   C-G: DUTC PortD <=> DUTG PortA
-   *   C-H: DUTC PortE <=> DUTH PortA
-   *   D-G: DUTD PortD <=> DUTG PortB
-   *   D-H: DUTD PortE <=> DUTH PortB
-   *   E-F: DUTE PortB <=> DUTF PortB
-   *   E-I: DUTE PortC <=> DUTI PortA
-   *   F-I: DUTF PortC <=> DUTI PortB
-   *
-   *                     DUTA --------- DUTB
-   *                    / | \          / | \
-   *                   /  |  \        /  |  \
-   *               DUTC --+-- DUTD  DUTE--+--DUTF
-   *                 | \       / |      \    /
-   *                 |   \   /   |       \  /
-   *               DUTG ---+--- DUTH     DUTI
+   *                                                           +--------+
+   *                        +----------------------------------+  DUTL  |
+   *                        |                                  +---+----+
+   *                      PortA                                    |
+   *                        |                                    PortB
+   *                        |                                      |
+   *                      PortC                                  PortC
+   *                        |                                      |
+   *                 +------+-+                                +---+----+
+   *                 |  DUTE  +--------PortB <=> PortB---------+  DUTF  +----+
+   *                 +---+----+                                +--------+    |
+   *                     |                                                 PortA
+   *                     |                                                   |
+   *                     |                                                   |
+   *                     +-------------PortD <=> PortA-------------+         |
+   *                                                               |       PortE
+   *                 +--------+                                +---+----+    |
+   *    +------------+  DUTA  +--------PortA <=> PortA---------+  DUTB  +----+
+   *    |            +----+---+                                +----+---+---------+
+   *  PortB               |                                         |             |
+   *    |                 +--PortC <=> PortA--+ +--PortC <=> PortB--+           PortB
+   *    |                                     | |                                 |
+   *    |   +--------+                    +---+-+--+                   +--------+ |
+   *    |   |  DUTG  +--PortD <=> PortB---+  DUTD  +--PortE <=> PortB--+  DUTH  | |
+   *    |   +----+---+                    +-+------+                   +---+----+ |
+   *    |        |                          |                              |      |
+   *    |        |                        PortC                            |      |
+   *    |        |                          |                              |      |
+   *    |        |                        PortC                            |      |
+   *    |        |                          |                              |      |
+   *  PortA      |                        +-+------+                       |    PortB
+   *    |        +----PortD <=> PortA-----+  DUTC  +----PortE <=> PortA----+      |
+   *    |                                 +--+--+--+                              |
+   *    +------------------------------------+  +---------------------------------+
    */
   static get nine_devices_topo_links_type_2(): TopoLinks {
     return cached("nine_devices_topo_links_type_2", () =>
@@ -684,30 +739,48 @@ export class LinkConstraint {
   }
 
   /**
-   * 九设备拓扑（在 nine_devices_topo_links_type_2 基础上去掉 DUTA-DUTB 直连）：
    *
-   *   A-C: DUTA PortB <=> DUTC PortA
-   *   A-D: DUTA PortC <=> DUTD PortA
-   *   B-C: DUTB PortB <=> DUTC PortB
-   *   B-D: DUTB PortC <=> DUTD PortB
-   *   B-E: DUTB PortD <=> DUTE PortA
-   *   B-F: DUTB PortE <=> DUTF PortA
-   *   C-D: DUTC PortC <=> DUTD PortC
-   *   C-G: DUTC PortD <=> DUTG PortA
-   *   C-H: DUTC PortE <=> DUTH PortA
-   *   D-G: DUTD PortD <=> DUTG PortB
-   *   D-H: DUTD PortE <=> DUTH PortB
-   *   E-F: DUTE PortB <=> DUTF PortB
-   *   E-I: DUTE PortC <=> DUTI PortA
-   *   F-I: DUTF PortC <=> DUTI PortB
+   * +----------+                                      +----------+
+   * |   DUTE   |-----------PortB <=> PortB------------|   DUTF   |
+   * +--+-----+-+                                      +--+-----+-+
+   *    |     |                                           |     |
+   *  PortA PortC                                       PortC PortA
+   *    |     |                                           |     |
+   *    |     |                                           |     |
+   *    |     |          +----------+                     |     |
+   *    |     +---PortA--|   DUTL   |--PortB--------------+     |
+   *    |                +----------+                           |
+   *    |                                                       |
+   *    +-------------------------------------------------+     |
+   *                                                      |     |
+   *    +----------------------------------+              |     |
+   *    |                                  |              |     |
+   *  PortC                                |            PortD  PortE
+   *    |                                  |              |     |
+   * +--+-------+                          |           +--+-----+-+
+   * |   DUTA   |             +------------X----PortB--|   DUTB   |
+   * +--+-------+             |            |           +--------+-+
+   *    |                     |            |                    |
+   *  PortB                   |            |                  PortC
+   *    |     +---------------+            +--------------+     |
+   *    |     |                                           |     |
+   *  PortA PortB                                       PortA PortB
+   *    |     |                                           |     |
+   * +--+-----+--+                                     +--+-----+---+
+   * |           |-------------PortC <=> PortC---------|            |
+   * |    DUTC   |                                     |    DUTD    |
+   * |           |--PortE-----+                        |            |
+   * +--+--------+            |                        +--+-------+-+
+   *    |                     |                           |      |
+   *  PortD                   |                         PortD  PortE
+   *    |       +-------------X---------------------------+       |
+   *    |       |             |                                   |
+   *  PortA   PortB           |                                 PortB
+   *    |       |             |                                   |
+   * +--+-------+-+           |                        +----------+-+
+   * |    DUTG    |           +-----------------PortA--|    DUTH    |
+   * +------------+                                    +------------+
    *
-   *                     DUTA          DUTB
-   *                    / | \          / | \
-   *                   /  |  \        /  |  \
-   *               DUTC --+-- DUTD  DUTE--+--DUTF
-   *                 | \       / |      \    /
-   *                 |   \   /   |       \  /
-   *               DUTG ---+--- DUTH     DUTI
    */
   static get nine_devices_topo_links_type_3(): TopoLinks {
     return cached("nine_devices_topo_links_type_3", () =>
@@ -731,30 +804,34 @@ export class LinkConstraint {
   }
 
   /**
-   * 九设备拓扑：
    *
-   *   A-B: DUTA PortA <=> DUTB PortA
-   *   B-C: DUTB PortB <=> DUTC PortA
-   *   C-F: DUTC PortB <=> DUTF PortA
-   *   A-G: DUTA PortB <=> DUTG PortA
-   *   G-H: DUTG PortB <=> DUTH PortA
-   *   H-F: DUTH PortB <=> DUTF PortB
-   *   E-A: DUTE PortA <=> DUTA PortC
-   *   C-D: DUTC PortC <=> DUTD PortA
-   *   D-E: DUTD PortB <=> DUTE PortB
-   *   E-F: DUTE PortC <=> DUTF PortC
-   *   C-E: DUTC PortD <=> DUTE PortD
-   *
-   *   DUTB ---- DUTA ---- DUTG ---- DUTH
-   *               | \               |
-   *               |  \              |
-   *               |   DUTE -------- + ---- DUTF
-   *               |     |  \                 |
-   *             DUTC ---+   \                |
-   *              |  \        \               |
-   *            DUTD  +--------+--------------+
-   *
-   *   示意图仅表示相邻关系，端口对应关系以链路列表为准。
+   *        +--------+                              +--------+                              +--------+
+   *        |  DUTB  +-------PortA <=> PortA--------+  DUTA  +-------PortB <=> PortA--------+  DUTG  |
+   *        +---+----+                              +-+------+                              +---+----+
+   *            |                                     |                                         |
+   *          PortB                                 PortC                                     PortB
+   *            |                                     |                                         |
+   *          PortA                                   |                                       PortA
+   *            |                                     |                                         |
+   *        +---+----+                                |                                     +---+----+
+   *  +-----+  DUTC  +-----+                          |                                     |  DUTH  |
+   *  |     +-----+--+     |                        PortA                                   +------+-+
+   *  |           |        |                          |                                            |
+   *  |           |        |                        +-+------+                                   PortB
+   *  |           |        +----PortD <=> PortD-----+  DUTE  +-----+                               |
+   *  |           |                                 +---+----+     |                             PortB
+   *  |           |                                     |          |                               |
+   *  |           |                                   PortB        |                        +------+-+
+   *  |           |                                     |          +----PortC <=> PortC-----+  DUTK  |
+   *  |           |                                   PortB                                 +--+-----+
+   *  |           |                                     |                                      |
+   *  |           |                                 +---+----+                                 |
+   *  |           +---------PortC <=> PortA---------+  DUTD  |                                 |
+   *  |                                             +--------+                                 |
+   *  |                                                                                        |
+   *  |                                                                                        |
+   *  |                                                                                        |
+   *  +--------------------------------------PortB <=> PortA-----------------------------------+
    */
   static get nine_devices_topo_links_type_4(): TopoLinks {
     return cached("nine_devices_topo_links_type_4", () =>
@@ -775,35 +852,50 @@ export class LinkConstraint {
   }
 
   /**
-   * 十二设备拓扑：
    *
-   *   A-B: DUTA PortA <=> DUTB PortA
-   *   A-H: DUTA PortB <=> DUTH PortA
-   *   A-I: DUTA PortC <=> DUTI PortA
-   *   B-C: DUTB PortB <=> DUTC PortA
-   *   C-D: DUTC PortB <=> DUTD PortA
-   *   C-I: DUTC PortC <=> DUTI PortB
-   *   C-J: DUTC PortD <=> DUTJ PortA
-   *   D-E: DUTD PortB <=> DUTE PortA
-   *   E-F: DUTE PortB <=> DUTF PortA
-   *   F-H: DUTF PortB <=> DUTH PortB
-   *   F-G: DUTF PortC <=> DUTG PortA
-   *   J-K: DUTJ PortB <=> DUTK PortA
-   *   K-I: DUTK PortB <=> DUTI PortC
-   *   K-L: DUTK PortC <=> DUTL PortB
-   *   L-G: DUTL PortA <=> DUTG PortB
-   *
-   *   DUTD -- DUTE
-   *    |       |
-   *   DUTC -- DUTF -- DUTG
-   *    |  \    |  \    |
-   *   DUTB  DUTJ  DUTH DUTL
-   *    |      |         |
-   *   DUTA -- DUTK -----+
-   *    |       |
-   *   DUTI ----+     （DUTI 同时连接 DUTC）
-   *
-   *   以上示意图仅表示相邻关系，端口对应关系以链路列表和下面的矩阵为准。
+   *  +--------+
+   *  |  DUTH  +---------------------PortB <=> PortB----------------------+
+   *  +---+----+                                                          |
+   *      |                                                               |
+   *    PortA                                                             |
+   *      |                                                               |
+   *    PortB                                                             |
+   *      |                                                               |
+   *  +---+----+                                        +--------+        |
+   *  |  DUTA  +------------PortC <=> PortA-------------+  DUTI  |        |
+   *  +-----+--+                                        +---+---++        |
+   *        |     +-------------PortC <=> PortB-------------+   |         |
+   *      PortA   |                 +--------+                PortC       |
+   *        |     |           +-----+  DUTJ  |                  |         |
+   *      PortA   |           |     +----+---+                PortB       |
+   *        |     |           |          +-PortB <=> PortA--+   |         |
+   *  +-----+--+  |         PortA                       +---+---++        |
+   *  |  DUTB  |  |           |                         |  DUTK  |        |
+   *  +-+------+  |           |                         +-----+--+        |
+   *    |         |           |                               |           |
+   *  PortB       |         PortD                           PortC         |
+   *    |         |           |                               |           |
+   *  PortA       |           |                             PortB         |
+   *    |         |           |                               |           |
+   *  +-+------+--+           |                         +-----+--+        |
+   *  |  DUTC  +--------------+                         |  DUTL  |        |
+   *  +-----+--+                                        +-+------+        |
+   *        |                                             |               |
+   *      PortB                                         PortA             |
+   *        |                                             |               |
+   *      PortA                                         PortB             |
+   *        |                                             |               |
+   *  +-----+--+                                        +-+------+        |
+   *  |  DUTD  |                                        |  DUTG  |        |
+   *  +-+------+                                        +-----+--+        |
+   *    |                                                     |           |
+   *  PortB                                                 PortA         |
+   *    |                                                     |           |
+   *  PortA                                                 PortC         |
+   *    |                                                     |           |
+   *  +-+------+                                        +-----+--+        |
+   *  |  DUTE  +------------PortB <=> PortA-------------+  DUTF  +--------+
+   *  +--------+                                        +--------+
    */
   static get twelve_devices_topo_links_type_2(): TopoLinks {
     return cached("twelve_devices_topo_links_type_2", () =>
@@ -828,14 +920,34 @@ export class LinkConstraint {
   }
 
   /**
-   * 十二设备环形拓扑。每台设备使用两个端口，形成一条闭合环：
    *
-   *   A -- B -- C -- D -- E -- F
-   *   |                        |
-   *   L -- K -- J -- I -- H -- G
-   *
-   * 端口约定：顺时针方向使用本端 PortA/PortB：
-   *   A PortA -> B PortA, B PortB -> C PortA, ..., L PortB -> A PortB
+   *       +--------+                   +--------+                   +--------+
+   *   +---|  DUTA  |--PortA <=> PortA--|  DUTB  |--PortB <=> PortA--|  DUTC  |
+   *   |   +----+---+                   +----+---+                   +----+---+
+   *   |                                                                  |
+   * PortB                                                              PortB
+   *   |                                                                  |
+   *   |                                                                PortA
+   *   |                                                                  |
+   *   |   +----+---+                   +--------+                   +----+---+
+   *   |   |  DUTF  |--PortB <=> PortA--|  DUTE  |--PortB <=> PortA--|  DUTD  |
+   *   |   +--------+                   +--------+                   +----+---+
+   *   |        |
+   *   |      PortB
+   *   |        |
+   *   |      PortA
+   *   |        |
+   *   |   +----+---+                   +--------+                   +--------+
+   *   |   |  DUTG  |--PortB <=> PortA--|  DUTH  |--PortB <=> PortA--|  DUTI  |
+   *   |   +--------+                   +--------+                   +----+---+
+   *   |                                                                  |
+   *   |                                                                PortB
+   *   |                                                                  |
+   * PortB                                                              PortA
+   *   |                                                                  |
+   *   |   +----+---+                   +--------+                   +----+---+
+   *   +---|  DUTL  |--PortB <=> PortA--|  DUTK  |--PortB <=> PortA--|  DUTJ  |
+   *       +--------+                   +--------+                   +--------+
    */
   static get twelve_devices_topo_links_type_1(): TopoLinks {
     return cached("twelve_devices_topo_links_type_1", () =>
@@ -860,21 +972,21 @@ export class LinkConstraint {
    *
    *    +--------+                   +--------+
    *    |  DUTE  |--PortA <=> PortA--|  DUTF  |
-   *    +--------+                   +--------+
+   *    +---+----+                   +---+----+
    *        |                            |
    *      PortB                        PortB
    *        |                            |
    *      PortB                        PortB
    *        |                            |
-   *    +--------+                   +--------+
+   *    +---+----+                   +---+----+
    *    |  DUTC  |                   |  DUTD  |
-   *    +--------+                   +--------+
+   *    +---+----+                   +---+----+
    *        |                            |
    *      PortA                        PortA
    *        |                            |
    *      PortA                        PortA
    *        |                            |
-   *    +--------+                   +--------+
+   *    +---+----+                   +---+----+
    *    |  DUTA  |                   |  DUTB  |
    *    +--------+                   +--------+
    *
@@ -893,29 +1005,25 @@ export class LinkConstraint {
 
   /**
    *
-   *                                  +--------+
-   *         +-----------------PortC--|  DUTD  |--PortA-----------------+
-   *         |                        +--------+                       |
-   *         |                            |                            |
-   *         |                          PortB                          |
-   *         |                            |                            |
-   *       PortC                        PortC                        PortA
-   *         |                            |                            |
-   *    +--------+                   +--------+                   +--------+
-   *    |        |                   |        |                   |        |
-   *    |  DUTA  |--PortA <=> PortA--|  DUTB  |                   |  DUTC  |
-   *    |        |                   |        |                   |        |
-   *    +--------+                   +--------+                   +--------+
-   *     |      |                     |      |                     |      |
-   *   PortB  PortD                 PortB  PortD                 PortC  PortD
-   *     |      |                     |      |                     |      |
-   *   PortA  PortB                 PortC  PortD                 PortA  PortB
-   *     |      |                     |      |                     |      |
-   *  +----------------------------------------+                  +--------+
-   *  |                                        |                  |        |
-   *  |                  DutE                  |                  |  DUTF  |
-   *  |                                        |                  |        |
-   *  +----------------------------------------+                  +--------+
+   *                               +--------+
+   *      +-----------------PortC--|  DUTD  |--PortA--------------------+
+   *      |                        +----+---+                           |
+   *      |                             |                               |
+   *      |                           PortB                             |
+   *      |                             |                               |
+   *    PortC                         PortC                           PortA
+   *      |                             |                               |
+   * +-----+----+                   +----+-----+                   +-----+----+
+   * |   DUTA   |--PortA <=> PortA--|   DUTB   |                   |   DUTC   |
+   * +-+------+-+                   +-+------+-+                   +-+-----+--+
+   *   |      |                       |      |                       |     |
+   * PortB  PortD                   PortB  PortD                   PortC PortD
+   *   |      |                       |      |                       |     |
+   * PortA  PortB                   PortC  PortD                   PortA PortB
+   *   |      |                       |      |                       |     |
+   * +-+------+-----------------------+------+------+          +-----+-----+-+
+   * |                     DUTE                     |          |    DUTF     |
+   * +----------------------------------------------+          +-------------+
    *
    */
   static get six_devices_topo_links_type_2(): TopoLinks {
@@ -938,32 +1046,26 @@ export class LinkConstraint {
   }
 
   /**
-   * 六设备拓扑：
    *
-   *   A-C: DUTA PortA <=> DUTC PortA
-   *   A-D: DUTA PortB <=> DUTD PortA
-   *   A-B: DUTA PortC <=> DUTB PortA
-   *   B-E: DUTB PortB <=> DUTE PortA
-   *   C-D: DUTC PortB <=> DUTD PortB
-   *   D-F: DUTD PortC <=> DUTF PortA
-   *   E-F: DUTE PortB <=> DUTF PortB
-   *
-   *              DUTA
-   *             / | \
-   *            /  |  \
-   *        DUTB  DUTC--DUTD
-   *          |           |
-   *          |           |
-   *        DUTE---------DUTF
-   *
-   *   链路矩阵（行 -> 列，值为本端端口-对端端口）：
-   *
-   *          DUTB          DUTC          DUTD          DUTE          DUTF
-   *   DUTA  PortC-PortA   PortA-PortA   PortB-PortA   —             —
-   *   DUTB                —             —             PortB-PortA   —
-   *   DUTC                              PortB-PortB   —             —
-   *   DUTD                                            —             PortC-PortA
-   *   DUTE                                                          PortB-PortB
+   * +--------+                   +--------+                   +--------+
+   * |  DUTB  |--PortC <=> PortA--|  DUTA  |--PortA <=> PortA--|  DUTC  |
+   * +---+----+                   +---+----+                   +------+-+
+   *     |                            |                               |
+   *   PortB                        PortB                           PortB
+   *     |                            |                               |
+   *     |                            +----------------PortA-----+    |
+   *     |                                                       |    |
+   *   PortA                                                     |  PortB
+   *     |                                                       |    |
+   * +---+----+                                                +-+----+-+
+   * |  DUTE  |                                                |  DUTD  |
+   * +---+----+                                                +---+----+
+   *     |                                                         |
+   *   PortB                                                     PortC
+   *     |                                                         |
+   *     |                        +--------+                       |
+   *     +----------PortB---------|  DUTF  |--PortA----------------+
+   *                              +--------+
    */
   static get six_devices_topo_links_type_3(): TopoLinks {
     return cached("six_devices_topo_links_type_3", () =>

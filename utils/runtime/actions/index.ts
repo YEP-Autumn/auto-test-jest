@@ -4,6 +4,7 @@ import {
   STR_DEBUG_INFO,
   STR_FAILED,
   STR_SUCCESS,
+  isPacketCheckDebug,
 } from "../../shared/base";
 import { formatPktList } from "../../domain/packet/format";
 import {
@@ -396,7 +397,9 @@ export class PacketChecker implements Actuator {
 
     // 如果所有期望字段都找到了，返回 true
     if (expectedIndex === expectedFields.length) {
-      console.log("one packet check pass.");
+      if (isPacketCheckDebug()) {
+        console.log("one packet check pass.");
+      }
       return true;
     }
 
@@ -435,10 +438,12 @@ export class PacketChecker implements Actuator {
         this.fieldListMatches(expectedFields, packet.layers)
       ) {
         matchCount++;
-        console.log(
-          STR_DEBUG_INFO,
-          `✅ Packet ${i + 1} matches expected pattern`,
-        );
+        if (isPacketCheckDebug()) {
+          console.log(
+            STR_DEBUG_INFO,
+            `✅ Packet ${i + 1} matches expected pattern`,
+          );
+        }
       }
     }
 

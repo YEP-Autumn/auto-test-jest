@@ -155,6 +155,17 @@ test("非对称开销导致 LFA 无环条件不满足时，受保护前缀数下
     60_000,
   );
 
+  // 初始存在 LFA 时，RIB 中应有 repair path。
+  testHelper.ReadyCheckDutA(
+    "show ip route 3.3.3.3",
+    new RegExp("repair path: 10\\.0\\.41\\.1 via"),
+    90_000,
+  );
+  testHelper.ExecRetMatchDutA("show ip route 3.3.3.3", [
+    new RegExp("\\*\\s+10\\.0\\.12\\.2,\\s+via"),
+    new RegExp("repair path: 10\\.0\\.41\\.1 via"),
+  ]);
+
   let before = -1;
 
   testHelper.ExecCustomDutA(async (dut) => {
@@ -187,6 +198,22 @@ test("非对称开销导致 LFA 无环条件不满足时，受保护前缀数下
     return false;
   });
 
+  // LFA 失效后，RIB 中不应再保留 repair path。
+  testHelper.ReadyCheckDutA(
+    "show ip route 3.3.3.3",
+    new RegExp("repair path:"),
+    90_000,
+    true,
+  );
+  testHelper.ExecRetMatchDutA("show ip route 3.3.3.3", [
+    new RegExp("\\*\\s+10\\.0\\.12\\.2,\\s+via"),
+  ]);
+  testHelper.ExecRetMatchDutA(
+    "show ip route 3.3.3.3",
+    new RegExp("repair path:"),
+    true,
+  );
+
   // 恢复开销，保护计数应回升。
   testHelper.ExecCustomDutD(async (dut) => {
     await dut.safeExec("configure terminal");
@@ -209,6 +236,17 @@ test("非对称开销导致 LFA 无环条件不满足时，受保护前缀数下
     }
     return false;
   });
+
+  // LFA 恢复后，RIB 中应重新出现 repair path。
+  testHelper.ReadyCheckDutA(
+    "show ip route 3.3.3.3",
+    new RegExp("repair path: 10\\.0\\.41\\.1 via"),
+    90_000,
+  );
+  testHelper.ExecRetMatchDutA("show ip route 3.3.3.3", [
+    new RegExp("\\*\\s+10\\.0\\.12\\.2,\\s+via"),
+    new RegExp("repair path: 10\\.0\\.41\\.1 via"),
+  ]);
 
   testHelper.CleanConfigDutA([
     "configure terminal",

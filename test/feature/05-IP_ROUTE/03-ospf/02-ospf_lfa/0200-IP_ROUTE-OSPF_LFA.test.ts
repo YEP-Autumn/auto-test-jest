@@ -17,7 +17,7 @@ afterAll(async () => {
 /**
  * RFC 6571 Figure 4「Square」原图：
  *   C1 = DUTA，C2 = DUTB，A1 = DUTC，A2 = DUTD，A3 = DUTE，A4 = DUTF，
- *   E1 = DUTG，E2 = DUTH，E3 = DUTL。
+ *   E1 = DUTG，E2 = DUTH，E3 = DUTI。
  *
  *                              P
  *                             / \
@@ -358,7 +358,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "end",
   ]);
 
-  testHelper.ExecConfigDutL([
+  testHelper.ExecConfigDutI([
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
@@ -393,7 +393,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
   testHelper.ReadyCheckDutF("show ip ospf neighbor", "Full", 120_000);
   testHelper.ReadyCheckDutG("show ip ospf neighbor", "Full", 120_000);
   testHelper.ReadyCheckDutH("show ip ospf neighbor", "Full", 120_000);
-  testHelper.ReadyCheckDutL("show ip ospf neighbor", "Full", 120_000);
+  testHelper.ReadyCheckDutI("show ip ospf neighbor", "Full", 120_000);
 
   testHelper.ReadyCheckDutG(
     "show ip ospf neighbor",
@@ -466,12 +466,12 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "shutdown",
     "end",
   ]);
-  testHelper.ReadyCheckDutL(
+  testHelper.ReadyCheckDutI(
     "show ip route 192.0.2.1",
     new RegExp("(10\\.5\\.9\\.1|10\\.6\\.9\\.1),\\s+via"),
     90_000,
   );
-  testHelper.ReadyCheckDutL("ping 192.0.2.1", " 0% packet loss", 60_000);
+  testHelper.ReadyCheckDutI("ping 192.0.2.1", " 0% packet loss", 60_000);
 
   // 恢复 C1-C2。
   testHelper.ExecConfigDutA([
@@ -740,7 +740,7 @@ test("RFC 6571 Figure 4 Square 原图中 E1 到 MHP 的 ECMP 和单链路故障�
     "end",
   ]);
 
-  testHelper.CleanConfigDutL([
+  testHelper.CleanConfigDutI([
     "configure terminal",
     "no router ospf",
     `interface ${Port.A}`,

@@ -17,7 +17,10 @@ afterAll(async () => {
 /**
  * RFC 5286 Appendix A / Figure 7 的 9 台等价裁剪：
  *   S = DUTA，N = DUTB，A（ABR）= DUTC，F（area 2 转接）= DUTD，
- *   B（ABR）= DUTE，ASBR = DUTK，E = DUTG，X = DUTH。
+ *   B（ABR）= DUTE，ASBR = DUTH，E = DUTF，X = DUTG。
+ *
+ * 设备槽位按 A~H 连续使用。为避免 ASBR 落在 110 矩阵设备上导致多区域
+ * 邻居停在 Init，dut.mapping 将槽位 H 绑定到 106 矩阵设备。
  *
  * Area 1：
  *   S-N 40，N-A 5，A-ASBR 35，S-E 5，E-X 5，X-ASBR 5，B-S 5
@@ -36,7 +39,7 @@ afterAll(async () => {
  * 因此 A 的流量会离开 area 1 进入 area 2，再经 B 回到 area 1 的 S，
  * 形成 RFC 5286 描述的“区域穿越”路径。
  *
- * 地址规划（节点编号 A=1 ... H=8，K 作为 ASBR）：
+ * 地址规划（S=1，N=2，ABR-A=3，F=4，ABR-B=5，ASBR=6，E=7，X=8）：
  *   S-N: 10.1.2.0/24    N-A: 10.2.3.0/24    A-ASBR(area1): 10.3.6.0/24
  *   S-E: 10.1.7.0/24    E-X: 10.7.8.0/24    X-ASBR: 10.8.6.0/24
  *   B-S: 10.1.5.0/24    A-F(area2): 10.3.4.0/24
@@ -216,7 +219,7 @@ test("RFC 5286 Figure 7 等价拓扑中 LFA 候选 N 的路径经区域穿越回
     "end",
   ]);
 
-  testHelper.ExecConfigDutK([
+  testHelper.ExecConfigDutH([
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
@@ -254,7 +257,7 @@ test("RFC 5286 Figure 7 等价拓扑中 LFA 候选 N 的路径经区域穿越回
     "end",
   ]);
 
-  testHelper.ExecConfigDutG([
+  testHelper.ExecConfigDutF([
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
@@ -281,7 +284,7 @@ test("RFC 5286 Figure 7 等价拓扑中 LFA 候选 N 的路径经区域穿越回
     "end",
   ]);
 
-  testHelper.ExecConfigDutH([
+  testHelper.ExecConfigDutG([
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
@@ -313,9 +316,9 @@ test("RFC 5286 Figure 7 等价拓扑中 LFA 候选 N 的路径经区域穿越回
   testHelper.ReadyCheckDutC("show ip ospf neighbor", "Full", 120_000);
   testHelper.ReadyCheckDutD("show ip ospf neighbor", "Full", 120_000);
   testHelper.ReadyCheckDutE("show ip ospf neighbor", "Full", 120_000);
-  testHelper.ReadyCheckDutK("show ip ospf neighbor", "Full", 120_000);
-  testHelper.ReadyCheckDutG("show ip ospf neighbor", "Full", 120_000);
   testHelper.ReadyCheckDutH("show ip ospf neighbor", "Full", 120_000);
+  testHelper.ReadyCheckDutF("show ip ospf neighbor", "Full", 120_000);
+  testHelper.ReadyCheckDutG("show ip ospf neighbor", "Full", 120_000);
 
   testHelper.ReadyCheckDutA(
     "show ip ospf neighbor",
@@ -563,7 +566,7 @@ test("RFC 5286 Figure 7 等价拓扑中 LFA 候选 N 的路径经区域穿越回
     "end",
   ]);
 
-  testHelper.CleanConfigDutK([
+  testHelper.CleanConfigDutH([
     "configure terminal",
     "no router ospf",
     `interface ${Port.A}`,
@@ -592,7 +595,7 @@ test("RFC 5286 Figure 7 等价拓扑中 LFA 候选 N 的路径经区域穿越回
     "end",
   ]);
 
-  testHelper.CleanConfigDutG([
+  testHelper.CleanConfigDutF([
     "configure terminal",
     "no router ospf",
     `interface ${Port.A}`,
@@ -613,7 +616,7 @@ test("RFC 5286 Figure 7 等价拓扑中 LFA 候选 N 的路径经区域穿越回
     "end",
   ]);
 
-  testHelper.CleanConfigDutH([
+  testHelper.CleanConfigDutG([
     "configure terminal",
     "no router ospf",
     `interface ${Port.A}`,

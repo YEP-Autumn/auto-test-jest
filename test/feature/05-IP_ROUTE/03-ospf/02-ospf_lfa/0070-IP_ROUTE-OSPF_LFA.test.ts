@@ -160,6 +160,16 @@ test("链路开销变化触发 OSPF 重新计算后，LFA 保护状态保持可�
     new RegExp("10\\.0\\.41\\.1,\\s+via"),
     60_000,
   );
+  // 主路径切换后，已计算的 LFA 应随之更新，并在 show ip route 中显示新的 repair path。
+  testHelper.ReadyCheckDutA(
+    "show ip route 3.3.3.3",
+    new RegExp("repair path: 10\\.0\\.12\\.2 via"),
+    60_000,
+  );
+  testHelper.ExecRetMatchDutA("show ip route 3.3.3.3", [
+    new RegExp("\\*\\s+10\\.0\\.41\\.1,\\s+via"),
+    new RegExp("repair path: 10\\.0\\.12\\.2 via"),
+  ]);
   testHelper.ExecRetMatchDutA("show ip ospf route", [
     "3.3.3.3/32",
     "via 10.0.41.1",
@@ -182,6 +192,16 @@ test("链路开销变化触发 OSPF 重新计算后，LFA 保护状态保持可�
     new RegExp("10\\.0\\.12\\.2,\\s+via"),
     60_000,
   );
+  // 恢复开销后，repair path 也应回到原来的备份下一跳。
+  testHelper.ReadyCheckDutA(
+    "show ip route 3.3.3.3",
+    new RegExp("repair path: 10\\.0\\.41\\.1 via"),
+    60_000,
+  );
+  testHelper.ExecRetMatchDutA("show ip route 3.3.3.3", [
+    new RegExp("\\*\\s+10\\.0\\.12\\.2,\\s+via"),
+    new RegExp("repair path: 10\\.0\\.41\\.1 via"),
+  ]);
   testHelper.ExecRetMatchDutA("show ip ospf fast-reroute per-prefix", [
     new RegExp("Protected by LFA\\s*:\\s*[1-9]\\d*"),
   ]);

@@ -215,10 +215,13 @@ test("RFC 6571 Triangle 原图中 MHP 和链路保护在单链路故障后保持
     "via 10.1.3.1",
     "via 10.2.3.1",
   ]);
+  testHelper.ReadyCheckDutC("show ip ospf route", "10.255.0.4/32", 90_000);
   testHelper.ExecRetMatchDutC("show ip ospf route", [
-    "10.255.0.4/32",
-    "via 10.1.3.1",
-    "via 10.2.3.1",
+    new RegExp(
+      "10\\.255\\.0\\.4/32" +
+        "(?=[\\s\\S]{0,200}?via 10\\.1\\.3\\.1)" +
+        "(?=[\\s\\S]{0,200}?via 10\\.2\\.3\\.1)",
+    ),
   ]);
 
   testHelper.ReadyCheckDutC("ping 192.0.2.1", " 0% packet loss", 60_000);

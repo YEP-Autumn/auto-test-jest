@@ -17,7 +17,7 @@ afterAll(async () => {
 /**
  * RFC 6571 Figure 1「Example 1」原图：
  *   S = DUTA，A = DUTB，B = DUTC，C = DUTD，D = DUTE，
- *   E = DUTF，F = DUTG，G = DUTH，H = DUTL。
+ *   E = DUTF，F = DUTG，G = DUTH，H = DUTI。
  *
  *                       D
  *                      / \
@@ -294,7 +294,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "end",
   ]);
 
-  testHelper.ExecConfigDutL([
+  testHelper.ExecConfigDutI([
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
@@ -322,7 +322,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
   testHelper.ReadyCheckDutF("show ip ospf neighbor", "Full", 120_000);
   testHelper.ReadyCheckDutG("show ip ospf neighbor", "Full", 120_000);
   testHelper.ReadyCheckDutH("show ip ospf neighbor", "Full", 120_000);
-  testHelper.ReadyCheckDutL("show ip ospf neighbor", "Full", 120_000);
+  testHelper.ReadyCheckDutI("show ip ospf neighbor", "Full", 120_000);
 
   testHelper.ReadyCheckDutA(
     "show ip ospf neighbor",
@@ -609,7 +609,7 @@ test("RFC 6571 Figure 1 原图中 S 到 D 的主路径故障后由 A 或 F 作�
     "end",
   ]);
 
-  testHelper.CleanConfigDutL([
+  testHelper.CleanConfigDutI([
     "configure terminal",
     "no router ospf",
     `interface ${Port.A}`,

@@ -20,7 +20,7 @@ afterAll(async () => {
  *   用一条 GRE 隧道模拟 C1/C2 在 L2 中的逻辑路径，隧道开销等价于 c。
  *
  *   C1 = DUTA，C2 = DUTB，A1 = DUTC，A2 = DUTD，A3 = DUTE，A4 = DUTF，
- *   E1 = DUTG，E2 = DUTH，E3 = DUTL。
+ *   E1 = DUTG，E2 = DUTH，E3 = DUTI。
  *
  *                              P
  *                             / \
@@ -361,7 +361,7 @@ test("RFC 6571 Figure 5 Extended U 中 C1/C2 通过隧道形成逻辑邻居并�
     "end",
   ]);
 
-  testHelper.ExecConfigDutL([
+  testHelper.ExecConfigDutI([
     "configure terminal",
     `interface ${Port.A}`,
     "no switchport",
@@ -396,7 +396,7 @@ test("RFC 6571 Figure 5 Extended U 中 C1/C2 通过隧道形成逻辑邻居并�
   testHelper.ReadyCheckDutF("show ip ospf neighbor", "Full", 150_000);
   testHelper.ReadyCheckDutG("show ip ospf neighbor", "Full", 150_000);
   testHelper.ReadyCheckDutH("show ip ospf neighbor", "Full", 150_000);
-  testHelper.ReadyCheckDutL("show ip ospf neighbor", "Full", 150_000);
+  testHelper.ReadyCheckDutI("show ip ospf neighbor", "Full", 150_000);
 
   // C1/C2 通过隧道形成逻辑邻居。
   testHelper.ReadyCheckDutA(
@@ -722,7 +722,7 @@ test("RFC 6571 Figure 5 Extended U 中 C1/C2 通过隧道形成逻辑邻居并�
     "end",
   ]);
 
-  testHelper.CleanConfigDutL([
+  testHelper.CleanConfigDutI([
     "configure terminal",
     "no router ospf",
     `interface ${Port.A}`,

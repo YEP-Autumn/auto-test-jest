@@ -111,6 +111,13 @@ test("多区域 ABR 汇总、外部 Type-1/Type-2 与默认路由在 LFA 使能�
   testHelper.ReadyCheckDutC("show ip ospf neighbor", "Full", 90_000);
   testHelper.ReadyCheckDutA("show ip ospf route", "3.3.0.0/16", 60_000);
 
+  // 外部 LSA 比区域间路由晚到 1~2 秒，先等待再精确匹配，避免收敛时序抖动。
+  testHelper.ReadyCheckDutA(
+    "show ip ospf route",
+    new RegExp("E1\\s+172\\.17\\.0\\.0/16"),
+    90_000,
+  );
+
   testHelper.ExecRetMatchDutA("show ip ospf route", [
     new RegExp("IA\\s+3\\.3\\.0\\.0/16"),
     new RegExp("E1\\s+172\\.17\\.0\\.0/16"),

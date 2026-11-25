@@ -2,8 +2,8 @@
 
 - 脚本目录：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`
 - 用例文档目录：`docs/test-cases/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`
-- 脚本数量：31
-- 用例文档数量：31
+- 脚本数量：33
+- 用例文档数量：33
 - 上级索引：[README.md](../README.md)
 
 ## 子目录索引
@@ -43,7 +43,7 @@
 | `0150-IP_ROUTE-OSPF_LFA.test.ts` | [0150-IP_ROUTE-OSPF_LFA.md](0150-IP_ROUTE-OSPF_LFA.md) | 已有文档 |
 | `0160-IP_ROUTE-OSPF_LFA.test.ts` | [0160-IP_ROUTE-OSPF_LFA.md](0160-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |
 | `0170-IP_ROUTE-OSPF_LFA.test.ts` | [0170-IP_ROUTE-OSPF_LFA.md](0170-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |
-| `0180-IP_ROUTE-OSPF_LFA.test.ts` | [0180-IP_ROUTE-OSPF_LFA.md](0180-IP_ROUTE-OSPF_LFA.md) | 已有文档 |
+| `0180-IP_ROUTE-OSPF_LFA.test.ts` | [0180-IP_ROUTE-OSPF_LFA.md](0180-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |
 | `0190-IP_ROUTE-OSPF_LFA.test.ts` | [0190-IP_ROUTE-OSPF_LFA.md](0190-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |
 | `0200-IP_ROUTE-OSPF_LFA.test.ts` | [0200-IP_ROUTE-OSPF_LFA.md](0200-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |
 | `0210-IP_ROUTE-OSPF_LFA.test.ts` | [0210-IP_ROUTE-OSPF_LFA.md](0210-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |
@@ -52,3 +52,5 @@
 | `0240-IP_ROUTE-OSPF_LFA.test.ts` | [0240-IP_ROUTE-OSPF_LFA.md](0240-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |
 | `0250-IP_ROUTE-OSPF_LFA.test.ts` | [0250-IP_ROUTE-OSPF_LFA.md](0250-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |
 | `0260-IP_ROUTE-OSPF_LFA.test.ts` | [0260-IP_ROUTE-OSPF_LFA.md](0260-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |
+| `0270-IP_ROUTE-OSPF_LFA.test.ts` | [0270-IP_ROUTE-OSPF_LFA.md](0270-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |
+| `0280-IP_ROUTE-OSPF_LFA.test.ts` | [0280-IP_ROUTE-OSPF_LFA.md](0280-IP_ROUTE-OSPF_LFA.md) | 已有文档，已实测通过 |

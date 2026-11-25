@@ -501,6 +501,69 @@ export class LinkConstraint {
   }
 
   /**
+   *
+   * +--------+                   +--------+
+   * |  DUTB  |--PortB <=> PortA--|  DUTC  |--PortC
+   * +---+----+                   +---+----+    |
+   *     |                            |         |
+   *   PortA                        PortB       |
+   *     |                            |         |
+   *   PortA                        PortB       |
+   *     |                            |         |
+   * +---+----+                   +---+----+    |
+   * |  DUTA  |--PortB <=> PortA--|  DUTD  |    |
+   * +---+----+                   +--------+    |
+   *     |                                      |
+   *   PortC                                    |
+   *     |                                      |
+   *     |                                      |
+   * +---+----+                                 |
+   * |  DUTE  |--PortB <=> ---------------------+
+   * +--------+
+   */
+  static get five_devices_topo_links_type_2(): TopoLinks {
+    return cached("five_devices_topo_links_type_2", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("B", "B"), dut("C", "A")),
+        link(dut("A", "B"), dut("D", "A")),
+        link(dut("D", "B"), dut("C", "B")),
+        link(dut("A", "C"), dut("E", "A")),
+        link(dut("E", "B"), dut("C", "C")),
+      ),
+    );
+  }
+
+  /**
+
+   *
+   *                                 +--------+                   +--------+
+   *     +------------ <=> PortC--|  DUTB  |--PortB <=> PortA--|  DUTC  |
+   *     |                        +---+----+                   +---+----+
+   *     |                            |                            |
+   *     |                          PortA                        PortB
+   *     |                            |                            |
+   *   PortB                        PortA                        PortB
+   *     |                            |                            |
+   * +---+----+                   +---+----+                   +---+----+
+   * |  DUTD  |--PortA <=> PortB--|  DUTA  |--PortC <=> PortA--|  DUTE  |
+   * +--------+                   +---+----+                   +--------+
+   *
+   */
+  static get five_devices_topo_links_type_3(): TopoLinks {
+    return cached("five_devices_topo_links_type_3", () =>
+      topo(
+        link(dut("A", "A"), dut("B", "A")),
+        link(dut("B", "B"), dut("C", "A")),
+        link(dut("A", "B"), dut("D", "A")),
+        link(dut("D", "B"), dut("B", "C")),
+        link(dut("A", "C"), dut("E", "A")),
+        link(dut("E", "B"), dut("C", "B")),
+      ),
+    );
+  }
+
+  /**
    *                               +--------+
    *    +-------------------PortB--|  DUTB  |--PortC---------------------+
    *    |                          +---+----+                            |
@@ -655,7 +718,7 @@ export class LinkConstraint {
    *    PortA                         PortA                         PortB
    *      |                             |                             |
    * +----+----+                   +----+----+                   +----+----+
-   * |  DUTG   |                   |  DUTL   |                   |  DUTE   |
+   * |  DUTG   |                   |  DUTI   |                   |  DUTE   |
    * +----+----+                   +---------+                   +----+----+
    *      |                                                           |
    *    PortB                                                       PortA
@@ -671,7 +734,7 @@ export class LinkConstraint {
         link(dut("B", "B"), dut("C", "A")),
         link(dut("C", "B"), dut("G", "A")),
         link(dut("D", "B"), dut("H", "A")),
-        link(dut("D", "C"), dut("L", "A")),
+        link(dut("D", "C"), dut("I", "A")),
         link(dut("E", "A"), dut("G", "B")),
         link(dut("E", "B"), dut("H", "B")),
         link(dut("F", "B"), dut("H", "C")),
@@ -682,7 +745,7 @@ export class LinkConstraint {
   /**
    *
    *                                                           +--------+
-   *                        +----------------------------------+  DUTL  |
+   *                        +----------------------------------+  DUTI  |
    *                        |                                  +---+----+
    *                      PortA                                    |
    *                        |                                    PortB
@@ -732,8 +795,8 @@ export class LinkConstraint {
         link(dut("D", "D"), dut("G", "B")),
         link(dut("D", "E"), dut("H", "B")),
         link(dut("E", "B"), dut("F", "B")),
-        link(dut("E", "C"), dut("L", "A")),
-        link(dut("F", "C"), dut("L", "B")),
+        link(dut("E", "C"), dut("I", "A")),
+        link(dut("F", "C"), dut("I", "B")),
       ),
     );
   }
@@ -748,7 +811,7 @@ export class LinkConstraint {
    *    |     |                                           |     |
    *    |     |                                           |     |
    *    |     |          +----------+                     |     |
-   *    |     +---PortA--|   DUTL   |--PortB--------------+     |
+   *    |     +---PortA--|   DUTI   |--PortB--------------+     |
    *    |                +----------+                           |
    *    |                                                       |
    *    +-------------------------------------------------+     |
@@ -797,8 +860,8 @@ export class LinkConstraint {
         link(dut("D", "D"), dut("G", "B")),
         link(dut("D", "E"), dut("H", "B")),
         link(dut("E", "B"), dut("F", "B")),
-        link(dut("E", "C"), dut("L", "A")),
-        link(dut("F", "C"), dut("L", "B")),
+        link(dut("E", "C"), dut("I", "A")),
+        link(dut("F", "C"), dut("I", "B")),
       ),
     );
   }
@@ -806,7 +869,7 @@ export class LinkConstraint {
   /**
    *
    *        +--------+                              +--------+                              +--------+
-   *        |  DUTB  +-------PortA <=> PortA--------+  DUTA  +-------PortB <=> PortA--------+  DUTG  |
+   *        |  DUTB  +-------PortA <=> PortA--------+  DUTA  +-------PortB <=> PortA--------+  DUTF  |
    *        +---+----+                              +-+------+                              +---+----+
    *            |                                     |                                         |
    *          PortB                                 PortC                                     PortB
@@ -814,7 +877,7 @@ export class LinkConstraint {
    *          PortA                                   |                                       PortA
    *            |                                     |                                         |
    *        +---+----+                                |                                     +---+----+
-   *  +-----+  DUTC  +-----+                          |                                     |  DUTH  |
+   *  +-----+  DUTC  +-----+                          |                                     |  DUTG  |
    *  |     +-----+--+     |                        PortA                                   +------+-+
    *  |           |        |                          |                                            |
    *  |           |        |                        +-+------+                                   PortB
@@ -822,7 +885,7 @@ export class LinkConstraint {
    *  |           |                                 +---+----+     |                             PortB
    *  |           |                                     |          |                               |
    *  |           |                                   PortB        |                        +------+-+
-   *  |           |                                     |          +----PortC <=> PortC-----+  DUTK  |
+   *  |           |                                     |          +----PortC <=> PortC-----+  DUTH  |
    *  |           |                                   PortB                                 +--+-----+
    *  |           |                                     |                                      |
    *  |           |                                 +---+----+                                 |
@@ -838,14 +901,14 @@ export class LinkConstraint {
       topo(
         link(dut("A", "A"), dut("B", "A")),
         link(dut("B", "B"), dut("C", "A")),
-        link(dut("C", "B"), dut("K", "A")),
-        link(dut("A", "B"), dut("G", "A")),
-        link(dut("G", "B"), dut("H", "A")),
-        link(dut("H", "B"), dut("K", "B")),
+        link(dut("C", "B"), dut("H", "A")),
+        link(dut("A", "B"), dut("F", "A")),
+        link(dut("F", "B"), dut("G", "A")),
+        link(dut("G", "B"), dut("H", "B")),
         link(dut("E", "A"), dut("A", "C")),
         link(dut("C", "C"), dut("D", "A")),
         link(dut("D", "B"), dut("E", "B")),
-        link(dut("E", "C"), dut("K", "C")),
+        link(dut("E", "C"), dut("H", "C")),
         link(dut("C", "D"), dut("E", "D")),
       ),
     );

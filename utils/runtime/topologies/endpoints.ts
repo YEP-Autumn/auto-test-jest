@@ -11,7 +11,7 @@ import { streamPorts } from "../config/traffic";
 import { StreamPortResolver } from "../traffic/resolver";
 import { PortMapping } from "../../domain/topology/model";
 
-/** 逻辑设备名，对应 Config.dut_list 的下标 A=0 .. L=11（最多 12 台） */
+/** 逻辑设备名，对应 Config.dut_list 的下标 A=0 .. L=11（最多 12 台，顺序由 dut.mapping 决定） */
 export type DutName =
   "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L";
 

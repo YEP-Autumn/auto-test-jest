@@ -240,7 +240,11 @@ DUT 连接行为默认值（`shellPrompt`、分页正则、超时、缓冲区、
 ### DUT 与端口映射（`utils/runtime/config/index.ts`）
 
 - `Config.dut_list` 决定被测设备清单，下标与 `DutIdx.A`(0) ~ `DutIdx.L`(11) 一一对应，最多支持 12 台。
-- 每台 DUT 通过 `portList`（如 `eth-0-1 ~ eth-0-4`，最多支持 6 个端口）和 `portMapping`
+  其顺序由 `dut.mapping` 决定：`mapping` 是设备名数组，第 1 个名字绑定 A、第 2 个绑定 B，依此类推。
+  因此调整 A/B/C/D 使用哪台设备时，只需调整 `mapping` 中名字的顺序，不必移动 `dut.list` 里的设备对象。
+  省略 `mapping` 时退回 `dut.list` 的原始顺序。
+- `dut.list` 中每台设备都必须有唯一 `name`（仅用于 `dut.mapping` 引用，与 IP 无关），
+  通过 `portList`（如 `eth-0-1 ~ eth-0-4`，最多支持 6 个端口）和 `portMapping`
   （`{ device, if_index }`，指向拓扑/流量收发后端里的真实端口）描述物理连接。
 - `traffic.ports` 定义测试仪/Scapy 端口；测试代码使用 `@/utils` 的 `StreamPort.A/B/...` 逻辑端口令牌，
   provider/address 在 `startTest()` 时由 `runtime/config/traffic.ts` 的 `streamPorts` 解析。

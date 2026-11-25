@@ -27,6 +27,8 @@ export interface DutConnectionConfigJson {
 }
 
 export interface DutConfigJson {
+  /** 设备名称，在 list 内唯一；用于 dut.mapping 引用，与 IP 无关 */
+  name: string;
   host: string;
   portList: string[];
   portMapping: PortMapping[];
@@ -34,6 +36,13 @@ export interface DutConfigJson {
 
 export interface DutConfigSectionJson {
   connection?: DutConnectionConfigJson;
+  /**
+   * 逻辑槽位（A~L）→ 设备名映射，按数组顺序依次对应 A、B、C…
+   *
+   * 调整 A/B/C/D 分别使用哪台设备时，只需改这里名字的顺序，
+   * 无需移动 list 中的设备对象。省略时退回 list 的原始顺序。
+   */
+  mapping?: string[];
   list: DutConfigJson[];
 }
 

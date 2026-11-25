@@ -101,6 +101,9 @@ function validateTopo(value: unknown): void {
   requireString(value.backend.password, "topo.backend.password");
 }
 
+/** 逻辑槽位数量：A ~ L */
+const DUT_SLOT_COUNT = 12;
+
 function validateDut(value: unknown): void {
   if (!isRecord(value)) fail("dut", "必须是对象");
 
@@ -118,9 +121,13 @@ function validateDut(value: unknown): void {
     fail("dut.list", "必须是非空数组");
   }
 
+  const names = new Set<string>();
   value.list.forEach((item, index) => {
     const prefix = `dut.list[${index}]`;
     if (!isRecord(item)) fail(prefix, "必须是对象");
+    const name = requireString(item.name, `${prefix}.name`);
+    if (names.has(name)) fail(`${prefix}.name`, `设备名重复：${name}`);
+    names.add(name);
     requireString(item.host, `${prefix}.host`);
 
     if (!Array.isArray(item.portList) || item.portList.length === 0) {
@@ -143,6 +150,28 @@ function validateDut(value: unknown): void {
     if (item.portList.length !== item.portMapping.length) {
       fail(prefix, "portList 与 portMapping 数量不一致");
     }
+  });
+
+  if (value.mapping === undefined) return;
+
+  if (!Array.isArray(value.mapping) || value.mapping.length === 0) {
+    fail("dut.mapping", "必须是非空数组");
+  }
+  if (value.mapping.length > DUT_SLOT_COUNT) {
+    fail("dut.mapping", `最多只能映射 ${DUT_SLOT_COUNT} 台设备（A ~ L）`);
+  }
+
+  const mappedNames = new Set<string>();
+  value.mapping.forEach((item, index) => {
+    const prefix = `dut.mapping[${index}]`;
+    const name = requireString(item, prefix);
+    if (!names.has(name)) {
+      fail(prefix, `设备名 ${name} 未在 dut.list 中定义`);
+    }
+    if (mappedNames.has(name)) {
+      fail(prefix, `设备名重复：${name}`);
+    }
+    mappedNames.add(name);
   });
 }
 

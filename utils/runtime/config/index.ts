@@ -1,7 +1,27 @@
 import { loadConfig } from "./loader";
 import { DUT_DEFAULT_CONFIG } from "./device-defaults";
+import type { DutConfigJson } from "./schema";
 
 const cfg = loadConfig();
+
+/**
+ * 按 `dut.mapping` 把设备名解析为逻辑槽位 A ~ L 的设备对象。
+ *
+ * 未配置 mapping 时保持旧行为：直接使用 `dut.list` 的顺序。
+ */
+function resolveDutList(): DutConfigJson[] {
+  const { list, mapping } = cfg.dut;
+  if (!mapping) return list;
+
+  const byName = new Map(list.map((device) => [device.name, device]));
+  return mapping.map((name) => {
+    const device = byName.get(name);
+    if (!device) {
+      throw new Error(`dut.mapping 引用了未定义的设备名：${name}`);
+    }
+    return device;
+  });
+}
 
 /**
  * 测试运行时的全局配置门面。
@@ -27,6 +47,11 @@ export class Config {
     ...cfg.dut.connection,
   };
 
-  /** DUT 清单，顺序对应 DutIdx.A ~ DutIdx.L */
-  public static dut_list = cfg.dut.list;
+  /**
+   * DUT 清单，顺序对应 DutIdx.A ~ DutIdx.L。
+   *
+   * 顺序由 `dut.mapping` 决定（名字的排列顺序 = A/B/C… 的绑定关系），
+   * 与 `dut.list` 中设备对象的书写顺序无关。
+   */
+  public static dut_list = resolveDutList();
 }

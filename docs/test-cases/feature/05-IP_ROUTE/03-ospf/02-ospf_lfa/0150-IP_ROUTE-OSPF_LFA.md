@@ -1,15 +1,15 @@
-# RFC 8518 多归前缀具有不同主备下一跳时，主备路径切换与故障恢复符合预期
+# RFC 8518 多归前缀具有不同主备下一跳时，主路径故障后切换到备份路径并恢复可达
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
-> 脚本：`0150-IP_ROUTE-OSPF_LFA.test.ts`
+> 本文依据 `docs/spec/test-case-template.md` 编写；文档中的子用例与用例编号一一对应。
+> 自动化实现：`0150-IP_ROUTE-OSPF_LFA.test.ts`（可选，手工执行时省略）
 
 ## 1. 基本信息
 
 - 用例编号：`0150`
-- 用例标题：RFC 8518 多归前缀具有不同主备下一跳时，主备路径切换与故障恢复符合预期
+- 用例标题：RFC 8518 多归前缀具有不同主备下一跳时，主路径故障后切换到备份路径并恢复可达
 - 所属特性 / 分组：`05-IP_ROUTE` / `OSPF配置` / `OSPF LFA`
 - 级别 / 类型：P1 / 功能
-- 执行方式：自动化脚本 / 手工
+- 执行方式：自动化工具 / 手工
 - 预估耗时：约 6 分钟
 - 关联：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`
 
@@ -26,7 +26,7 @@
 
 | 项 | 要求 | 说明 |
 | --- | --- | --- |
-| 设备 profile | `default` | 以 CLI 是否接受 LFA 命令为准 |
+| 设备能力 / 版本 | 按实际执行环境填写 | 以 CLI 是否接受 LFA 命令为准 |
 | 端口形态 | 每台设备 3 个三层接口 | 接口需支持 `no switchport` |
 | 拓扑后端 | 四设备全互联拓扑可建立 | 邻居无法 Full 时标记 `Blocked` |
 | 软件版本 | 支持 `fast-reroute per-prefix enable` | 不支持时标记 `Blocked` |
@@ -44,7 +44,7 @@
    C-D: DUTC PortC <=> DUTD PortC（172.16.1.0/24）
 ```
 
-内置拓扑：`LinkConstraint.four_devices_topo_links_type_4`。
+拓扑名称 / 来源：`four_devices_topo_links_type_4`（内置拓扑）。
 
 | 链路 | 网段 | 端点地址 | 开销 |
 | --- | --- | --- | --- |
@@ -67,6 +67,7 @@ A 到 `172.16.1.1` 的最优下一跳可能随收敛顺序为 B（`10.0.12.2`）
 | 参数 | 取值 | 说明 |
 | --- | --- | --- |
 | OSPF 进程 | 0（`router ospf`） | 同一 VRF 仅支持一个进程 |
+| Router ID | A=1.1.1.1、B=2.2.2.2、C=3.3.3.3、D=4.4.4.4 | 与 Loopback0 一致 |
 | Area | 0 | 单区域 |
 | Network Type | point-to-point | 排除广播网 DR/BDR 影响 |
 | Hello / Dead | 10s / 40s | 设备默认值 |
@@ -116,30 +117,65 @@ exit
 end
 ```
 
-DUTD 的 `<PortC>` 配置 `172.16.1.2/24` 并发布 `172.16.1.0/24`；DUTA、DUTB 按 2 节地址配置其余链路。全部邻居 `Full` 后，在各设备 OSPF 进程视图执行：
+DUTD 的 `<PortC>` 配置 `172.16.1.2/24` 并发布 `172.16.1.0/24`；DUTA、DUTB 按第 2 节地址配置其余链路。各设备在 `router ospf` 视图使能 `fast-reroute per-prefix enable`；全部邻居 `Full` 后，等待保护表刷新，再执行 4.2 基线检查。
+
+### 4.2 基线检查与执行顺序
+
+执行顺序：4.2 基线检查 → 4.3 触发与流量发送 → 4.4 恢复。
+
+| 顺序 | 动作 | 命令 / 触发方式 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 检查邻居 | `show ip ospf neighbor` | 每台设备 3 个邻居均为 `Full` |
+| 2 | 检查 LFA 状态 | `show ip ospf fast-reroute per-prefix`（DUTA） | `Fast-reroute per-prefix : enabled`，`Intra-area prefixes` 大于 0，`Protected by LFA` 大于 0 |
+| 3 | 检查 MHP 主路径 | `show ip ospf route` | `172.16.1.0/24` 经 `10.0.12.2`、`10.0.13.2` 或 `10.0.14.2`，记录实际下一跳 |
+| 4 | 检查逐前缀 MHP 条目（观测项） | `show ip ospf fast-reroute per-prefix` | 若出现 `172.16.1.0/24`，记录其 `Backup nbr`；该条目不影响判定 |
+| 5 | 检查基线连通性 | `ping 172.16.1.1` | `0% packet loss` |
+
+### 4.3 触发与流量发送
+
+关闭 DUTA 的 `<PortA>`，模拟共享主下一跳 A-B 链路故障：
 
 ```text
-fast-reroute per-prefix enable
+configure terminal
+interface <PortA>
+shutdown
+end
 ```
 
-### 4.2 观测与预期
-
-| 观测项 | 命令 | 预期 |
+| 触发 | 操作 | 预期 |
 | --- | --- | --- |
-| 邻居 | `show ip ospf neighbor` | 每台设备 3 个邻居均为 `Full` |
-| LFA 使能 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
-| 区域内前缀 | `show ip ospf fast-reroute per-prefix` | `Intra-area prefixes` 大于 0 |
-| 受保护前缀 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
-| MHP 主路径 | `show ip ospf route` | `172.16.1.0/24` 经 `via 10.0.12.2`、`10.0.13.2` 或 `10.0.14.2` |
-| 逐前缀 LFA（观测项） | `show ip ospf fast-reroute per-prefix` | 若出现 `172.16.1.0/24`，记录其 `Backup nbr`；不出现时不影响判定 |
-| 连通性 | `ping 172.16.1.1` | `0% packet loss` |
+| 故障 1 | DUTA 的 `<PortA>` 执行 `shutdown` | A-B 邻居断开，MHP 的共享主下一跳失效 |
+| MHP 路由切换 | 等待 `show ip route 172.16.1.1` 刷新 | 下一跳为 `10.0.13.2` 或 `10.0.14.2`；`show ip ospf route` 中 `172.16.1.0/24` 改经 C 或 D 到达 |
+| 故障期间连通性 | `ping 172.16.1.1`、`ping 3.3.3.3`、`ping 4.4.4.4` | 均为 `0% packet loss` |
 
-### 4.3 故障与恢复
+### 4.4 恢复
 
-1. 关闭 DUTA 的 `<PortA>`，模拟共享主下一跳 A-B 链路故障。
-2. `show ip route 172.16.1.1` 应出现 `10.0.13.2` 或 `10.0.14.2` 的下一跳；`show ip ospf route` 中 `172.16.1.0/24` 应改为经 C 或 D 到达。
-3. `ping 172.16.1.1`、`ping 3.3.3.3`、`ping 4.4.4.4` 均应为 `0% packet loss`。
-4. 恢复 `<PortA>`，MHP 恢复合法下一跳（`10.0.12.2`、`10.0.13.2` 或 `10.0.14.2`）；`Protected by LFA` 恢复大于 0，ping 恢复 `0% packet loss`。
+| 恢复动作 | 命令 | 预期 |
+| --- | --- | --- |
+| 链路恢复 | DUTA 的 `<PortA>` 执行 `no shutdown` | A-B 邻居重新为 `Full` |
+| MHP 主路径恢复 | `show ip ospf route` | `172.16.1.0/24` 恢复合法下一跳：`10.0.12.2`、`10.0.13.2` 或 `10.0.14.2` |
+| 保护恢复 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
+| 恢复后连通性 | `ping 172.16.1.1` | `0% packet loss` |
+
+### 4.5 观测面
+
+| 观测面 | 命令 / 方法 | 判定 |
+| --- | --- | --- |
+| 协议状态面 | `show ip ospf neighbor` | 故障前 3 个邻居均为 `Full`；恢复后 A-B 邻居重新为 `Full` |
+| 表项面 | `show ip ospf route` | `172.16.1.0/24` 存在；故障后改经 C 或 D，恢复后为 `10.0.12.2`、`10.0.13.2` 或 `10.0.14.2` |
+| 保护表面 | `show ip ospf fast-reroute per-prefix`（DUTA） | `Protected by LFA` 故障前大于 0，恢复后大于 0；MHP 逐前缀条目仅作记录 |
+| 转发面 | `show ip route 172.16.1.1`、`ping` | 故障前后均有有效下一跳；3 个 ping 均为 `0% packet loss` |
+| 恢复 / 资源面 | `show ip ospf neighbor`、`show ip ospf route` | 恢复后邻居、MHP 主路径和保护计数回到基线 |
+
+### 4.6 判定标准
+
+- 4.2 步骤 1 至 3、5：每台设备 3 个邻居均为 `Full`；`Fast-reroute per-prefix : enabled`，`Intra-area prefixes` 大于 0 且 `Protected by LFA` 大于 0；`172.16.1.0/24` 经 `10.0.12.2`、`10.0.13.2` 或 `10.0.14.2`；`ping 172.16.1.1` 为 `0% packet loss`。步骤 4 的 MHP 逐前缀条目仅记录，不计入判定。
+- 4.3 步骤 1 至 3：`172.16.1.1` 的下一跳切换为 `10.0.13.2` 或 `10.0.14.2`；`172.16.1.0/24` 改经 C 或 D；3 个 ping 均为 `0% packet loss`。
+- 4.4 步骤 1 至 4：`172.16.1.0/24` 恢复 `10.0.12.2`、`10.0.13.2` 或 `10.0.14.2` 的合法下一跳；`Protected by LFA` 大于 0；`ping 172.16.1.1` 为 `0% packet loss`。
+- 若形成 MHP ECMP，`show ip ospf route` 出现双下一跳且 `ping 172.16.1.1` 为 `0% packet loss`，判为满足主路径要求。
+- 上述必检项全部满足，且清理后无 `router ospf`、`fast-reroute` 残留 → `Pass`。
+- 上述任一必检项不满足，或清理失败 → `Fail`。
+- LFA 命令不可用、四设备全互联拓扑无法建立、邻居无法 `Full` 或接口数量不足 → `Blocked`，记录缺失项。
 
 ## 5. 清理与恢复
 
@@ -190,7 +226,7 @@ show ip ospf processes-count
 | 3 | 设备实测差异 | 若现场形成 MHP ECMP，MHP 可能不再单独出现在 LFA 表中；此时以 `show ip ospf route` 双下一跳和故障后可达性作为补充判据 |
 | 4 | 观测限制 | 设备在存在受保护前缀时提供逐前缀 `Type`、`Primary nbr`、`Backup nbr` 明细；MHP 条目是否出现取决于当前实现和收敛时序，本用例仅作观测记录 |
 | 5 | 配置时序 | 本用例在初始 OSPF 配置中使能 LFA，邻居 Full 后检查保护计数与路由收敛 |
-| 6 | 版本差异 | LFA 命令不可用时标记 `Blocked`，不将版本差异判为功能失败 |
+| 6 | 版本差异 | LFA 命令不可用时标记 `Blocked`，将版本差异记录为环境限制 |
 
 ## 7. 执行与结果记录
 
@@ -202,7 +238,7 @@ show ip ospf processes-count
 | 证据 | 回显文件 / 日志位置 |
 | 关联缺陷 / 需求 | |
 
-逐条结果：
+逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |

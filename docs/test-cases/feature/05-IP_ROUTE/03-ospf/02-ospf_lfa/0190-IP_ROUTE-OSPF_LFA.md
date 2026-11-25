@@ -1,7 +1,7 @@
 # RFC 6571 Figure 3 Full Mesh 原图中 E1 到 MHP 的 ECMP 和单链路故障恢复
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
-> 脚本：`0190-IP_ROUTE-OSPF_LFA.test.ts`
+> 本文依据 `docs/spec/test-case-template.md` 编写；文档中的子用例与用例编号一一对应。
+> 自动化实现：`0190-IP_ROUTE-OSPF_LFA.test.ts`（可选，手工执行时省略）
 
 ## 1. 基本信息
 
@@ -9,7 +9,7 @@
 - 用例标题：RFC 6571 Figure 3 Full Mesh 原图中 E1 到 MHP 的 ECMP 和单链路故障恢复
 - 所属特性 / 分组：`05-IP_ROUTE` / `OSPF配置` / `OSPF LFA`
 - 级别 / 类型：P1 / 功能
-- 执行方式：自动化脚本 / 手工
+- 执行方式：自动化工具 / 手工
 - 预估耗时：约 2 分钟
 - 关联：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`
 
@@ -25,7 +25,7 @@
 
 | 项 | 要求 | 说明 |
 | --- | --- | --- |
-| 设备 profile | `default` | 以 CLI 是否接受 LFA 命令为准 |
+| 设备能力 / 版本 | 按实际执行环境填写 | 以 CLI 是否接受 LFA 命令为准 |
 | 端口形态 | A1、A2 各 5 个三层接口 | DUTC/DUTD 为 6 口 e530 |
 | DUT 数量 | 6 台 | 设备不足时标记 `Blocked` |
 | 软件版本 | 支持 `fast-reroute per-prefix enable` | 不支持时标记 `Blocked` |
@@ -52,7 +52,7 @@
                           E1     E2
 ```
 
-内置拓扑：`LinkConstraint.six_devices_topo_links_type_4`。
+拓扑名称 / 来源：`six_devices_topo_links_type_4`（内置拓扑）。
 
 | 链路 | 网段 | 端点地址 | 开销 |
 | --- | --- | --- | --- |
@@ -133,27 +133,91 @@ exit
 end
 ```
 
-DUTB～DUTF 按第 2 节地址配置；DUTB（C2）同样配置 `192.0.2.1/32` 的 loopback1。全部邻居 `Full` 后，在各设备 OSPF 进程视图执行 `fast-reroute per-prefix enable`。
+DUTB～DUTF 按第 2 节地址配置；DUTB（C2）同样配置 `192.0.2.1/32` 的 loopback1。各设备在 `router ospf` 视图使能 `fast-reroute per-prefix enable`；全部邻居 `Full` 后，等待保护表刷新，再执行 4.2 基线检查。
 
-### 4.2 观测与预期
+### 4.2 基线检查与执行顺序
 
-| 观测项 | 命令 | 预期 |
+执行顺序：4.2 基线检查 → 4.3.1 → 4.4.1 → 4.3.2 → 4.4.2。
+
+| 顺序 | 动作 | 命令 / 触发方式 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 检查邻居 | `show ip ospf neighbor` | 所有直连邻居均为 `Full` |
+| 2 | 检查 E1 到 P 的下一跳 | `show ip route 192.0.2.1`（DUTE） | 出现 `10.3.5.1, via` 或 `10.4.5.1, via`，允许 ECMP 或单路径 |
+| 3 | 检查 LFA 状态 | `show ip ospf fast-reroute per-prefix`（DUTE） | `Fast-reroute per-prefix : enabled`，`Calculation` 的 `runs` 大于 0，`Protected by LFA` 大于 0 |
+| 4 | 检查基线连通性 | `ping 192.0.2.1` | `0% packet loss` |
+
+### 4.3 触发与流量发送
+
+#### 4.3.1 周期 1：E1-A1 链路故障
+
+关闭 DUTE 的 `<PortA>`：
+
+```text
+configure terminal
+interface <PortA>
+shutdown
+end
+```
+
+| 触发 | 操作 | 预期 |
 | --- | --- | --- |
-| 邻居 | `show ip ospf neighbor` | 所有直连邻居均为 `Full` |
-| E1 到 P 的下一跳 | `show ip route 192.0.2.1`（DUTE） | 出现 `10.3.5.1, via` 或 `10.4.5.1, via`（允许 ECMP 或单路径） |
-| LFA 使能 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
-| LFA 计算 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
-| 受保护前缀 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
-| 连通性 | `ping 192.0.2.1` | `0% packet loss` |
+| 故障 1 | DUTE 的 `<PortA>` 执行 `shutdown` | E1-A1 邻居断开，E1 到 P 的流量切换到 A2 |
+| 路由切换 | 等待 `show ip route 192.0.2.1` 刷新 | 下一跳为 `10.4.5.1, via` |
+| 故障期间连通性 | `ping 192.0.2.1` | `0% packet loss` |
 
-### 4.3 故障与恢复
+#### 4.3.2 周期 2：A1-C1 链路故障
 
-1. 关闭 DUTE 的 `<PortA>`，模拟 E1-A1 链路故障。
-2. `show ip route 192.0.2.1` 应切换为 `10.4.5.1, via`，即经 A2 到达 P。
-3. `ping 192.0.2.1` 应为 `0% packet loss`；恢复 `<PortA>` 后主路径恢复。
-4. 关闭 DUTC 的 `<PortA>`，模拟 A1-C1 链路故障。
-5. DUTC（A1）到 P 的路由应切换为 `10.2.3.1, via`，即经直连的 C2 到达 P。
-6. `ping 192.0.2.1` 应为 `0% packet loss`；恢复后 `Protected by LFA` 恢复大于 0。
+本周期在 4.4.1 完成周期 1 恢复后执行。关闭 DUTC 的 `<PortA>`：
+
+```text
+configure terminal
+interface <PortA>
+shutdown
+end
+```
+
+| 触发 | 操作 | 预期 |
+| --- | --- | --- |
+| 故障 2 | DUTC 的 `<PortA>` 执行 `shutdown` | A1-C1 邻居断开，A1 到 P 的流量切换到直连的 C2 |
+| 路由切换 | 等待 `show ip route 192.0.2.1` 刷新（DUTC） | 下一跳为 `10.2.3.1, via` |
+| 故障期间连通性 | `ping 192.0.2.1` | `0% packet loss` |
+
+### 4.4 恢复
+
+#### 4.4.1 周期 1 恢复
+
+| 恢复动作 | 命令 | 预期 |
+| --- | --- | --- |
+| 链路恢复 | DUTE 的 `<PortA>` 执行 `no shutdown` | E1-A1 邻居重新为 `Full` |
+| 主路径恢复 | `show ip route 192.0.2.1` | 下一跳恢复为 `10.3.5.1` 或 `10.4.5.1`，允许 ECMP 或单路径 |
+
+#### 4.4.2 周期 2 恢复
+
+| 恢复动作 | 命令 | 预期 |
+| --- | --- | --- |
+| 链路恢复 | DUTC 的 `<PortA>` 执行 `no shutdown` | A1-C1 邻居重新为 `Full` |
+| 保护恢复 | `show ip ospf fast-reroute per-prefix`（DUTE） | `Protected by LFA` 大于 0 |
+
+### 4.5 观测面
+
+| 观测面 | 命令 / 方法 | 判定 |
+| --- | --- | --- |
+| 协议状态面 | `show ip ospf neighbor` | 基线时所有直连邻居 `Full`；两个故障周期分别导致 E1-A1、A1-C1 邻居断开并在恢复后重新 `Full` |
+| 表项面 | `show ip route 192.0.2.1` | 基线时经 A1 或 A2；周期 1 故障后仅经 A2；周期 2 故障后 A1 经 C2 |
+| 保护表面 | `show ip ospf fast-reroute per-prefix`（DUTE） | `Calculation` 的 `runs` 大于 0；`Protected by LFA` 基线和周期 2 恢复后均大于 0 |
+| 转发面 | `ping 192.0.2.1` | 基线、两个故障周期内均为 `0% packet loss` |
+| 恢复 / 资源面 | `show ip route 192.0.2.1`、`show ip ospf fast-reroute per-prefix` | 周期 1 恢复后主路径恢复；周期 2 恢复后保护计数大于 0 |
+
+### 4.6 判定标准
+
+- 4.2 步骤 1 至 4：所有直连邻居为 `Full`；`Fast-reroute per-prefix : enabled`，`192.0.2.1` 的下一跳为 `10.3.5.1` 或 `10.4.5.1`；`Calculation` 的 `runs` 大于 0 且 `Protected by LFA` 大于 0；`ping 192.0.2.1` 为 `0% packet loss`。
+- 4.3.1 步骤 1 至 3：`192.0.2.1` 的下一跳切换为 `10.4.5.1`；`ping 192.0.2.1` 为 `0% packet loss`。
+- 4.4.1 步骤 1 至 2：E1-A1 邻居重新 `Full`；`192.0.2.1` 的下一跳恢复为 `10.3.5.1` 或 `10.4.5.1`。
+- 4.3.2 步骤 1 至 3：DUTC 到 `192.0.2.1` 的下一跳切换为 `10.2.3.1`；`ping 192.0.2.1` 为 `0% packet loss`。
+- 4.4.2 步骤 1 至 2：A1-C1 邻居重新 `Full`；DUTE 的 `Protected by LFA` 大于 0。
+- 上述必检项全部满足，且清理后无 `router ospf`、`fast-reroute`、`loopback1` 残留 → `Pass`。
+- 上述任一必检项不满足，或清理失败 → `Fail`。
+- LFA 命令不可用、6 台设备或所需端口不足、全互联拓扑无法建立、邻居无法 `Full` → `Blocked`，记录缺失项。
 
 ## 5. 清理与恢复
 
@@ -196,7 +260,7 @@ show ip ospf processes-count
 | 1 | 拓扑说明 | 本用例为 RFC 6571 Figure 3 Full Mesh 原图，6 台设备、10 条链路 |
 | 2 | 端口要求 | A1、A2 各需 5 口，分别映射到 DUTC/DUTD（6 口 e530） |
 | 3 | MHP 说明 | `192.0.2.1/32` 在 C1、C2 上重复配置，属于 anycast/MHP |
-| 4 | ECMP 观测 | 部分设备对远端 MHP 只安装单条最优路径；本脚本允许 ECMP 或单下一跳，故障后以可达性和下一跳切换为判据 |
+| 4 | ECMP 观测 | 部分设备对远端 MHP 只安装单条最优路径；本用例允许 ECMP 或单下一跳，故障后以可达性和下一跳切换为判据 |
 | 5 | 保护范围 | Full Mesh 下 A1-C1 故障后，A1 可经直连 C2 或经 A2 绕行，验证节点保护 |
 
 ## 7. 执行与结果记录
@@ -209,7 +273,7 @@ show ip ospf processes-count
 | 证据 | 回显文件 / 日志位置 |
 | 关联缺陷 / 需求 | |
 
-逐条结果：
+逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |

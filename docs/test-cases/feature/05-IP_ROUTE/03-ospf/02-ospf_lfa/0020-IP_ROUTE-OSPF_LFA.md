@@ -1,7 +1,7 @@
 # A-B 主链路故障后，OSPF LFA 将流量切换到 A-D-C 备份路径并恢复
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
-> 脚本：`0020-IP_ROUTE-OSPF_LFA.test.ts`
+> 本文依据 `docs/spec/test-case-template.md` 编写；文档中的子用例与用例编号一一对应。
+> 自动化实现：`0020-IP_ROUTE-OSPF_LFA.test.ts`（可选，手工执行时省略）
 
 ## 1. 基本信息
 
@@ -9,7 +9,7 @@
 - 用例标题：A-B 主链路故障后，OSPF LFA 将流量切换到 A-D-C 备份路径并恢复
 - 所属特性 / 分组：`05-IP_ROUTE` / `OSPF配置` / `OSPF LFA`
 - 级别 / 类型：P1 / 功能
-- 执行方式：自动化脚本 / 手工
+- 执行方式：自动化工具 / 手工
 - 预估耗时：约 4 分钟
 - 关联：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`；设计模板见 [test-case-template.md](../../../../../spec/test-case-template.md)
 
@@ -25,7 +25,7 @@
 
 | 项 | 要求 | 说明 |
 | --- | --- | --- |
-| 设备 profile | `default` | 以 CLI 是否接受命令为准 |
+| 设备能力 / 版本 | 按实际执行环境填写 | 以 CLI 是否接受命令为准 |
 | 端口形态 | 按拓扑需要 2~4 个三层接口 | 接口需支持 `no switchport` |
 | 拓扑后端 | 能建立对应拓扑 | 邻居无法 Full 时标记 `Blocked` |
 | 软件版本 | 接受本用例命令 | 不支持时标记 `Blocked` |
@@ -46,7 +46,7 @@
    +--------+                   +--------+
 ```
 
-内置拓扑：`LinkConstraint.four_devices_topo_links_type_3`。
+拓扑名称 / 来源：`four_devices_topo_links_type_3`（内置拓扑）。
 
 | 链路 | 网段 | 端点地址 | 开销 |
 | --- | --- | --- | --- |
@@ -187,7 +187,20 @@ exit
 end
 ```
 
-### 4.2 触发
+### 4.2 基线检查与执行顺序
+
+| 顺序 | 动作 | 命令 / 触发方式 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 邻居基线检查 | `show ip ospf neighbor` | DUTA 与 DUTB、DUTD 的邻居状态均为 `Full` |
+| 2 | LFA 覆盖基线 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
+| 3 | 主路径基线 | `show ip ospf route` | `3.3.3.3/32` 的下一跳为 `10.0.12.2` |
+| 4 | 连通性基线 | `ping 3.3.3.3` | `0% packet loss` |
+| 5 | 注入 A-B 主链路故障 | 见 4.3 | 路由切换到 A-D-C 备份路径 |
+| 6 | 恢复 A-B 主链路 | 见 4.4 | 主路径回切，邻居与 LFA 覆盖恢复 |
+
+### 4.3 触发与流量发送
+
+本用例不发送测试仪流量，触发后通过邻居、路由和 ping 观测切换结果。
 
 DUTA：
 
@@ -198,15 +211,11 @@ shutdown
 end
 ```
 
-### 4.3 观测与预期
-
-| 观测项 | 命令 | 预期 |
+| 触发 | 操作 | 预期 |
 | --- | --- | --- |
-| 备份路径生效 | `show ip route 3.3.3.3` | 下一跳包含 `via 10.0.41.1` |
-| OSPF 路由切换 | `show ip ospf route` | `3.3.3.3/32` 的下一跳为 `10.0.41.1` |
-| 故障期间连通性 | `ping 3.3.3.3` | `0% packet loss` |
+| A-B 主链路故障 | DUTA `<PortA>` 执行 `shutdown` | 邻居 `10.0.12.2` 中断，`3.3.3.3/32` 切换为经 `10.0.41.1` 的 A-D-C 备份路径 |
 
-### 4.4 恢复与预期
+### 4.4 恢复
 
 DUTA：
 
@@ -217,11 +226,28 @@ no shutdown
 end
 ```
 
-| 观测项 | 命令 | 预期 |
+| 恢复动作 | 命令 | 预期 |
 | --- | --- | --- |
-| 主路径恢复 | `show ip route 3.3.3.3` | 下一跳包含 `via 10.0.12.2` |
-| LFA 覆盖恢复 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
-| 连通性恢复 | `ping 3.3.3.3` | `0% packet loss` |
+| A-B 主链路恢复 | DUTA `<PortA>` 执行 `no shutdown` | 邻居 `10.0.12.2` 恢复，`3.3.3.3/32` 回切到经 `10.0.12.2` 的主路径 |
+
+### 4.5 观测面
+
+| 观测面 | 命令 / 方法 | 判定 |
+| --- | --- | --- |
+| 协议状态面 | `show ip ospf neighbor` | 故障前邻居为 `Full`；故障后不再包含 `10.0.12.2`；恢复后重新包含 `10.0.12.2` |
+| 协议配置面 | `show ip ospf fast-reroute per-prefix` | 故障前 `Fast-reroute per-prefix : enabled` 且 `Protected by LFA` 大于 0；恢复后 `Protected by LFA` 大于 0 |
+| 表项面 | `show ip ospf route` | `3.3.3.3/32` 的下一跳依次为 `10.0.12.2`（故障前）、`10.0.41.1`（故障中）、`10.0.12.2`（恢复后） |
+| 路由表面 | `show ip route 3.3.3.3` | 故障中下一跳包含 `via 10.0.41.1`；恢复后下一跳包含 `via 10.0.12.2` |
+| 转发面 | `ping 3.3.3.3` | 故障前、故障中、恢复后均为 `0% packet loss` |
+
+### 4.6 判定标准
+
+- 4.2 步骤 1 至 4 全部满足：邻居 `Full`，`Protected by LFA` 大于 0，主路径下一跳为 `10.0.12.2`，`ping 3.3.3.3` 丢包率为 0%。
+- 4.3 触发后：`show ip route 3.3.3.3` 下一跳包含 `via 10.0.41.1`，`show ip ospf route` 中 `3.3.3.3/32` 的下一跳为 `10.0.41.1`，`ping 3.3.3.3` 丢包率为 0%。
+- 4.4 恢复后：邻居重新包含 `10.0.12.2`，`show ip route 3.3.3.3` 下一跳包含 `via 10.0.12.2`，`Protected by LFA` 大于 0，`ping 3.3.3.3` 丢包率为 0%。
+- 上述条件全部满足且第 5 章清理成功：结论为 `Pass`。
+- 上述条件任一不满足：结论为 `Fail`。
+- 设备不接受 LFA 命令、拓扑后端无法建立邻居或测试环境不可用：结论为 `Blocked`，记录缺失项与现场。
 
 ## 5. 清理与恢复
 
@@ -269,12 +295,12 @@ show ip ospf neighbor
 | 项 | 内容 |
 | --- | --- |
 | 执行时间 / 执行人 | |
-| 结论 | Pass / Fail / Blocked |
+| 结论 | `Pass` / `Fail` / `Blocked` |
 | 实际观测 | 记录邻居、LFA 计数、路由下一跳和 ping 结果 |
 | 证据 | 回显文件 / 日志位置 |
 | 关联缺陷 / 需求 | |
 
-逐条结果：
+逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |

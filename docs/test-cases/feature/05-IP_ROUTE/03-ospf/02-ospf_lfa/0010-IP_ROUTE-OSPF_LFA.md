@@ -1,7 +1,7 @@
 # 环形组网启用 OSPF LFA 后邻居 Full 且存在受保护前缀
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
-> 脚本：`0010-IP_ROUTE-OSPF_LFA.test.ts`
+> 本文依据 `docs/spec/test-case-template.md` 编写；文档中的子用例与用例编号一一对应。
+> 自动化实现：`0010-IP_ROUTE-OSPF_LFA.test.ts`（可选，手工执行时省略）
 
 ## 1. 基本信息
 
@@ -9,7 +9,7 @@
 - 用例标题：环形组网启用 OSPF LFA 后邻居 Full 且存在受保护前缀
 - 所属特性 / 分组：`05-IP_ROUTE` / `OSPF配置` / `OSPF LFA`
 - 级别 / 类型：P1 / 功能
-- 执行方式：自动化脚本 / 手工
+- 执行方式：自动化工具 / 手工
 - 预估耗时：约 3 分钟
 - 关联：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`；设计模板见 [test-case-template.md](../../../../../spec/test-case-template.md)
 
@@ -25,7 +25,7 @@
 
 | 项 | 要求 | 说明 |
 | --- | --- | --- |
-| 设备 profile | `default` | 以 CLI 是否接受命令为准 |
+| 设备能力 / 版本 | 按实际执行环境填写 | 以 CLI 是否接受命令为准 |
 | 端口形态 | 按拓扑需要 2~4 个三层接口 | 接口需支持 `no switchport` |
 | 拓扑后端 | 能建立对应拓扑 | 邻居无法 Full 时标记 `Blocked` |
 | 软件版本 | 接受本用例命令 | 不支持时标记 `Blocked` |
@@ -46,7 +46,7 @@
    +--------+                   +--------+
 ```
 
-内置拓扑：`LinkConstraint.four_devices_topo_links_type_3`。
+拓扑名称 / 来源：`four_devices_topo_links_type_3`（内置拓扑）。
 
 | 链路 | 网段 | 端点地址 | 开销 |
 | --- | --- | --- | --- |
@@ -187,16 +187,35 @@ exit
 end
 ```
 
-### 4.2 观测与预期
+### 4.2 基线检查与执行顺序
 
-| 观测项 | 命令 | 预期 |
+| 顺序 | 动作 | 命令 / 触发方式 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 邻居基线检查 | `show ip ospf neighbor` | DUTA 与 DUTB、DUTD 的邻居状态均为 `Full` |
+| 2 | LFA 使能检查 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
+| 3 | 前缀覆盖检查 | `show ip ospf fast-reroute per-prefix` | `Intra-area prefixes` 大于 0 |
+| 4 | 保护覆盖检查 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
+| 5 | 主路径检查 | `show ip ospf route` | `3.3.3.3/32` 的下一跳为 `10.0.12.2` |
+| 6 | 连通性基线检查 | `ping 3.3.3.3` | `0% packet loss` |
+
+本用例不注入故障，无需触发与恢复步骤；基线检查通过后即进入 4.5 观测面采集。
+
+### 4.5 观测面
+
+| 观测面 | 命令 / 方法 | 判定 |
 | --- | --- | --- |
-| 邻居状态 | `show ip ospf neighbor` | 状态包含 `Full` |
-| LFA 使能 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
-| 前缀覆盖 | `show ip ospf fast-reroute per-prefix` | `Intra-area prefixes` 大于 0 |
-| 保护覆盖 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
-| 主路径 | `show ip ospf route` | `3.3.3.3/32` 的下一跳为 `10.0.12.2` |
-| 连通性 | `ping 3.3.3.3` | `0% packet loss` |
+| 协议状态面 | `show ip ospf neighbor` | 邻居状态包含 `Full` |
+| 协议配置面 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
+| LFA 汇总面 | `show ip ospf fast-reroute per-prefix` | `Intra-area prefixes` 大于 0，`Protected by LFA` 大于 0 |
+| 表项面 | `show ip ospf route` | `3.3.3.3/32` 的下一跳为 `10.0.12.2` |
+| 转发面 | `ping 3.3.3.3` | `0% packet loss` |
+
+### 4.6 判定标准
+
+- 步骤 1 至 6 全部满足：邻居 `Full`，LFA 使能，`Intra-area prefixes` 大于 0，`Protected by LFA` 大于 0，`3.3.3.3/32` 下一跳为 `10.0.12.2`，`ping 3.3.3.3` 丢包率为 0%。
+- 上述条件全部满足且第 5 章清理成功：结论为 `Pass`。
+- 上述条件任一不满足：结论为 `Fail`。
+- 设备不接受 LFA 命令、`show ip ospf fast-reroute per-prefix` 无使能状态，或拓扑后端无法建立邻居：结论为 `Blocked`，记录缺失项与现场。
 
 ## 5. 清理与恢复
 
@@ -244,12 +263,12 @@ show ip ospf neighbor
 | 项 | 内容 |
 | --- | --- |
 | 执行时间 / 执行人 | |
-| 结论 | Pass / Fail / Blocked |
+| 结论 | `Pass` / `Fail` / `Blocked` |
 | 实际观测 | 记录邻居、LFA 计数、路由下一跳和 ping 结果 |
 | 证据 | 回显文件 / 日志位置 |
 | 关联缺陷 / 需求 | |
 
-逐条结果：
+逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |

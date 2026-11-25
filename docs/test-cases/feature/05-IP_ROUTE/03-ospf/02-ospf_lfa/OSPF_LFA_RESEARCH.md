@@ -14,7 +14,7 @@
    - 查询命令：`show ip ospf fast-reroute per-prefix`
 4. 设备当前未暴露 LFA tie-break、prefix-priority、Remote LFA、TI-LFA 等扩展命令；`show ip ospf fast-reroute per-prefix` 在存在受保护前缀时会输出逐前缀 `Primary nbr / Backup nbr` 明细，但 MHP 条目是否出现取决于场景与收敛时序。
 5. 设备软件特性列表（HOS V2.4）未单独列出 OSPF LFA/FRR，说明该能力与具体软件版本、License 或 profile 相关。用例执行前必须以 CLI 是否接受命令、`show ip ospf fast-reroute per-prefix` 是否返回使能状态作为能力判定；不满足时结论标记为 `Blocked`。
-6. 已设计 31 个功能用例和 4 个 CLI 用例，覆盖基线、链路保护、节点保护、无备份路径、接口角色、并行链路、开销变化、连续故障恢复、ECMP、多区域/ABR、外部路由/ASBR、汇总与默认路由、多 VRF/多进程、网络类型、unnumbered 能力探测、非对称开销，以及 RFC 5286/6571/8518 的简化拓扑和原图规模拓扑。
+6. 已设计 33 个功能用例和 4 个 CLI 用例，覆盖基线、链路保护、节点保护、无备份路径、接口角色、并行链路、开销变化、主路径不变时备份切换、link→link+node 保护升级、连续故障恢复、ECMP、多区域/ABR、外部路由/ASBR、汇总与默认路由、多 VRF/多进程、网络类型、unnumbered 能力探测、非对称开销，以及 RFC 5286/6571/8518 的简化拓扑和原图规模拓扑。
 
 ## 2. LFA 原理
 
@@ -390,6 +390,7 @@ default-information originate always metric-type 2
 | OSPF 路由表 ECMP 恢复晚于 IP 路由表 | 0090 | IP 路由已显示双下一跳时，`show ip ospf route` 仍只有备份下一跳 | 在严格断言前增加 `show ip ospf route` 的 `ReadyCheck` |
 | 非对称开销配置到错误设备 | 0180 | 在 DUTA 二层 PortC 上执行 `ip ospf cost` 返回 `% This can't be configured for L2 interface.` | 改为配置 DUTD PortC，并拆分“读取 DUTA 计数”和“配置 DUTD 开销”两步 |
 | 清理命令重复删除未配置项 | 0180 | `no ip ospf cost` 对未配置开销的接口返回 `% Parameter is not configured` | 仅保留实际配置过开销的接口清理命令 |
+| LFA→LFA 更新时 RIB repair path 曾未刷新（已复测通过） | 0270、0280 | 初次执行时控制面 `show ip ospf fast-reroute per-prefix` 已更新 Backup nbr/Type，但 `show ip route` 的 `repair path` 在 90 秒内仍保持旧备份；复测时控制面与 `repair path` 已同步更新，0180 验证的 LFA→无LFA、无LFA→有LFA 也正常 | 初次现象保留为历史记录；复测结论 Pass |
 
 ## 7. RFC 拓扑扩展用例（0110~0260）
 
@@ -446,7 +447,7 @@ default-information originate always metric-type 2
 
 ### 7.2 配置时序说明
 
-全部 31 个功能脚本（`0010~0260`，含 `0041`、`0042`、`0062`、`0091`、`0092`）在初始 OSPF 配置中使能 LFA。邻居 `Full` 后使用 `ReadyCheck` 等待关键路由收敛、`Calculation` 的 `runs` 增长和 `Protected by LFA` 刷新，再进行保护计数与转发面断言。
+全部 33 个功能脚本（`0010~0280`，含 `0041`、`0042`、`0062`、`0091`、`0092`、`0270`、`0280`）在初始 OSPF 配置中使能 LFA。邻居 `Full` 后使用 `ReadyCheck` 等待关键路由收敛、`Calculation` 的 `runs` 增长和 `Protected by LFA` 刷新，再进行保护计数与转发面断言。
 
 ## 8. 参考资料
 

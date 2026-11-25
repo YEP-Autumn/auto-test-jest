@@ -1,7 +1,7 @@
 # 双 ASBR 发布同一外部前缀时，主路径故障后流量切换到备用 ASBR
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
-> 脚本：`0230-IP_ROUTE-OSPF_LFA.test.ts`
+> 本文依据 `docs/spec/test-case-template.md` 编写；文档中的子用例与用例编号一一对应。
+> 自动化实现：`0230-IP_ROUTE-OSPF_LFA.test.ts`（可选，手工执行时省略）
 
 ## 1. 基本信息
 
@@ -9,7 +9,7 @@
 - 用例标题：双 ASBR 发布同一外部前缀时，主路径故障后流量切换到备用 ASBR
 - 所属特性 / 分组：`05-IP_ROUTE` / `OSPF配置` / `OSPF LFA`
 - 级别 / 类型：P1 / 功能
-- 执行方式：自动化脚本 / 手工
+- 执行方式：自动化工具 / 手工
 - 预估耗时：约 2 分钟
 - 关联：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`
 
@@ -25,7 +25,7 @@
 
 | 项 | 要求 | 说明 |
 | --- | --- | --- |
-| 设备 profile | `default` | 以 CLI 是否接受 LFA 命令为准 |
+| 设备能力 / 版本 | 按实际执行环境填写 | 以 CLI 是否接受 LFA 命令为准 |
 | 端口形态 | 每台设备 2～3 个三层接口 | 接口需支持 `no switchport` |
 | 外部路由 | 支持 `redistribute connected metric ... metric-type 2` | 不支持时标记 `Blocked` |
 | 软件版本 | 支持 `fast-reroute per-prefix enable` | 不支持时标记 `Blocked` |
@@ -41,7 +41,7 @@
          E = DUTE ---- DUTF = F
 ```
 
-内置拓扑：`LinkConstraint.six_devices_topo_links_type_3`。
+拓扑名称 / 来源：`six_devices_topo_links_type_3`（内置拓扑）。
 
 | 链路 | 网段 | 端点地址 | 开销 |
 | --- | --- | --- | --- |
@@ -129,25 +129,69 @@ exit
 
 全部邻居 `Full` 后，在各设备 OSPF 进程视图执行 `fast-reroute per-prefix enable`。
 
-### 4.2 观测与预期
+### 4.2 基线检查与执行顺序
 
-| 观测项 | 命令 | 预期 |
+| 顺序 | 动作 | 命令 / 触发方式 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 配置生效 | `show running-config \| include router ospf`、`show running-config \| include redistribute`、`show running-config \| include fast-reroute` | 各设备存在 OSPF 进程，E、F 存在外部分布配置，各设备存在 LFA 配置 |
+| 2 | 邻居基线 | `show ip ospf neighbor` | 所有直连邻居均为 `Full` |
+| 3 | 外部路由存在 | `show ip ospf route` | 存在 `E2 198.51.100.1/32` |
+| 4 | 主 ASBR 基线 | `show ip route 198.51.100.1` | 下一跳为 `10.1.4.2`（经 B/F） |
+| 5 | LFA 计算 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
+| 6 | 连通性基线 | `ping 198.51.100.1` | `0% packet loss` |
+| 7 | 触发周期 1 | 关闭 DUTA 的 `<PortB>` | 见 4.3.1 |
+| 8 | 触发周期 2 | 在周期 1 未恢复时再关闭 DUTA 的 `<PortA>` | 见 4.3.2 |
+| 9 | 恢复链路 | 恢复 DUTA 的 `<PortA>`、`<PortB>` | 见 4.4 |
+
+### 4.3 触发与流量发送
+
+本用例不使用测试仪流量，触发方式为两周期链路故障注入。
+
+#### 4.3.1 周期 1：S-B 链路故障
+
+| 触发 | 操作 | 预期 |
 | --- | --- | --- |
-| 邻居 | `show ip ospf neighbor` | 所有直连邻居均为 `Full` |
-| 外部路由存在 | `show ip ospf route` | 存在 `E2 198.51.100.1/32` |
-| 主 ASBR | `show ip route 198.51.100.1` | 下一跳为 `10.1.4.2`（经 B/F） |
-| LFA 计算 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
-| 连通性 | `ping 198.51.100.1` | `0% packet loss` |
+| 故障 1 | 关闭 DUTA 的 `<PortB>`，模拟 S-B 链路故障 | `10.1.4.2` 邻居断开，外部前缀切换到 N2 方向 |
+| 路由检查 | `show ip route 198.51.100.1` | 下一跳切换为 `10.1.3.2`，即经 N2-B-F 到达 F |
+| 转发检查 | `ping 198.51.100.1` | `0% packet loss` |
 
-### 4.3 故障与恢复
+#### 4.3.2 周期 2：S-N2 链路故障
 
-1. 关闭 DUTA 的 `<PortB>`，模拟 S-B 链路故障。
-2. `show ip route 198.51.100.1` 应切换为 `10.1.3.2`，即经 N2-B-F 到达 F。
-3. `ping 198.51.100.1` 应为 `0% packet loss`。
-4. 再关闭 DUTA 的 `<PortA>`，模拟 S-N2 链路故障，此时 F 侧路径不可用。
-5. `show ip route 198.51.100.1` 应切换为 `10.1.2.2`，即经 N1-E 到达 E。
-6. `ping 198.51.100.1` 应为 `0% packet loss`，`show ip ospf route` 仍应存在 `E2 198.51.100.1/32`。
-7. 恢复 `<PortA>`、`<PortB>`，外部前缀回到 `10.1.4.2`，ping 恢复 `0% packet loss`。
+| 触发 | 操作 | 预期 |
+| --- | --- | --- |
+| 故障 2 | 再关闭 DUTA 的 `<PortA>`，模拟 S-N2 链路故障 | F 侧路径不可用，外部前缀切换到 E 方向 |
+| 路由检查 | `show ip route 198.51.100.1` | 下一跳切换为 `10.1.2.2`，即经 N1-E 到达 E |
+| 表项检查 | `show ip ospf route` | 仍存在 `E2 198.51.100.1/32` |
+| 转发检查 | `ping 198.51.100.1` | `0% packet loss` |
+
+### 4.4 恢复
+
+| 恢复动作 | 命令 | 预期 |
+| --- | --- | --- |
+| 链路恢复 | 在 DUTA 的 `<PortA>`、`<PortB>` 执行 `no shutdown` | 两个直连邻居恢复 `Full` |
+| 外部前缀回切 | `show ip route 198.51.100.1` | 下一跳回到 `10.1.4.2` |
+| 外部路由复查 | `show ip ospf route` | 存在 `E2 198.51.100.1/32` |
+| 转发恢复 | `ping 198.51.100.1` | `0% packet loss` |
+
+### 4.5 观测面
+
+| 观测面 | 命令 / 方法 | 判定 |
+| --- | --- | --- |
+| 协议状态面 | `show ip ospf neighbor` | 各周期直连邻居按链路状态为 `Full` 或断开 |
+| 表项面 | `show ip ospf route`、`show ip route 198.51.100.1` | 始终存在 `E2 198.51.100.1/32`；下一跳按周期依次为 `10.1.4.2`、`10.1.3.2`、`10.1.2.2` |
+| 计数 / 告警面 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
+| 转发面 | `ping 198.51.100.1` | 基线、两个故障周期和恢复后丢包率均为 0% |
+| 恢复 / 资源面 | 恢复链路后复查邻居与路由 | 下一跳回到 `10.1.4.2`，外部路由条目保留 |
+
+### 4.6 判定标准
+
+- 步骤 1 至 6：配置项存在；邻居状态为 `Full`；`show ip ospf route` 存在 `E2 198.51.100.1/32`；`show ip route 198.51.100.1` 下一跳为 `10.1.4.2`；`runs` 大于 0；丢包率 = 0%。
+- 步骤 7：关闭 `<PortB>` 后，下一跳变为 `10.1.3.2`，丢包率 = 0%。
+- 步骤 8：再关闭 `<PortA>` 后，下一跳变为 `10.1.2.2`，`E2 198.51.100.1/32` 仍存在，丢包率 = 0%。
+- 步骤 9：恢复 `<PortA>`、`<PortB>` 后，下一跳回到 `10.1.4.2`，丢包率 = 0%，且第 5 章清理检查通过。
+- `Pass`：上述必检项全部满足，且清理后无 OSPF、外部分布与 LFA 配置残留。
+- `Fail`：任一必检项不满足，或清理后仍存在协议或外部分布配置残留。
+- `Blocked`：设备不支持 `redistribute connected metric ... metric-type 2` 或 `fast-reroute per-prefix enable`，或邻居无法达到 `Full`。
 
 ## 5. 清理与恢复
 
@@ -198,13 +242,13 @@ show ip ospf processes-count
 | 项 | 内容 |
 | --- | --- |
 | 执行时间 / 执行人 | |
-| 结论 | Pass / Fail / Blocked |
+| 结论 | `Pass` / `Fail` / `Blocked` |
 | 实际观测 | 记录邻居、外部路由条目、故障前后下一跳和 ping 结果 |
 | 证据 | 回显文件 / 日志位置 |
 | 关联缺陷 / 需求 | |
 
-逐条结果：
+逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |
-| 0230 | | | |
+| `0230` | `Pass` / `Fail` / `Blocked` | | |

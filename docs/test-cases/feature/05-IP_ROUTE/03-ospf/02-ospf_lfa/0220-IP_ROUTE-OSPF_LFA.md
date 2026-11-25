@@ -1,7 +1,7 @@
 # RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故障后保持可达
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
-> 脚本：`0220-IP_ROUTE-OSPF_LFA.test.ts`
+> 本文依据 `docs/spec/test-case-template.md` 编写；文档中的子用例与用例编号一一对应。
+> 自动化实现：`0220-IP_ROUTE-OSPF_LFA.test.ts`（可选，手工执行时省略）
 
 ## 1. 基本信息
 
@@ -9,7 +9,7 @@
 - 用例标题：RFC 8518 Figure 2 原图中 MHP 的两个 ECMP 主下一跳在单路径故障后保持可达
 - 所属特性 / 分组：`05-IP_ROUTE` / `OSPF配置` / `OSPF LFA`
 - 级别 / 类型：P1 / 功能
-- 执行方式：自动化脚本 / 手工
+- 执行方式：自动化工具 / 手工
 - 预估耗时：约 7 分钟
 - 关联：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`
 
@@ -25,7 +25,7 @@
 
 | 项 | 要求 | 说明 |
 | --- | --- | --- |
-| 设备 profile | `default` | 以 CLI 是否接受 LFA 命令为准 |
+| 设备能力 / 版本 | 按实际执行环境填写 | 以 CLI 是否接受 LFA 命令为准 |
 | 端口形态 | 每台设备 2～3 个三层接口 | 接口需支持 `no switchport` |
 | 拓扑后端 | 六设备拓扑可建立 | 邻居无法 Full 时标记 `Blocked` |
 | 软件版本 | 支持 `fast-reroute per-prefix enable` | 不支持时标记 `Blocked` |
@@ -41,7 +41,7 @@
         E------ F
 ```
 
-内置拓扑：`LinkConstraint.six_devices_topo_links_type_3`。
+拓扑名称 / 来源：`six_devices_topo_links_type_3`（内置拓扑）。
 
 | 链路 | 网段 | 端点地址 | 开销 |
 | --- | --- | --- | --- |
@@ -122,7 +122,7 @@ exit
 end
 ```
 
-DUTB～DUTF 按 2 节地址和开销配置。E、F 额外配置：
+DUTB～DUTF 按第 2 节地址和开销配置。E、F 额外配置：
 
 ```text
 interface loopback1
@@ -137,23 +137,57 @@ F 侧 `loopback1` 的 `ip ospf cost` 为 16。全部邻居 `Full` 后，在各�
 fast-reroute per-prefix enable
 ```
 
-### 4.2 观测与预期
+### 4.2 基线检查与执行顺序
 
-| 观测项 | 命令 | 预期 |
+| 顺序 | 动作 | 命令 / 触发方式 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 配置生效 | `show running-config \| include router ospf`、`show running-config \| include fast-reroute` | 各设备存在 OSPF 进程与 LFA 配置 |
+| 2 | 邻居基线 | `show ip ospf neighbor` | 所有直连邻居为 `Full` |
+| 3 | LFA 使能 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
+| 4 | LFA 计算 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
+| 5 | 受保护前缀 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
+| 6 | MHP ECMP 基线 | `show ip ospf route` | `192.0.2.1/32` 同时经 `via 10.1.2.2` 和 `via 10.1.4.2` |
+| 7 | 连通性基线 | `ping 192.0.2.1` | `0% packet loss` |
+| 8 | 触发故障 | 关闭 DUTA 的 `<PortB>` | 见 4.3 |
+| 9 | 恢复链路 | 恢复 DUTA 的 `<PortB>` | 见 4.4 |
+
+### 4.3 触发与流量发送
+
+本用例不使用测试仪流量，触发方式为链路故障注入。
+
+| 触发 | 操作 | 预期 |
 | --- | --- | --- |
-| 邻居 | `show ip ospf neighbor` | 所有邻居 `Full` |
-| LFA 使能 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
-| LFA 计算 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
-| 受保护前缀 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
-| MHP ECMP | `show ip ospf route` | `192.0.2.1/32` 同时经 `via 10.1.2.2` 和 `via 10.1.4.2` |
-| 连通性 | `ping 192.0.2.1` | `0% packet loss` |
+| 故障 1 | 关闭 DUTA 的 `<PortB>`，模拟 S-B 主路径故障 | `10.1.4.2` 邻居断开，`192.0.2.1/32` 由 ECMP 收敛为单路径 |
+| 路由检查 | `show ip route 192.0.2.1`、`show ip ospf route` | `show ip route` 出现 `10.1.2.2, via <接口>`；`show ip ospf route` 中 `192.0.2.1/32` 仅保留 `via 10.1.2.2` |
+| 转发检查 | `ping 192.0.2.1` | `0% packet loss` |
 
-### 4.3 故障与恢复
+### 4.4 恢复
 
-1. 关闭 DUTA 的 `<PortB>`，模拟 S-B 主路径故障。
-2. `show ip route 192.0.2.1` 应出现 `10.1.2.2, via <接口>`；`show ip ospf route` 中 `192.0.2.1/32` 应只保留 `via 10.1.2.2`。
-3. `ping 192.0.2.1` 应为 `0% packet loss`。
-4. 恢复 `<PortB>`，MHP 重新形成 ECMP，`Protected by LFA` 恢复大于 0，ping 恢复 `0% packet loss`。
+| 恢复动作 | 命令 | 预期 |
+| --- | --- | --- |
+| 链路恢复 | 在 DUTA 的 `<PortB>` 执行 `no shutdown` | `10.1.4.2` 邻居恢复 `Full` |
+| MHP 回切 | `show ip ospf route`、`show ip route 192.0.2.1` | `192.0.2.1/32` 重新形成经 `10.1.2.2` 与 `10.1.4.2` 的 ECMP |
+| 保护计数恢复 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
+| 转发恢复 | `ping 192.0.2.1` | `0% packet loss` |
+
+### 4.5 观测面
+
+| 观测面 | 命令 / 方法 | 判定 |
+| --- | --- | --- |
+| 协议状态面 | `show ip ospf neighbor` | 所有直连邻居 `Full`；故障期间 `10.1.4.2` 邻居断开 |
+| 表项面 | `show ip ospf route`、`show ip route 192.0.2.1` | 基线为 ECMP；故障后仅保留 `via 10.1.2.2` 与 `10.1.2.2, via <接口>` |
+| 计数 / 告警面 | `show ip ospf fast-reroute per-prefix` | `runs` 大于 0，`Protected by LFA` 大于 0 |
+| 转发面 | `ping 192.0.2.1` | 基线、故障后、恢复后丢包率均为 0% |
+| 恢复 / 资源面 | 恢复 `<PortB>` 后复查邻居、路由与保护计数 | ECMP 与 LFA 保护计数恢复 |
+
+### 4.6 判定标准
+
+- 步骤 1 至 7：配置项存在；邻居状态为 `Full`；LFA 已使能且 `runs` 大于 0；`Protected by LFA` 大于 0；`192.0.2.1/32` 的 ECMP 下一跳同时包含 `10.1.2.2` 与 `10.1.4.2`；`ping 192.0.2.1` 丢包率 = 0%。
+- 步骤 8：关闭 `<PortB>` 后，`show ip route 192.0.2.1` 的下一跳为 `10.1.2.2`，`show ip ospf route` 中 `192.0.2.1/32` 仅保留 `via 10.1.2.2`，丢包率 = 0%。
+- 步骤 9：恢复 `<PortB>` 后，ECMP 重新形成，`Protected by LFA` 大于 0，丢包率 = 0%。
+- `Pass`：上述必检项全部满足，且第 5 章清理检查通过。
+- `Fail`：任一必检项不满足，或清理后仍存在 OSPF 进程、LFA 配置残留。
+- `Blocked`：设备不支持 `fast-reroute per-prefix enable`，或邻居无法达到 `Full`。
 
 ## 5. 清理与恢复
 
@@ -197,20 +231,20 @@ show ip ospf processes-count
 | 2 | MHP 说明 | `192.0.2.1/32` 在 E、F 上重复配置，属于 anycast/MHP；必须显式配置 Router ID |
 | 3 | 开销说明 | E 侧 P 的 cost 取 5，F 侧取 16，使 S 到 P 经 E/F 的路径都等于 20，符合 RFC 文字描述 |
 | 4 | 配置时序 | LFA 已在初始配置中使能，邻居 Full 后检查保护计数 |
-| 5 | 观测限制 | MHP 逐前缀 LFA 条目可能不稳定；必检项为 ECMP、保护计数和故障后可达性 |
+| 5 | 观测限制 | MHP 逐前缀 LFA 条目存在不稳定现象；必检项为 ECMP、保护计数和故障后可达性 |
 
 ## 7. 执行与结果记录
 
 | 项 | 内容 |
 | --- | --- |
 | 执行时间 / 执行人 | |
-| 结论 | Pass / Fail / Blocked |
+| 结论 | `Pass` / `Fail` / `Blocked` |
 | 实际观测 | 记录邻居、LFA 计数、MHP 的 ECMP 下一跳、故障前后路由和 ping 结果 |
 | 证据 | 回显文件 / 日志位置 |
 | 关联缺陷 / 需求 | |
 
-逐条结果：
+逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |
-| 0220 | | | |
+| `0220` | `Pass` / `Fail` / `Blocked` | | |

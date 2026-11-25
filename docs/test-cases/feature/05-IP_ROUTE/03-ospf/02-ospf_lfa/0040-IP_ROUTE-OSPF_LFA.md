@@ -1,7 +1,7 @@
 # 链形组网无可用备份路径时，LFA 保护前缀数为 0 且链路故障后路由不可达
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
-> 脚本：`0040-IP_ROUTE-OSPF_LFA.test.ts`
+> 本文依据 `docs/spec/test-case-template.md` 编写；文档中的子用例与用例编号一一对应。
+> 自动化实现：`0040-IP_ROUTE-OSPF_LFA.test.ts`（可选，手工执行时省略）
 
 ## 1. 基本信息
 
@@ -9,7 +9,7 @@
 - 用例标题：链形组网无可用备份路径时，LFA 保护前缀数为 0 且链路故障后路由不可达
 - 所属特性 / 分组：`05-IP_ROUTE` / `OSPF配置` / `OSPF LFA`
 - 级别 / 类型：P1 / 功能
-- 执行方式：自动化脚本 / 手工
+- 执行方式：自动化工具 / 手工
 - 预估耗时：约 3 分钟
 - 关联：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`；设计模板见 [test-case-template.md](../../../../../spec/test-case-template.md)
 
@@ -25,7 +25,7 @@
 
 | 项 | 要求 | 说明 |
 | --- | --- | --- |
-| 设备 profile | `default` | 以 CLI 是否接受命令为准 |
+| 设备能力 / 版本 | 按实际执行环境填写 | 以 CLI 是否接受命令为准 |
 | 端口形态 | 按拓扑需要 2~4 个三层接口 | 接口需支持 `no switchport` |
 | 拓扑后端 | 能建立对应拓扑 | 邻居无法 Full 时标记 `Blocked` |
 | 软件版本 | 接受本用例命令 | 不支持时标记 `Blocked` |
@@ -38,7 +38,7 @@
    +--------+                   +--------+                   +--------+
 ```
 
-内置拓扑：`LinkConstraint.three_devices_topo_links_type_4`。
+拓扑名称 / 来源：`three_devices_topo_links_type_4`（内置拓扑）。
 
 | 链路 | 网段 | 端点地址 | 开销 |
 | --- | --- | --- | --- |
@@ -143,17 +143,21 @@ exit
 end
 ```
 
-### 4.2 观测与预期
+### 4.2 基线检查与执行顺序
 
-| 观测项 | 命令 | 预期 |
-| --- | --- | --- |
-| 邻居状态 | `show ip ospf neighbor` | 状态包含 `Full` |
-| LFA 使能 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
-| 无保护前缀 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 等于 0 |
-| 主路径 | `show ip ospf route` | `3.3.3.3/32` 的下一跳为 `10.0.12.2` |
-| 连通性 | `ping 3.3.3.3` | `0% packet loss` |
+| 顺序 | 动作 | 命令 / 触发方式 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 邻居基线检查 | `show ip ospf neighbor` | DUTA 与 DUTB、DUTC 的邻居状态均为 `Full` |
+| 2 | LFA 使能检查 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
+| 3 | 保护计数基线 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 等于 0 |
+| 4 | 主路径基线 | `show ip ospf route` | `3.3.3.3/32` 的下一跳为 `10.0.12.2` |
+| 5 | 连通性基线 | `ping 3.3.3.3` | `0% packet loss` |
+| 6 | 注入 A-B 链路故障 | 见 4.3 | 目标前缀撤销，无 LFA 备份路径接管 |
+| 7 | 恢复 A-B 链路 | 见 4.4 | 路由与连通性恢复 |
 
-### 4.3 触发与故障后预期
+### 4.3 触发与流量发送
+
+本用例不发送测试仪流量，触发后通过路由表和 ping 观测故障结果。
 
 DUTA：
 
@@ -164,12 +168,11 @@ shutdown
 end
 ```
 
-| 观测项 | 命令 | 预期 |
+| 触发 | 操作 | 预期 |
 | --- | --- | --- |
-| 路由撤销 | `show ip route 3.3.3.3` | `% Network not in table` |
-| LFA 覆盖 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 等于 0 |
+| A-B 链路故障 | DUTA `<PortA>` 执行 `shutdown` | `3.3.3.3/32` 从路由表撤销；`Protected by LFA` 保持为 0 |
 
-### 4.4 恢复与预期
+### 4.4 恢复
 
 DUTA：
 
@@ -180,10 +183,28 @@ no shutdown
 end
 ```
 
-| 观测项 | 命令 | 预期 |
+| 恢复动作 | 命令 | 预期 |
 | --- | --- | --- |
-| 路由恢复 | `show ip route 3.3.3.3` | 下一跳包含 `via 10.0.12.2` |
-| 连通性恢复 | `ping 3.3.3.3` | `0% packet loss` |
+| A-B 链路恢复 | DUTA `<PortA>` 执行 `no shutdown` | `3.3.3.3/32` 重新出现，下一跳为 `10.0.12.2`，连通性恢复 |
+
+### 4.5 观测面
+
+| 观测面 | 命令 / 方法 | 判定 |
+| --- | --- | --- |
+| 协议状态面 | `show ip ospf neighbor` | 故障前邻居为 `Full`；故障后邻居 `10.0.12.2` 中断；恢复后邻居重新为 `Full` |
+| LFA 汇总面 | `show ip ospf fast-reroute per-prefix` | 故障前后 `Fast-reroute per-prefix : enabled`，`Protected by LFA` 始终等于 0 |
+| 表项面 | `show ip ospf route` | 故障前和恢复后存在 `3.3.3.3/32`，下一跳为 `10.0.12.2`；故障期间前缀撤销 |
+| 路由表面 | `show ip route 3.3.3.3` | 故障期间回显 `% Network not in table`；恢复后下一跳包含 `via 10.0.12.2` |
+| 转发面 | `ping 3.3.3.3` | 故障前和恢复后 `0% packet loss`；故障期间目标前缀无路由，报文不可达 |
+
+### 4.6 判定标准
+
+- 4.2 步骤 1 至 5 全部满足：邻居 `Full`，LFA 使能，`Protected by LFA` 等于 0，主路径下一跳为 `10.0.12.2`，`ping 3.3.3.3` 丢包率为 0%。
+- 4.3 触发后：`show ip route 3.3.3.3` 回显 `% Network not in table`，`show ip ospf fast-reroute per-prefix` 的 `Protected by LFA` 等于 0。
+- 4.4 恢复后：`show ip route 3.3.3.3` 下一跳包含 `via 10.0.12.2`，`ping 3.3.3.3` 丢包率为 0%。
+- 上述条件全部满足且第 5 章清理成功：结论为 `Pass`。
+- 上述条件任一不满足：结论为 `Fail`。
+- 设备不接受 LFA 命令、拓扑后端无法建立链形邻居或测试环境不可用：结论为 `Blocked`，记录缺失项与现场。
 
 ## 5. 清理与恢复
 
@@ -222,12 +243,12 @@ show ip ospf processes-count
 | 项 | 内容 |
 | --- | --- |
 | 执行时间 / 执行人 | |
-| 结论 | Pass / Fail / Blocked |
+| 结论 | `Pass` / `Fail` / `Blocked` |
 | 实际观测 | 记录邻居、LFA 计数、路由下一跳和 ping 结果 |
 | 证据 | 回显文件 / 日志位置 |
 | 关联缺陷 / 需求 | |
 
-逐条结果：
+逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |

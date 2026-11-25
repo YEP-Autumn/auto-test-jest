@@ -1,7 +1,7 @@
 # RFC 5286 Figure 7 等价拓扑中 LFA 候选 N 的路径经区域穿越回到 S
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
-> 脚本：`0260-IP_ROUTE-OSPF_LFA.test.ts`
+> 本文依据 `docs/spec/test-case-template.md` 编写；文档中的子用例与用例编号一一对应。
+> 自动化实现：`0260-IP_ROUTE-OSPF_LFA.test.ts`（可选，手工执行时省略）
 
 ## 1. 基本信息
 
@@ -9,7 +9,7 @@
 - 用例标题：RFC 5286 Figure 7 等价拓扑中 LFA 候选 N 的路径经区域穿越回到 S
 - 所属特性 / 分组：`05-IP_ROUTE` / `OSPF配置` / `OSPF LFA`
 - 级别 / 类型：P2 / 功能（观测型）
-- 执行方式：自动化脚本 / 手工
+- 执行方式：自动化工具 / 手工
 - 预估耗时：约 3 分钟
 - 关联：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`
 
@@ -25,26 +25,26 @@
 
 | 项 | 要求 | 说明 |
 | --- | --- | --- |
-| 设备 profile | `default` | 以 CLI 是否接受 LFA 命令为准 |
+| 设备能力 / 版本 | 按实际执行环境填写 | 以 CLI 是否接受 LFA 命令为准 |
 | 端口形态 | 每台设备 2～4 个三层接口 | 接口需支持 `no switchport` |
-| DUT 数量 | 8 台（9 台拓扑中留 1 台备用） | 设备不足时标记 `Blocked` |
+| DUT 数量 | 8 台（DUTA~DUTH） | 设备不足时标记 `Blocked` |
 | 多区域 | 支持 `area 0/1/2` 与 ABR/ASBR | 不支持时标记 `Blocked` |
 | 软件版本 | 支持 `fast-reroute per-prefix enable` | 不支持时标记 `Blocked` |
 
 ## 2. 组网与拓扑
 
 ```text
-   DUTB ---- DUTA ---- DUTG ---- DUTH
+   DUTB ---- DUTA ---- DUTF ---- DUTG
                | \               |
                |  \              |
-               |   DUTE -------- + ---- DUTK
+               |   DUTE -------- + ---- DUTH
                |     |  \                 |
              DUTC ---+   \                |
               |  \        \               |
             DUTD  +--------+--------------+
 ```
 
-内置拓扑：`LinkConstraint.nine_devices_topo_links_type_4`（RFC 5286 Figure 7 的 9 台等价裁剪）。
+拓扑名称 / 来源：`nine_devices_topo_links_type_4`（RFC 5286 Figure 7 的 8 台等价裁剪，DUTA~DUTH）。
 
 角色映射：
 
@@ -55,9 +55,9 @@
 | C | A（ABR） | area 1 + area 2 + backbone |
 | D | F（area 2 转接） | area 2 |
 | E | B（ABR） | area 1 + area 2 + backbone |
-| G | E | area 1 |
-| H | X | area 1 |
-| K | ASBR | area 1 + area 2 |
+| F | E | area 1 |
+| G | X | area 1 |
+| H | ASBR | area 1 + area 2 |
 
 | 链路 | 区域 | 网段 | 端点地址 | 开销 |
 | --- | --- | --- | --- | --- |
@@ -145,7 +145,7 @@ exit
 end
 ```
 
-DUTB～DUTH 按第 2 节地址、区域和开销配置。DUTK（ASBR）额外配置：
+DUTB～DUTG 按第 2 节地址、区域和开销配置。DUTH（ASBR）额外配置：
 
 ```text
 interface loopback1
@@ -158,28 +158,67 @@ exit
 
 全部邻居 `Full` 后，在各设备 OSPF 进程视图执行 `fast-reroute per-prefix enable`。
 
-### 4.2 观测与预期
+### 4.2 基线检查与执行顺序
 
-| 观测项 | 命令 | 预期 |
+| 顺序 | 动作 | 命令 / 触发方式 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 配置生效 | `show running-config \| include router ospf`、`show running-config \| include redistribute`、`show running-config \| include fast-reroute` | 各设备存在 OSPF 进程，ASBR 存在外部分布配置，各设备存在 LFA 配置 |
+| 2 | 邻居基线 | `show ip ospf neighbor` | 各区域直连邻居均为 `Full` |
+| 3 | 外部路由存在 | `show ip ospf route`（DUTA） | 存在 `E2 198.51.100.1/32` |
+| 4 | S 的路径 | `show ip route 198.51.100.1` | 下一跳 `10.1.7.2`（经 E） |
+| 5 | N 的路径 | `show ip route 198.51.100.1`（DUTB） | 下一跳 `10.2.3.2`（经 A） |
+| 6 | A 的路径 | `show ip route 198.51.100.1`（DUTC） | 下一跳 `10.3.4.2`（经 area 2 的 F） |
+| 7 | B 的路径 | `show ip route 198.51.100.1`（DUTE） | 下一跳 `10.1.5.2`（经 area 1 的 S） |
+| 8 | F 的路径 | `show ip route 198.51.100.1`（DUTD） | 下一跳 `10.4.5.2`（经 B） |
+| 9 | LFA 计算 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
+| 10 | 受保护前缀 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
+| 11 | 连通性基线 | `ping 198.51.100.1` | `0% packet loss` |
+| 12 | 触发故障 | 关闭 DUTA 的 `<PortB>` | 见 4.3 |
+| 13 | 恢复链路 | 恢复 DUTA 的 `<PortB>` | 见 4.4 |
+
+### 4.3 触发与流量发送
+
+本用例不使用测试仪流量，触发方式为链路故障注入。
+
+| 触发 | 操作 | 预期 |
 | --- | --- | --- |
-| 邻居 | `show ip ospf neighbor` | 各区域直连邻居均为 `Full` |
-| 外部路由 | `show ip ospf route`（DUTA） | 存在 `E2 198.51.100.1/32` |
-| S 的路径 | `show ip route 198.51.100.1` | 下一跳 `10.1.7.2`（经 E） |
-| N 的路径 | `show ip route 198.51.100.1`（DUTB） | 下一跳 `10.2.3.2`（经 A） |
-| A 的路径 | `show ip route 198.51.100.1`（DUTC） | 下一跳 `10.3.4.2`（经 area 2 的 F） |
-| B 的路径 | `show ip route 198.51.100.1`（DUTE） | 下一跳 `10.1.5.2`（经 area 1 的 S） |
-| F 的路径 | `show ip route 198.51.100.1`（DUTD） | 下一跳 `10.4.5.2`（经 B） |
-| LFA 计算 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
-| 受保护前缀 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
-| 连通性 | `ping 198.51.100.1` | `0% packet loss` |
+| 故障 1 | 关闭 DUTA 的 `<PortB>`，模拟 S-E 链路故障 | `10.1.7.2` 邻居断开，S 到外部前缀的主路径失效 |
+| 路由检查 | `show ip route 198.51.100.1` | 收敛后经 `10.1.5.2`（B）或 `10.1.2.2`（N）绕行 |
+| 转发检查 | `ping 198.51.100.1` | `0% packet loss` |
 
-### 4.3 故障与恢复
+执行过程中记录故障瞬间是否出现短暂环路或丢包；本用例以最终收敛结果和区域穿越路径为主要判据。
 
-1. 关闭 DUTA 的 `<PortB>`，模拟 S-E 链路故障。
-2. S 的主路径失效，收敛后 `show ip route 198.51.100.1` 应经 `10.1.5.2`（B）或 `10.1.2.2`（N）绕行。
-3. `ping 198.51.100.1` 应为 `0% packet loss`。
-4. 恢复 `<PortB>`，主路径回到 `10.1.7.2`，`Protected by LFA` 恢复大于 0。
-5. 执行过程中记录故障瞬间是否出现短暂环路或丢包；本用例以最终收敛结果和区域穿越路径为主要判据。
+### 4.4 恢复
+
+| 恢复动作 | 命令 | 预期 |
+| --- | --- | --- |
+| 链路恢复 | 在 DUTA 的 `<PortB>` 执行 `no shutdown` | `10.1.7.2` 邻居恢复 `Full` |
+| 主路径回切 | `show ip route 198.51.100.1` | 主路径回到 `10.1.7.2` |
+| 保护计数恢复 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
+| 转发恢复 | `ping 198.51.100.1` | `0% packet loss` |
+
+### 4.5 观测面
+
+| 观测面 | 命令 / 方法 | 判定 |
+| --- | --- | --- |
+| 协议状态面 | `show ip ospf neighbor` | 各区域直连邻居 `Full`；故障期间 `10.1.7.2` 邻居断开 |
+| 表项面（区域选择） | `show ip route 198.51.100.1`（各节点） | A 经 area 2 的 F（`10.3.4.2`），B 经 area 1 的 S（`10.1.5.2`），F 经 B（`10.4.5.2`） |
+| 表项面（OSPF 路由） | `show ip ospf route` | 存在 `E2 198.51.100.1/32` |
+| 计数 / 告警面 | `show ip ospf fast-reroute per-prefix` | `runs` 大于 0，`Protected by LFA` 大于 0 |
+| 转发面 | `ping 198.51.100.1` | 基线、故障后、恢复后丢包率均为 0% |
+| 过程观测 | 抓包或日志 | 记录故障瞬间的短暂环路或丢包，作为观测项 |
+| 恢复 / 资源面 | 恢复 `<PortB>` 后复查邻居、路由与保护计数 | 主路径回到 `10.1.7.2`，保护计数恢复 |
+
+### 4.6 判定标准
+
+- 步骤 1 至 11：配置项存在；各区域邻居状态为 `Full`；`show ip ospf route` 存在 `E2 198.51.100.1/32`；S、N、A、B、F 的下一跳依次为 `10.1.7.2`、`10.2.3.2`、`10.3.4.2`、`10.1.5.2`、`10.4.5.2`；`runs` 大于 0；`Protected by LFA` 大于 0；丢包率 = 0%。
+- 步骤 12：关闭 `<PortB>` 后，S 的下一跳收敛为 `10.1.5.2` 或 `10.1.2.2`，丢包率 = 0%。
+- 步骤 13：恢复 `<PortB>` 后，S 的下一跳回到 `10.1.7.2`，`Protected by LFA` 大于 0，丢包率 = 0%。
+- 区域穿越：A 经 area 2 到达 ASBR、B 经 area 1 回到 S 的区域选择关系应保持不变。
+- `Pass`：上述必检项全部满足，且第 5 章清理检查通过。
+- `Fail`：任一必检项不满足，或清理后仍存在 OSPF、外部分布与 LFA 配置残留。
+- `Blocked`：设备不支持多区域 OSPF 与 `fast-reroute per-prefix enable`，或邻居无法达到 `Full`。
+- 观测型说明：故障瞬间的短暂环路或丢包记录为观测项，不作为 `Fail` 判据；判定以最终收敛结果和区域穿越路径为准。
 
 ## 5. 清理与恢复
 
@@ -220,10 +259,10 @@ show ip ospf processes-count
 
 | # | 项 | 说明 |
 | --- | --- | --- |
-| 1 | 拓扑说明 | 本用例使用 9 台等价裁剪（DUTA~DUTH + DUTK，DUTK 作为 ASBR），保留 S→N→A→F→B→S 的区域穿越核心路径；RFC 原图约 11～12 台 |
+| 1 | 拓扑说明 | 本用例使用 8 台等价裁剪（DUTA~DUTH，DUTH 作为 ASBR），保留 S→N→A→F→B→S 的区域穿越核心路径；RFC 原图约 11～12 台 |
 | 2 | 区域设计 | A、B 同时属于 area 1、area 2 和 backbone；ASBR 同时属于 area 1 和 area 2 |
 | 3 | 观测重点 | 重点记录 A 经 area 2、B 经 area 1 的区域选择差异，以及 S 的 LFA 候选 N 的路径回到 S 的现象 |
-| 4 | 判定原则 | 本用例为观测型；不要求毫秒级丢包指标，不把故障瞬间的微环判为功能失败 |
+| 4 | 判定原则 | 本用例为观测型；判据采用最终收敛结果与区域穿越路径，故障瞬间的微环记录为观测项 |
 | 5 | 标准约束 | RFC 5286 6.3 明确此类场景不应使用 LFA；设备行为差异记录为观测项 |
 
 ## 7. 执行与结果记录
@@ -231,13 +270,13 @@ show ip ospf processes-count
 | 项 | 内容 |
 | --- | --- |
 | 执行时间 / 执行人 | |
-| 结论 | Pass / Fail / Blocked |
+| 结论 | `Pass` / `Fail` / `Blocked` |
 | 实际观测 | 记录各节点到外部前缀的下一跳、区域选择、LFA 计数、故障前后路由和 ping 结果 |
 | 证据 | 回显文件 / 日志位置 |
 | 关联缺陷 / 需求 | |
 
-逐条结果：
+逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |
-| 0260 | | | |
+| `0260` | `Pass` / `Fail` / `Blocked` | | |

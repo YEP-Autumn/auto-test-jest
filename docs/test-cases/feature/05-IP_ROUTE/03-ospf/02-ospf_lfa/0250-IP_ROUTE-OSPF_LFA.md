@@ -1,7 +1,7 @@
 # RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
-> 脚本：`0250-IP_ROUTE-OSPF_LFA.test.ts`
+> 本文依据 `docs/spec/test-case-template.md` 编写；文档中的子用例与用例编号一一对应。
+> 自动化实现：`0250-IP_ROUTE-OSPF_LFA.test.ts`（可选，手工执行时省略）
 
 ## 1. 基本信息
 
@@ -9,7 +9,7 @@
 - 用例标题：RFC 8518 Figure 3 中反向 MAX_METRIC 链路仍可作为 D1 的候选 LFA
 - 所属特性 / 分组：`05-IP_ROUTE` / `OSPF配置` / `OSPF LFA`
 - 级别 / 类型：P2 / 功能（观测型）
-- 执行方式：自动化脚本 / 手工
+- 执行方式：自动化工具 / 手工
 - 预估耗时：约 2 分钟
 - 关联：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`
 
@@ -26,7 +26,7 @@
 
 | 项 | 要求 | 说明 |
 | --- | --- | --- |
-| 设备 profile | `default` | 以 CLI 是否接受 LFA 命令为准 |
+| 设备能力 / 版本 | 按实际执行环境填写 | 以 CLI 是否接受 LFA 命令为准 |
 | 端口形态 | 每台设备 1～3 个三层接口 | 接口需支持 `no switchport` |
 | 接口开销 | 支持 `ip ospf cost 65535` | 不支持时标记 `Blocked` |
 | 软件版本 | 支持 `fast-reroute per-prefix enable` | 不支持时标记 `Blocked` |
@@ -45,7 +45,7 @@
       D2 = DUTE
 ```
 
-内置拓扑：`LinkConstraint.five_devices_topo_links_type_1`。
+拓扑名称 / 来源：`five_devices_topo_links_type_1`（内置拓扑）。
 
 | 链路 | 网段 | 端点地址 | 开销 |
 | --- | --- | --- | --- |
@@ -119,25 +119,62 @@ DUTB（N1）、DUTD（D1）、DUTE（D2）按第 2 节地址配置。DUTC（N2�
 fast-reroute per-prefix enable
 ```
 
-### 4.2 观测与预期
+### 4.2 基线检查与执行顺序
 
-| 观测项 | 命令 | 预期 |
+| 顺序 | 动作 | 命令 / 触发方式 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 配置生效 | `show running-config \| include router ospf`、`show running-config \| include fast-reroute` | 各设备存在 OSPF 进程与 LFA 配置 |
+| 2 | 邻居基线 | `show ip ospf neighbor` | 所有直连邻居均为 `Full` |
+| 3 | MAX_METRIC 配置 | `show running-config interface <PortA>`（N2） | 含 `ip ospf cost 65535` |
+| 4 | LFA 使能 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
+| 5 | LFA 计算 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
+| 6 | 受保护前缀 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
+| 7 | D1 的 LFA 明细 | `show ip ospf fast-reroute per-prefix` | 出现 `10.255.0.4/32`，Primary 为 `10.255.0.2`，Backup 为 `10.1.3.2` |
+| 8 | D1 主路径基线 | `show ip route 10.255.0.4` | 唯一包含 `10.1.2.2, via <接口>`，不包含 `10.1.3.2` |
+| 9 | 连通性基线 | `ping 10.255.0.4`、`ping 10.255.0.5` | 均为 `0% packet loss` |
+| 10 | 触发故障 | 关闭 DUTA 的 `<PortA>` | 见 4.3 |
+| 11 | 恢复链路 | 恢复 DUTA 的 `<PortA>` | 见 4.4 |
+
+### 4.3 触发与流量发送
+
+本用例不使用测试仪流量，触发方式为链路故障注入。
+
+| 触发 | 操作 | 预期 |
 | --- | --- | --- |
-| 邻居 | `show ip ospf neighbor` | 所有直连邻居均为 `Full` |
-| MAX_METRIC 配置 | `show running-config interface <PortA>`（N2） | 含 `ip ospf cost 65535` |
-| LFA 使能 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
-| LFA 计算 | `show ip ospf fast-reroute per-prefix` | `Calculation` 的 `runs` 大于 0 |
-| 受保护前缀 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
-| D1 的 LFA 明细 | `show ip ospf fast-reroute per-prefix` | 出现 `10.255.0.4/32`，Primary 为 `10.255.0.2`，Backup 为 `10.1.3.2` |
-| D1 主路径 | `show ip route 10.255.0.4` | 唯一包含 `10.1.2.2, via <接口>`，不包含 `10.1.3.2` |
-| 连通性 | `ping 10.255.0.4`、`ping 10.255.0.5` | 均为 `0% packet loss` |
+| 故障 1 | 关闭 DUTA 的 `<PortA>`，模拟 S-N1 链路故障 | `10.1.2.2` 邻居断开，S 到 D1 的主路径失效 |
+| 路由检查 | `show ip route 10.255.0.4` | 下一跳切换为 `10.1.3.2, via <接口>`，即经 N2 到达 D1 |
+| 转发检查 | `ping 10.255.0.4`、`ping 10.255.0.5` | 均为 `0% packet loss` |
 
-### 4.3 故障与恢复
+### 4.4 恢复
 
-1. 关闭 DUTA 的 `<PortA>`，模拟 S-N1 链路故障。
-2. `show ip route 10.255.0.4` 应切换为 `10.1.3.2, via <接口>`，即经 N2 到达 D1。
-3. `ping 10.255.0.4`、`ping 10.255.0.5` 均应为 `0% packet loss`。
-4. 恢复 `<PortA>`，D1 主路径回到 `10.1.2.2`，`Protected by LFA` 恢复大于 0，ping 恢复 `0% packet loss`。
+| 恢复动作 | 命令 | 预期 |
+| --- | --- | --- |
+| 链路恢复 | 在 DUTA 的 `<PortA>` 执行 `no shutdown` | `10.1.2.2` 邻居恢复 `Full` |
+| 主路径回切 | `show ip route 10.255.0.4` | 下一跳回到 `10.1.2.2` |
+| 保护计数恢复 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
+| 转发恢复 | `ping 10.255.0.4`、`ping 10.255.0.5` | 均为 `0% packet loss` |
+
+### 4.5 观测面
+
+| 观测面 | 命令 / 方法 | 判定 |
+| --- | --- | --- |
+| 协议状态面 | `show ip ospf neighbor` | 所有直连邻居 `Full`；故障期间 `10.1.2.2` 邻居断开 |
+| 表项面（OSPF 路由） | `show ip ospf route` | 存在 `10.255.0.4/32`，主路径经 N1 |
+| 表项面（LFA 明细） | `show ip ospf fast-reroute per-prefix` | `10.255.0.4/32` 的 Primary 为 `10.255.0.2`，Backup 为 `10.1.3.2` |
+| 表项面（RIB） | `show ip route 10.255.0.4` | 基线下一跳为 `10.1.2.2`，故障后为 `10.1.3.2` |
+| 计数 / 告警面 | `show ip ospf fast-reroute per-prefix` | `runs` 大于 0，`Protected by LFA` 大于 0 |
+| 转发面 | `ping 10.255.0.4`、`ping 10.255.0.5` | 丢包率均为 0% |
+| 恢复 / 资源面 | 恢复 `<PortA>` 后复查邻居、路由与保护计数 | 主路径回到 `10.1.2.2`，保护计数恢复 |
+
+### 4.6 判定标准
+
+- 步骤 1 至 9：配置项存在；邻居状态为 `Full`；N2 的 `<PortA>` 含 `ip ospf cost 65535`；LFA 已使能且 `runs` 大于 0；`Protected by LFA` 大于 0；`10.255.0.4/32` 的 LFA 明细为 Primary `10.255.0.2` / Backup `10.1.3.2`；RIB 唯一主下一跳为 `10.1.2.2`；两个 ping 丢包率均为 0%。
+- 步骤 10：关闭 `<PortA>` 后，RIB 下一跳为 `10.1.3.2`，两个 ping 丢包率均为 0%。
+- 步骤 11：恢复 `<PortA>` 后，主路径回到 `10.1.2.2`，`Protected by LFA` 大于 0，丢包率均为 0%。
+- `Pass`：上述必检项全部满足，且第 5 章清理检查通过。
+- `Fail`：任一必检项不满足，或清理后仍存在 OSPF、LFA 配置残留。
+- `Blocked`：设备不支持 `ip ospf cost 65535` 或 `fast-reroute per-prefix enable`，或邻居无法达到 `Full`。
+- 观测型差异：若设备将反向 MAX_METRIC 链路从 SPF 中排除，导致 D1 的 LFA 明细未出现 Backup `10.1.3.2`，按第 6 章记录为实现差异并保留观测记录；其余必检项满足时结论记为 `Pass`。
 
 ## 5. 清理与恢复
 
@@ -178,7 +215,7 @@ show ip ospf processes-count
 | --- | --- | --- |
 | 1 | 拓扑说明 | 本用例为 RFC 8518 Figure 3 原图，5 台设备、5 条链路 |
 | 2 | 方向性 | OSPF 接口开销是出方向属性，N2 的 `<PortA>` 配置 65535 只影响 N2->S 方向 |
-| 3 | 观测限制 | 若设备直接从 SPF 中排除反向 MAX_METRIC 链路，记录为“实现差异”，不判功能失败 |
+| 3 | 观测限制 | 若设备直接从 SPF 中排除反向 MAX_METRIC 链路，记录为实现差异；功能判据以主路径、保护计数和故障后可达性为准 |
 | 4 | 主路径 | N2-D1 开销设为 30，S 到 D1 的主路径唯一经 N1（20），经 N2 为 40，不会形成 ECMP；D1 的 LFA 明细需明确出现 Primary N1 / Backup N2 |
 
 ## 7. 执行与结果记录
@@ -186,13 +223,13 @@ show ip ospf processes-count
 | 项 | 内容 |
 | --- | --- |
 | 执行时间 / 执行人 | |
-| 结论 | Pass / Fail / Blocked |
+| 结论 | `Pass` / `Fail` / `Blocked` |
 | 实际观测 | 记录邻居、LFA 计数、MAX_METRIC 配置、故障前后路由和 ping 结果 |
 | 证据 | 回显文件 / 日志位置 |
 | 关联缺陷 / 需求 | |
 
-逐条结果：
+逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |
-| 0250 | | | |
+| `0250` | `Pass` / `Fail` / `Blocked` | | |

@@ -1,7 +1,7 @@
 # 禁用候选接口或受保护接口后，LFA 保护计数按预期下降并可恢复
 
-> 本文依据 `docs/spec/test-case-template.md` 编写，覆盖本脚本的测试用例；文档中的子用例与脚本中的 `test()` 一一对应。
-> 脚本：`0050-IP_ROUTE-OSPF_LFA.test.ts`
+> 本文依据 `docs/spec/test-case-template.md` 编写；文档中的子用例与用例编号一一对应。
+> 自动化实现：`0050-IP_ROUTE-OSPF_LFA.test.ts`（可选，手工执行时省略）
 
 ## 1. 基本信息
 
@@ -9,7 +9,7 @@
 - 用例标题：禁用候选接口或受保护接口后，LFA 保护计数按预期下降并可恢复
 - 所属特性 / 分组：`05-IP_ROUTE` / `OSPF配置` / `OSPF LFA`
 - 级别 / 类型：P1 / 功能
-- 执行方式：自动化脚本 / 手工
+- 执行方式：自动化工具 / 手工
 - 预估耗时：约 5 分钟
 - 关联：`test/feature/05-IP_ROUTE/03-ospf/02-ospf_lfa/`；设计模板见 [test-case-template.md](../../../../../spec/test-case-template.md)
 
@@ -25,7 +25,7 @@
 
 | 项 | 要求 | 说明 |
 | --- | --- | --- |
-| 设备 profile | `default` | 以 CLI 是否接受命令为准 |
+| 设备能力 / 版本 | 按实际执行环境填写 | 以 CLI 是否接受命令为准 |
 | 端口形态 | 按拓扑需要 2~4 个三层接口 | 接口需支持 `no switchport` |
 | 拓扑后端 | 能建立对应拓扑 | 邻居无法 Full 时标记 `Blocked` |
 | 软件版本 | 接受本用例命令 | 不支持时标记 `Blocked` |
@@ -46,7 +46,7 @@
    +--------+                   +--------+
 ```
 
-内置拓扑：`LinkConstraint.four_devices_topo_links_type_3`。
+拓扑名称 / 来源：`four_devices_topo_links_type_3`（内置拓扑）。
 
 | 链路 | 网段 | 端点地址 | 开销 |
 | --- | --- | --- | --- |
@@ -187,19 +187,23 @@ exit
 end
 ```
 
-### 4.2 执行顺序
+### 4.2 基线检查与执行顺序
 
-| 顺序 | 动作 | 对象 |
-| --- | --- | --- |
-| 1 | 记录基线保护计数 P0 | DUTA |
-| 2 | 在 PortD 配置 `candidate disable` | DUTA |
-| 3 | 等待保护计数 P1 小于 P0 | DUTA |
-| 4 | 删除 PortD 的 `candidate disable`，等待计数恢复 | DUTA |
-| 5 | 在 PortA 配置 `protection disable` | DUTA |
-| 6 | 等待保护计数 P2 小于 P0 | DUTA |
-| 7 | 删除 PortA 的 `protection disable` | DUTA |
+| 顺序 | 动作 | 命令 / 触发方式 | 预期 |
+| --- | --- | --- | --- |
+| 1 | 邻居基线检查 | `show ip ospf neighbor` | DUTA 邻居状态为 `Full` |
+| 2 | LFA 使能检查 | `show ip ospf fast-reroute per-prefix` | `Fast-reroute per-prefix : enabled` |
+| 3 | 基线保护计数 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0，记录基线值 P0 |
+| 4 | 周期 1 触发 | 见 4.3.1 | 保护计数 P1 小于 P0 |
+| 5 | 周期 1 恢复 | 见 4.4.1 | 保护计数恢复到 P0 |
+| 6 | 周期 2 触发 | 见 4.3.2 | 保护计数 P2 小于 P0 |
+| 7 | 周期 2 恢复 | 见 4.4.2 | 保护计数恢复到 P0 |
 
-### 4.3 配置
+### 4.3 触发与流量发送
+
+本用例不发送测试仪流量，触发后仅观测 LFA 保护计数。两个周期按 4.2 的顺序交替执行：4.3.1 → 4.4.1 → 4.3.2 → 4.4.2。
+
+#### 4.3.1 周期 1：禁用候选接口
 
 DUTA：
 
@@ -210,14 +214,11 @@ ip ospf fast-reroute per-prefix candidate disable
 end
 ```
 
-恢复：
+| 触发 | 操作 | 预期 |
+| --- | --- | --- |
+| 候选接口禁用 | DUTA `<PortD>` 配置 `candidate disable` | `Protected by LFA` 计数 P1 小于基线值 P0 |
 
-```text
-configure terminal
-interface <PortD>
-no ip ospf fast-reroute per-prefix candidate disable
-end
-```
+#### 4.3.2 周期 2：禁用受保护接口
 
 DUTA：
 
@@ -228,7 +229,30 @@ ip ospf fast-reroute per-prefix protection disable
 end
 ```
 
-恢复：
+| 触发 | 操作 | 预期 |
+| --- | --- | --- |
+| 受保护接口禁用 | DUTA `<PortA>` 配置 `protection disable` | `Protected by LFA` 计数 P2 小于基线值 P0 |
+
+### 4.4 恢复
+
+#### 4.4.1 周期 1 恢复
+
+DUTA：
+
+```text
+configure terminal
+interface <PortD>
+no ip ospf fast-reroute per-prefix candidate disable
+end
+```
+
+| 恢复动作 | 命令 | 预期 |
+| --- | --- | --- |
+| 恢复候选接口 | DUTA `<PortD>` 执行 `no ... candidate disable` | `Protected by LFA` 计数恢复到 P0 |
+
+#### 4.4.2 周期 2 恢复
+
+DUTA：
 
 ```text
 configure terminal
@@ -237,14 +261,28 @@ no ip ospf fast-reroute per-prefix protection disable
 end
 ```
 
-### 4.4 观测与预期
-
-| 观测项 | 命令 | 预期 |
+| 恢复动作 | 命令 | 预期 |
 | --- | --- | --- |
-| 基线保护 | `show ip ospf fast-reroute per-prefix` | `Protected by LFA` 大于 0 |
-| 候选接口禁用 | `show ip ospf fast-reroute per-prefix` | 保护计数小于基线值 |
-| 候选接口恢复 | `show ip ospf fast-reroute per-prefix` | 保护计数恢复到基线值 |
-| 受保护接口禁用 | `show ip ospf fast-reroute per-prefix` | 保护计数小于基线值 |
+| 恢复受保护接口 | DUTA `<PortA>` 执行 `no ... protection disable` | `Protected by LFA` 计数恢复到 P0 |
+
+### 4.5 观测面
+
+| 观测面 | 命令 / 方法 | 判定 |
+| --- | --- | --- |
+| 协议状态面 | `show ip ospf neighbor` | 两个周期前后 DUTA 邻居保持 `Full` |
+| LFA 汇总面 | `show ip ospf fast-reroute per-prefix` | 基线 `Protected by LFA` 大于 0；周期 1、周期 2 计数均小于 P0，恢复后回到 P0 |
+| 表项面 | `show ip ospf route` | `3.3.3.3/32` 始终存在，主下一跳为 `10.0.12.2` |
+| 转发面 | `ping 3.3.3.3` | 两个周期前后均为 `0% packet loss` |
+
+### 4.6 判定标准
+
+- 4.2 步骤 1 至 3 满足：邻居 `Full`，LFA 使能，基线 `Protected by LFA` 大于 0。
+- 4.3.1 与 4.4.1 满足：禁用候选接口后计数 P1 小于 P0，恢复后计数回到 P0。
+- 4.3.2 与 4.4.2 满足：禁用受保护接口后计数 P2 小于 P0，恢复后计数回到 P0。
+- 4.5 中邻居保持 `Full`，`3.3.3.3/32` 主下一跳保持 `10.0.12.2`，`ping 3.3.3.3` 丢包率为 0%。
+- 上述条件全部满足且第 5 章清理成功：结论为 `Pass`。
+- 上述条件任一不满足：结论为 `Fail`。
+- 设备不接受 `candidate disable` 或 `protection disable` 命令、LFA 汇总计数不可读，或拓扑后端无法建立邻居：结论为 `Blocked`，记录缺失项与现场。
 
 ## 5. 清理与恢复
 
@@ -292,12 +330,12 @@ show ip ospf neighbor
 | 项 | 内容 |
 | --- | --- |
 | 执行时间 / 执行人 | |
-| 结论 | Pass / Fail / Blocked |
+| 结论 | `Pass` / `Fail` / `Blocked` |
 | 实际观测 | 记录邻居、LFA 计数、路由下一跳和 ping 结果 |
 | 证据 | 回显文件 / 日志位置 |
 | 关联缺陷 / 需求 | |
 
-逐条结果：
+逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |

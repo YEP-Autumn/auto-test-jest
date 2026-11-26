@@ -109,6 +109,7 @@ interface loopback0
 ip address 3.3.3.3/32
 exit
 router ospf
+router-id 3.3.3.3
 network 10.0.13.0/24 area 0
 network 10.0.23.0/24 area 0
 network 172.16.1.0/24 area 0
@@ -117,7 +118,7 @@ exit
 end
 ```
 
-DUTD 的 `<PortC>` 配置 `172.16.1.2/24` 并发布 `172.16.1.0/24`；DUTA、DUTB 按第 2 节地址配置其余链路。各设备在 `router ospf` 视图使能 `fast-reroute per-prefix enable`；全部邻居 `Full` 后，等待保护表刷新，再执行 4.2 基线检查。
+DUTD 的 `<PortC>` 配置 `172.16.1.2/24` 并发布 `172.16.1.0/24`；DUTA、DUTB 按第 2 节地址配置其余链路。各设备在 `router ospf` 视图显式配置与 Loopback0 一致的 `router-id`，并使能 `fast-reroute per-prefix enable`；全部邻居 `Full` 后，等待保护表刷新，再执行 4.2 基线检查。
 
 ### 4.2 基线检查与执行顺序
 

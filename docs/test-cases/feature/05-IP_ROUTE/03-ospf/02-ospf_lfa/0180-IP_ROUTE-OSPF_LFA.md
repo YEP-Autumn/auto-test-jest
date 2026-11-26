@@ -291,14 +291,14 @@ show ip ospf neighbor
 
 | 项 | 内容 |
 | --- | --- |
-| 执行时间 / 执行人 | 2026-11-24 |
-| 结论 | Pass |
-| 实际观测 | LFA 失效后 `Protected by LFA` 从 4 降到 1，`show ip route 3.3.3.3` 不再出现 `repair path:`；恢复开销后计数回到 5，`repair path: 10.0.41.1 via ...` 重新出现，主下一跳始终为 `10.0.12.2` |
-| 证据 | `/tmp/opencode/ospf_lfa_0180_transitions.log` |
-| 关联缺陷 / 需求 | 验证 LFA→无LFA、无LFA→有LFA 的 RIB 更新正常 |
+| 执行时间 / 执行人 | |
+| 结论 | `Pass` / `Fail` / `Blocked` |
+| 实际观测 | 记录 LFA 计数、repair path 变化、故障前后路由和 ping 结果 |
+| 证据 | 回显 / 抓包文件 / 日志位置 |
+| 关联缺陷 / 需求 | |
 
 逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |
-| 0180 | Pass | LFA 有无切换时 repair path 正确移除/恢复 | `/tmp/opencode/ospf_lfa_0180_transitions.log` |
+| `0180` | | | |

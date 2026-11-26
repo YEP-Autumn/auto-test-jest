@@ -369,14 +369,14 @@ show ip ospf neighbor
 
 | 项 | 内容 |
 | --- | --- |
-| 执行时间 / 执行人 | 2026-11-24 |
-| 结论 | `Pass` |
-| 实际观测 | 初始 `3.3.3.3/32` 为 `link 2.2.2.2 10.0.14.2`，`repair path: 10.0.14.2`；打开 E-C 后变为 `link+node 2.2.2.2 10.0.15.2`，`repair path: 10.0.15.2`；再次关闭 E-C 后回到 `link` / D。主下一跳始终为 `10.0.12.2`，ping 0% 丢包 |
-| 证据 | `/tmp/opencode/ospf_lfa_0270_0280_retest2.log` |
-| 关联缺陷 / 需求 | 初次执行曾出现 RIB `repair path` 未刷新，复测已通过 |
+| 执行时间 / 执行人 | |
+| 结论 | `Pass` / `Fail` / `Blocked` |
+| 实际观测 | 记录 LFA 明细中主备下一跳和 repair path、故障前后路由和 ping 结果 |
+| 证据 | 回显 / 抓包文件 / 日志位置 |
+| 关联缺陷 / 需求 | |
 
 逐条结果（与用例编号一一对应）：
 
 | 用例编号 | 结论 | 实际观测 | 证据 |
 | --- | --- | --- | --- |
-| `0280` | `Pass` | 控制面 Type/Backup 与 RIB repair path 均随 E-C 启停在 link/D 与 link+node/E 之间切换 | `/tmp/opencode/ospf_lfa_0270_0280_retest2.log` |
+| `0280` | | | |

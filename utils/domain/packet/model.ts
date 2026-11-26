@@ -151,6 +151,7 @@ export interface ICMPOptions {
 }
 
 export interface RAWOptions {
+  /** 原始负载：Buffer 保存为 base64；string 原样保存，由后端按文本字节下发 */
   payload?: Buffer | string;
 }
 
@@ -374,7 +375,13 @@ export class PacketBuilder {
     return this;
   }
 
-  /** 设置原始数据负载（Builder 内统一保存为 base64 字符串，兼容 Renix thrift 模型） */
+  /**
+   * 设置原始数据负载。
+   *
+   * Buffer 按旧约定保存为 base64（兼容 Renix thrift 模型）；string 原样保存，
+   * 供 Renix 这类把 thrift STRING 直接当作报文字节的链路使用。调用方应根据
+   * 后端选择入参类型。
+   */
   setRaw(options: RAWOptions = {}): PacketBuilder {
     const rawPayload =
       options.payload instanceof Buffer

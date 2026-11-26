@@ -2,8 +2,8 @@
 
 - 脚本目录：`test/feature/05-IP_ROUTE/03-ospf/`
 - 用例文档目录：`docs/test-cases/feature/05-IP_ROUTE/03-ospf/`
-- 脚本数量：37
-- 用例文档数量：37
+- 脚本数量：38
+- 用例文档数量：38
 - 上级索引：[README.md](../README.md)
 
 ## 子目录索引
@@ -12,7 +12,7 @@
 | --- | --- | --- | --- |
 | `01-ospf_basic/` | [`01-ospf_basic/README.md`](01-ospf_basic/README.md) | 0 | 0 |
 | `01-ospf_basic_cli/` | [`01-ospf_basic_cli/README.md`](01-ospf_basic_cli/README.md) | 0 | 0 |
-| `02-ospf_lfa/` | [`02-ospf_lfa/README.md`](02-ospf_lfa/README.md) | 33 | 33 |
+| `02-ospf_lfa/` | [`02-ospf_lfa/README.md`](02-ospf_lfa/README.md) | 34 | 34 |
 | `02-ospf_lfa_cli/` | [`02-ospf_lfa_cli/README.md`](02-ospf_lfa_cli/README.md) | 4 | 4 |
 
 ## 脚本
